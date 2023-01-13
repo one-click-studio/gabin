@@ -50,19 +50,19 @@ const update = () => {
     @apply flex justify-start items-center;
 }
 .toggleui-container > .toggleui-btn {
-    @apply relative h-2 w-8 rounded-full bg-content-3 transition-all;
+    @apply relative h-2 w-8 rounded-full bg-content-3 transition-all border-0 cursor-pointer;
 }
 .toggleui-container > .toggleui-btn.active {
-    @apply bg-main-hover;
+    @apply bg-mainhover;
 }
 
 .toggleui-container > .toggleui-btn > .toggleui-circle {
-    --tw-translate-y: -5px;
+    /* --tw-translate-y: -5px; */
     @apply h-4 w-4 rounded-full inline-block transition-all;
-    @apply bg-content-2 -translate-x-2;
+    @apply bg-content-2 -translate-x-2 -translate-y-1;
 }
 .toggleui-container > .toggleui-btn.active > .toggleui-circle {
-    @apply bg-main-highlight translate-x-2;
+    @apply bg-mainhighlight translate-x-2;
 }
 .toggleui-container > .toggleui-label {
     @apply ml-2;

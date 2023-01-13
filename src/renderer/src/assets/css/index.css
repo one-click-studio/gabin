@@ -148,7 +148,7 @@ button.btn.primary {
 
 button.btn.primary:focus-visible,
 button.btn.primary:hover {
-    @apply bg-main-hover;
+    @apply bg-mainhover;
 }
 
 button.btn.danger {
@@ -161,7 +161,7 @@ button.btn.danger:hover {
 }
 
 table {
-    @apply w-full;
+    @apply w-full border-collapse;
 }
 table > thead {
     @apply bg-bg-1 text-sm;
@@ -172,6 +172,30 @@ table > thead > tr > th {
 table > tbody > tr > td {
     @apply px-2 py-0.5;
     @apply border-content-3;
+}
+
+ul {
+    @apply list-none;
+    @apply m-0 p-0;
+}
+
+a {
+    @apply cursor-pointer decoration-none;
+}
+
+input {
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    @apply font-bold m-0 my-1;
+}
+p {
+    @apply m-0;
+}
+
+div {
+    @apply box-border;
 }
 
 .scroll-hidden {

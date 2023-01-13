@@ -1,11 +1,9 @@
-import { app } from 'electron'
-
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import VAD from "webrtcvad"
 import { InferenceSession, Tensor } from "onnxruntime-node"
+import { getPath } from '@src/main/utils/utils'
 
-import { join } from 'path'
-const sileroModelPath = join(app.getAppPath(), '../public/silero_vad.onnx')
+const sileroModelPath = getPath('models/silero.onnx')
 
 interface Device {
     id: number

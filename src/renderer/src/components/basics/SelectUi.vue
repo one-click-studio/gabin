@@ -43,10 +43,8 @@ const displayOption = (option: any) => {
 }
 
 const isSelected = (option: any) => {
-    if (props.keyvalue) {
-        return (option[props.keyvalue] === props.value)
-    }
-    return (option === props.value)
+    const displayed = displayOption(option)
+    return (displayed === props.value)
 }
 
 const update = (select: any) => {
@@ -70,7 +68,7 @@ initOptions()
     >
         <div
             class="selectui-container"
-            :class="open? 'z-10' :'z-0'"
+            :class="open? 'z-12' :'z-0'"
         >
             <ListboxLabel
                 class="selectui-label"
@@ -119,14 +117,14 @@ initOptions()
     @apply color-white;
 }
 .selectui-opts {
-    @apply bg-bg-2 w-full z-10;
+    @apply bg-bg-2 z-12;
     @apply absolute top-full left-0 max-h-60 w-full overflow-auto py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5;
 }
 .selectui-opt {
-    @apply bg-bg-2 w-full p-3 hover:bg-bg-1 cursor-pointer text-content-2 relative z-10;
+    @apply bg-bg-2 w-full p-3 hover:bg-bg-1 cursor-pointer text-content-2 relative z-12;
 }
 .selectui-opt.selected {
-    @apply text-content-1 font-bold;
+    @apply font-bold;
 }
 
 </style>

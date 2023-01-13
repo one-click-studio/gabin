@@ -42,11 +42,11 @@ defineProps<Props>()
     @apply flex flex-col relative;
 }
 .n-line > span {
-    @apply relative pl-5 py-1;
+    @apply relative pl-5 py-[5.5px];
 }
 .n-line > span > .source-name {
-    @apply ml-3 py-[5.4px];
-    @apply border-y border-content-3
+    @apply ml-3 py-[4.5px];
+    @apply border-y-2 border-x-0 border-solid border-content-3;
 }
 .n-line > span:first-child > .source-name {
     @apply border-t-0;

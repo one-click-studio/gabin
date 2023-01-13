@@ -6,6 +6,7 @@ import { ipcMain } from '@src/common/ipcs'
 import { Gabin } from '@src/main/gabin';
 import { ProfileSetup } from '@src/main/modules/setup';
 import db from '@src/main/utils/db'
+import { isDev } from '@src/main/utils/utils'
 
 const { invoke, handle } = ipcMain
 let gabin: Gabin
@@ -20,6 +21,11 @@ const initGabin = () => {
   gabin.autocam$.subscribe(autocam => {
     BrowserWindow.getAllWindows().forEach(bw => {
       invoke.handleAutocam(bw, autocam)
+    })
+  })
+  gabin.timeline$.subscribe(micId => {
+    BrowserWindow.getAllWindows().forEach(bw => {
+      invoke.handleTimeline(bw, micId)
     })
   })
   gabin.availableMics$.subscribe(availableMics => {
@@ -110,7 +116,7 @@ async function createWindow(): Promise<void> {
     }
   })
 
-  mainWindow.webContents.openDevTools()  
+  if (isDev()) mainWindow.webContents.openDevTools()  
 
   // init db
   await db.connect()
@@ -119,6 +125,9 @@ async function createWindow(): Promise<void> {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    // setTimeout(() => {
+    //   invoke.simpleString(mainWindow, "")
+    // }, 1000)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

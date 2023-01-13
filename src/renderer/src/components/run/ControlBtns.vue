@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-// @ts-ignore (TO DELETE)
 import { klona } from 'klona'
 import { store } from '@src/renderer/src/store/store'
 import { useRouter } from 'vue-router'
@@ -81,7 +80,6 @@ const init = () => {
     })
 }
 
-// @ts-ignore (TO DELETE)
 const setCurrentShot = (shot: Shoot) => {
     for (const i in currentContainers.value) {
         if (currentContainers.value[i] === shot.containerId) {

@@ -42,6 +42,7 @@ export const { ipcMain, ipcRenderer, exposeApiToGlobalWindow } = createInterproc
         async handlePower(_, data: boolean) {},
 
         async handleNewShot(_, data: Shoot) {},
+        async handleTimeline(_, data: MicId) {},
         async handleAutocam(_, data: boolean) {},
         async handleAvailableMics(_, data: AvailableMicsMap) {},
         async handleStreamdeckConnected(_, data: boolean) {},

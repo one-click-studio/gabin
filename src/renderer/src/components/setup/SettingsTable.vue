@@ -242,6 +242,7 @@ update()
                                             </ButtonUi>
                                             <InputUi
                                                 label=""
+                                                center
                                                 :value="cam.weight + ''"
                                                 :class="correctPercent(mic.cams)? '' : 'incorrect-percent'"
                                                 @update="(v) => updateWeightSettings(i, j, k, parseInt(v))"
@@ -266,6 +267,7 @@ update()
                                     <template v-if="editable">
                                         <InputUi
                                             label=""
+                                            center
                                             :value="container.durations.min + ''"
                                             @update="(v) => updateDurationsSettings(i, 'min', parseFloat(v))"
                                         />
@@ -282,6 +284,7 @@ update()
                                     <template v-if="editable">
                                         <InputUi
                                             label=""
+                                            center
                                             :value="container.durations.max + ''"
                                             @update="(v) => updateDurationsSettings(i, 'max', parseFloat(v))"
                                         />
@@ -358,10 +361,8 @@ table.editable > thead > tr > th.column-5,
 table.editable > tbody > tr > td.column-5 {
     @apply w-2/12;
 }
-
-</style>
-<style>
-table .inputui-container input {
-    @apply text-center;
+td.column-1, td.column-2, td.column-3, td.column-4, td.column-5, td.column-6, td.column-7 {
+    @apply border-solid border-t-0 border-x-0;
 }
+
 </style>

@@ -140,14 +140,14 @@ onEnterPress(() => {
     @apply w-full flex flex-wrap items-start my-5;
 }
 .obs-container-info > div {
-    @apply bg-bg-2 p-4 ml-4 my-5 min-w-[35rem] w-full;
+    @apply bg-bg-2 p-4 my-5 min-w-[35rem] w-full;
 }
 
 .obs-scene {
     @apply bg-bg-3 p-1;
 }
 .obs-container {
-    @apply border-main-highlight border-dashed flex border;
+    @apply border-mainhighlight border-dashed flex border;
 }
 .obs-container > span {
     @apply bg-main m-auto text-xxs p-0.5;

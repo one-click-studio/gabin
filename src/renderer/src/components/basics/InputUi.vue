@@ -4,6 +4,7 @@ import { ref } from 'vue'
 interface Props {
     label: string
     value?: string
+    center?: boolean
     error?: boolean
 }
 
@@ -31,6 +32,7 @@ const classToAdd = (): string => {
 
     classes += isFocused.value? ' is-focused' : ''
     classes += props.error? ' is-error' : ''
+    classes += props.center? ' is-centered' : ''
 
     return classes
 }
@@ -59,7 +61,7 @@ const classToAdd = (): string => {
 
 <style scoped>
 .inputui-container {
-    @apply flex h-14 relative bg-bg-1 border-b-main-highlight transition-all;
+    @apply flex h-14 relative bg-bg-1 border-b-mainhighlight transition-all;
 }
 .inputui-container.is-focused {
     @apply border-b-2;
@@ -73,6 +75,9 @@ const classToAdd = (): string => {
 }
 .inputui-container > input {
     @apply w-full bg-transparent outline-none z-10 h-9 border-0 color-white mx-3 mt-4 p-0;
+}
+.inputui-container.is-centered > input {
+    @apply text-center mt-0;
 }
 .inputui-container > .inputui-label.has-value {
     @apply text-xs;

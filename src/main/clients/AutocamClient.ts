@@ -48,6 +48,7 @@ export class AutocamClient extends Client {
 
     shoot$ = new Subject<Shoot>()
     forcedShot$ = new Subject<ObsAssetId['source']>()
+    timeline$: BehaviorSubject<MicId>
     private currentShots$: BehaviorSubject<CurrentShotsMap>
 
     private enable = false
@@ -56,7 +57,6 @@ export class AutocamClient extends Client {
     private availableMics: AvailableMicsMap = new Map()
     private recorders: AudioActivity[] = []
     private micsSpeaking: Map<string, BehaviorSubject<boolean>>
-    private timeline$: BehaviorSubject<MicId>
     private subscriptions: Subscriptions = { timeline: null, forcedShot: null }
 
     private audioDevices: AudioDeviceSettings[] = []

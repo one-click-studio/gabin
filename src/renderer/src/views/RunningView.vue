@@ -6,6 +6,9 @@ import { store } from '@src/renderer/src/store/store'
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
 
 import ControlBtns from '@src/renderer/src/components/run/ControlBtns.vue'
+import Speakers from '@src/renderer/src/components/run/Speakers.vue'
+
+import type { SpeakingMic } from '@src/types/protocol'
 
 const { invoke, handle } = window.api
 
@@ -13,6 +16,8 @@ const INIT_MSG = 'Not displaying anything'
 
 const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
+const speakingMics = ref([] as SpeakingMic[])
+
 
 const togglePower = async () => {
     if (!loading.value){
@@ -34,9 +39,34 @@ handle.handleNewShot(async (_, shoot) => {
     msg.value.main = `${shoot.data.shotId.name}`
 })
 
+handle.handleTimeline(async (_, { data }) => {
+    for (const i in  speakingMics.value){
+        speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
+    }
+})
+
+const init = () => {
+    const profile = store.profiles.getCurrent()
+
+    profile?.settings.mics.forEach((device) => {
+        for (const i in device.mics){
+            if (!device.mics[i]) continue
+            speakingMics.value.push({
+                name: device.micsName[i],
+                speaking: false,
+            })
+        }
+    })
+
+    // console.log(speakingMics.value)
+}
+
 if (!store.power) {
     togglePower()
 }
+
+init()
+
 
 </script>
 
@@ -64,6 +94,8 @@ if (!store.power) {
                     class="mb-8"
                 />
             </div>
+
+            <Speakers :mics="speakingMics" />
         </div>
 
         <div class="flex flex-col items-center flex-1 bg-bg-2">

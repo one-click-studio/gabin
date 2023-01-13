@@ -69,7 +69,9 @@ router.beforeResolve((to) => {
             class="h-full flex-1 flex flex-col z-20"
             :class="options.timeline? '' : 'timeline-close'"
         >
-            <div class="mx-10 my-5 h-full flex-1 flex flex-col">
+            <div class="mx-10 flex-1 flex flex-col h-full">
+                <div class="pb-5" />
+
                 <transition :name="options.header? 'slide-bottom' : 'slide-top'">
                     <div
                         v-if="options.header"
@@ -87,7 +89,7 @@ router.beforeResolve((to) => {
 
                 <div
                     id="body"
-                    class="w-full flex-1 overflow-hidden py-5"
+                    class="w-full flex-1 overflow-hidden"
                 >
                     <slot />
                 </div>
@@ -96,7 +98,7 @@ router.beforeResolve((to) => {
                     <div
                         v-if="options.footer"
                         id="footer"
-                        class="w-full"
+                        class="w-full pt-5"
                     >
                         <Footer
                             :back="store.layout.footer.back"
@@ -104,7 +106,10 @@ router.beforeResolve((to) => {
                         />
                     </div>
                 </transition>
+
+                <div class="pb-5" />
             </div>
+
         </div>
     </div>
 </template>

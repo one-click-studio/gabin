@@ -63,6 +63,10 @@ export interface Shoot {
     mode: 'focus' | 'illustration'
 }
 
+export interface SpeakingMic {
+    name: string
+    speaking: boolean
+}
 
 export type AvailableMicsMap = Map<MicId, boolean>
 

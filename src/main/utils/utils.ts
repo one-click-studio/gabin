@@ -1,3 +1,5 @@
+import { join } from 'path'
+
 export class expoAttempt {
     private max: number
     timeout: NodeJS.Timeout = setTimeout(()=>{ return })
@@ -142,4 +144,15 @@ export class timer {
             return this.running
     }
 
+}
+
+export function isDev(): boolean {
+    return process.argv[0].includes('electron')
+}
+
+export function getPath(str: string): string {
+    let strPath = join(__dirname, 'models/silero.onnx')
+    if (!isDev()) strPath = strPath.replace('app.asar', 'app.asar.unpacked')
+
+    return strPath
 }

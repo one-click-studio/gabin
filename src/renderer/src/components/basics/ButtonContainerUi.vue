@@ -27,7 +27,7 @@ const getBg = () => {
     if (props.error) {
         return 'bg-content-negative'
     } else if (props.active && props.primary) {
-        return 'bg-main-hover'
+        return 'bg-mainhover'
     } else if (props.active) {
         return 'bg-bg-1'
     } else {

@@ -23,6 +23,10 @@ handle.handleStreamdeckConnected(async (_, reachable) => {
     }
 })
 
+handle.simpleString(async (_, {data}) => {
+    console.log(data)
+})
+
 window.addEventListener('keyup', e => {
     store.keyPress$.next(e.key)
 })
