@@ -117,7 +117,7 @@ async function createWindow(): Promise<void> {
     }
   })
 
-  if (isDev()) mainWindow.webContents.openDevTools()  
+  if (isDev()) mainWindow.webContents.openDevTools()
 
   // init db
   await db.connect()
