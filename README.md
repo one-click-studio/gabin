@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/micorp-studio/gabin/blob/master/build/icon.png?raw=true" width="150px" height="150px">
+    <img src="https://github.com/micorp-studio/gabin/blob/main/build/icon.png?raw=true" width="150px" height="150px">
 </p>
 
 <div align="center">
