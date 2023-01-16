@@ -103,8 +103,11 @@ async function createWindow(): Promise<void> {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
+    minWidth: 768,
+    minHeight: 550,
     show: false,
     title: 'Gabin',
+    titleBarStyle: 'hidden',
     autoHideMenuBar: true,
     ...(process.platform === 'linux'
       ? {

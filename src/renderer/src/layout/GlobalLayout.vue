@@ -113,3 +113,11 @@ router.beforeResolve((to) => {
         </div>
     </div>
 </template>
+<style scoped>
+#main {
+    -webkit-app-region: drag;
+}
+#body {
+    -webkit-app-region: no-drag;
+}
+</style>
