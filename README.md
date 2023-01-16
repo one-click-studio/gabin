@@ -35,6 +35,11 @@ pnpm dev
 ```sh
 pnpm build:win # or pnpm build:mac (not tested yet)
 ```
+### Tests
+
+```sh
+pnpm test
+```
 
 ## Licence
 All rights reserved. © 2023 Micorp Studio
