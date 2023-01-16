@@ -18,6 +18,7 @@ interface Options {
 }
 
 const router = useRouter()
+const draggable = ref<boolean>(false)
 
 const options = ref<Options>({
     sidebar: false,
@@ -31,6 +32,7 @@ router.beforeResolve((to) => {
     options.value.timeline = (to.meta.timeline as boolean)
     options.value.header = (to.meta.header as boolean)
     options.value.footer = (to.meta.footer as boolean)
+    draggable.value = (to.meta.type as number) < 2
 })
 
 </script>
@@ -39,6 +41,7 @@ router.beforeResolve((to) => {
     <div
         id="main"
         class="absolute top-0 left-0 h-screen w-screen z-10 flex"
+        :class="draggable? 'drag' : ''"
     >
         <transition :name="options.sidebar? 'slide-right' : 'slide-left'">
             <div
@@ -114,7 +117,7 @@ router.beforeResolve((to) => {
     </div>
 </template>
 <style scoped>
-#main {
+#main.drag {
     -webkit-app-region: drag;
 }
 #body {
