@@ -122,6 +122,19 @@ export class ProfileSetup {
         this.profiles.edit(profiles)
     }
 
+    setAutostart(id: Profile['id'], autostart: Profile['autostart']) {
+        const profiles: Profile[] = this.profiles.defaultValue
+
+        const ids = profiles.map(p => p.id)
+        const index = ids.indexOf(id)
+
+        if (index > -1) {
+            profiles[index].autostart = autostart
+        }
+
+        this.profiles.edit(profiles)
+    }
+
     editId(oldId: Profile['id'], id: Profile['id']) {
         const profiles: Profile[] = this.profiles.defaultValue
 

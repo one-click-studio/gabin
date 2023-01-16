@@ -27,6 +27,7 @@ const DEFAULT_CONNECTIONS = (): ConnectionsConfig => {
 
 export const store = reactive({
     keyPress$: new Subject<string>(),
+    isFirstRun: true,
     layout: {
         sidebar: {
             open: true,

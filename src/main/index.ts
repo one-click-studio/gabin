@@ -74,6 +74,7 @@ function handler() {
   handle.getProfiles(async () => profileSetup.getProfiles())
   handle.setDefaultProfile(async (_, id) => profileSetup.setDefault(id.data))
   handle.setIconProfile(async (_, p) => profileSetup.setIcon(p.data.id, p.data.icon))
+  handle.setAutostart(async (_, p) => profileSetup.setAutostart(p.data.id, p.data.autostart))
   handle.setProfileId(async (_, p) => profileSetup.editId(p.data.old, p.data.id))
 
   // SHOTS

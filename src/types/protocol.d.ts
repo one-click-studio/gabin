@@ -99,6 +99,7 @@ export interface Profile {
     active?: boolean
     settings: ProfileSettings
     connections: ConnectionsConfig
+    autostart?: boolean
 }
 export interface ProfileSettings {
     mics: AudioDeviceSettings[]
