@@ -1,13 +1,15 @@
 {
   "name": "gabin",
   "version": "1.0.0",
-  "description": "An Electron application with Vue and TypeScript",
+  "packageManager": "pnpm@7.24.3",
+  "description": "Automate show production using OBS, Bitfocus Companion and any audio api.",
+  "author": "Micorp Studio",
+  "homepage": "https://micorp.studio",
+  "repository": "github:micorp-studio/gabin",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://www.electronjs.org",
   "scripts": {
-    "format": "prettier --write .",
-    "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts,.vue --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts,.vue --fix",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "test": "vitest run",
     "start": "electron-vite preview",
@@ -16,7 +18,8 @@
     "postinstall": "electron-builder install-app-deps",
     "build:win": "npm run build && electron-builder --win --config",
     "build:mac": "npm run build && electron-builder --mac --config",
-    "build:linux": "npm run build && electron-builder --linux --config"
+    "build:linux": "npm run build && electron-builder --linux --config",
+    "release": "pnpm build && electron-builder --publish always --config"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^1.0.2",

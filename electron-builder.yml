@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: gabin
+appId: studio.micorp.gabin
+productName: Gabin
 directories:
   buildResources: build
 files:
@@ -13,12 +13,17 @@ asarUnpack:
 afterSign: build/notarize.js
 win:
   executableName: gabin
+  verifyUpdateCodeSignature: false
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  differentialPackage: false
 mac:
+  target:
+    - target: default
+      arch: universal
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -27,16 +32,14 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
 dmg:
   artifactName: ${name}-${version}.${ext}
+  writeUpdateInfo: false
 linux:
   target:
     - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
+  maintainer: micorp.studio
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
