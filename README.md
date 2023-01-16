@@ -5,7 +5,7 @@
 <div align="center">
   <h1>Gabin</h1>
 </div>
-<p align="center">Automate show production using <em>OBS and Bitfocus Companion</em>.</p>
+<p align="center">Automate show production using <em>OBS, Bitfocus Companion and any audio api</em>.</p>
 
 
 <br />
