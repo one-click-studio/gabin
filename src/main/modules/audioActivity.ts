@@ -102,7 +102,7 @@ export class AudioActivity {
     private _consecutiveSilence: number[]
     private _consecutiveSpeech: number[]
 
-    private _speakingThreshold = 10
+    private _speakingThreshold = 3
     private _silenceThreshold = 10
 
     private _speechThreshold = 0.9
