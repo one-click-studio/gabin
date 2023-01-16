@@ -1,0 +1,64 @@
+name: build-release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest, macOS-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 17
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: build macOS
+        if: matrix.os == 'macOS-latest'
+        run: pnpm release
+        env:
+          # electron-builder reports an error on CI machines due to unpack ffmpeg-static
+          # https://github.com/electron-userland/electron-builder/issues/3179
+          USE_HARD_LINKS: false
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: build windows
+        if: matrix.os == 'windows-latest'
+        run: pnpm release
+        env:
+          # electron-builder reports an error on CI machines due to unpack ffmpeg-static
+          # https://github.com/electron-userland/electron-builder/issues/3179
+          USE_HARD_LINKS: false
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # todo: add windows signing
