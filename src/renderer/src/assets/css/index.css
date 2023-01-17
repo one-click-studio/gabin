@@ -198,6 +198,28 @@ div {
     @apply box-border;
 }
 
+.text-xxs {
+	line-height: 0.844rem;
+}
+.text-xs {
+	line-height: 1rem;
+}
+.text-sm {
+	line-height: 1.219rem;
+}
+.text-base {
+	line-height: 1.35rem;
+}
+.text-m {
+	line-height: 1.5rem;
+}
+.text-lg {
+	line-height: 2rem;
+}
+.text-xl {
+	line-height: 3.6rem;
+}
+
 .scroll-hidden {
     @apply overflow-auto;
 }
