@@ -11,13 +11,17 @@
 <br />
 <br />
 
+## Download
+
+You can download the latest version of Gabin [here](https://github.com/micorp-studio/gabin/releases).
+
 ## Features
 
 - ⚡️  [electron-vite](https://evite.netlify.app), [Vue 3](https://vuejs.org), [pnpm](https://pnpm.io) - born with fastness
 - 🖌️ [unocss](https://github.com/unocss/unocss) for ultra-fast tailwind-compatible styling
 - 💬 [interprocess](https://github.com/daltonmenezes/interprocess) for main/renderer type-safe communication
 - ⚙️  [Vitest](https://github.com/vitest-dev/vitest) for testing, [Playwright](https://github.com/microsoft/playwright) for E2E tests
-<!-- - 🚀 GitHub Actions to build & release app on [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces) -->
+- 🚀 GitHub Actions to build & release app
 
 ## Usage
 
@@ -33,7 +37,7 @@ pnpm dev
 ### Build
 
 ```sh
-pnpm build:win # or pnpm build:mac (not tested yet)
+pnpm build:win # or pnpm build:mac
 ```
 ### Tests
 
@@ -41,5 +45,6 @@ pnpm build:win # or pnpm build:mac (not tested yet)
 pnpm test
 ```
 
-## Licence
-All rights reserved. © 2023 Micorp Studio
+## Known issues
+
+- ASIO is not working with XR32 audio mixer

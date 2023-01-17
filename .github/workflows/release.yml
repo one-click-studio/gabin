@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - test-ci
-
+      - main
 
 env:
   USE_HARD_LINKS: false
@@ -18,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -60,6 +59,10 @@ jobs:
         run: pnpm release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
 
       - name: build windows
         if: matrix.os == 'windows-latest'
