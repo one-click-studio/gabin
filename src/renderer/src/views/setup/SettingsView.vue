@@ -33,7 +33,7 @@ onEnterPress(() => {
     <div class="flex flex-col w-full pb-10">
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">🤖</span>
-            <p>Now let's setup Gabin! For each scene and each microphone choose the display rate of a camera and the minimum and maximum display time.</p>
+            <p>Now let's setup Gabin ! For each scene, enable cameras each microphone can trigger.</p>
         </div>
 
         <div class="mt-8 w-full h-full relative">

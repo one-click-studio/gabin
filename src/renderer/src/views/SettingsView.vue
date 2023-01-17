@@ -127,7 +127,7 @@ init()
                 </h3>
                 <EditConnection
                     v-if="connection"
-                    label="Obs websocket"
+                    label="OBS websocket"
                     :connection="connection"
                     :password="(type !== 'tcp')"
                     @update="(c: Connection) => updateConnexions(type, c)"

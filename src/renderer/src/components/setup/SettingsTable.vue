@@ -178,13 +178,13 @@ update()
                         class="column-4"
                     />
                     <th class="column-5">
-                        Display rate
+                        Probability
                     </th>
                     <th class="column-6">
-                        Min (s)
+                        Min
                     </th>
                     <th class="column-7">
-                        Max (s)
+                        Max
                     </th>
                 </tr>
             </thead>

@@ -23,12 +23,12 @@ const goNext = (route: string) => {
     <div class="h-full w-full flex justify-center items-center">
         <div class="w-96 flex flex-col justify-start items-start">
             <Gabin
-                msg="My vision mixer?"
+                msg="My video mixer?"
                 size="sm"
             />
 
             <h1 class="my-4">
-                Choose your vision mixer
+                Choose your video mixer
             </h1>
             <span class="text-content-2 text-sm">
                 Please let Gabin know what mixer you'll use on this profile.

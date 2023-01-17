@@ -28,11 +28,10 @@ onEnterPress(() => {
             />
 
             <h1 class="my-4">
-                I'm Gabin, your intelligent video director
+                I'm Gabin, your intelligent camera switcher
             </h1>
             <span class="text-content-2 text-sm">
-                I'm going to simplify your life by automatically change the scenes of your show according to who's speaking.
-                Follow me through the creation and setup of your profile, and don't be afraid, I'm here to assist you !
+                I will mimic natural camera changes depending on who is speaking.
             </span>
 
             <ButtonUi

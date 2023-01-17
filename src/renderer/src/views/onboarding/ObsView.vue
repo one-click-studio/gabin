@@ -59,15 +59,15 @@ onEnterPress(() => {
             />
 
             <h1 class="my-4">
-                Obs websockets configuration
+                OBS websocket configuration
             </h1>
             <span class="text-content-2 text-sm">
-                In order to communicate with your streaming software, please let Gabin know your obs websockets ip. (Password is optional)
+                In order to communicate with your streaming software, please let Gabin know your obs websocket ip. (Password is optional)
             </span>
 
             <div class="mt-10 w-full flex flex-col justify-start items-start">
                 <EditConnection
-                    label="Obs websocket"
+                    label="OBS websocket"
                     :connection="obsConnection"
                     :password="true"
                     @update="update"

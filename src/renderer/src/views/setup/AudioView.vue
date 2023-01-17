@@ -164,7 +164,7 @@ updateNextBtn()
     <div class="flex flex-col w-full scroll-hidden pb-10">
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">🎙</span>
-            <p>Tell Gabin which source he should listen to. This could be 1 or more microphones or even a mixer.</p>
+            <p>Which mic should we listen to ? This must be a specific channel from an audio device.</p>
         </div>
         <ButtonUi
             class="add-audio-btn i-first primary w-full h-14 mt-4"
@@ -183,7 +183,7 @@ updateNextBtn()
                     <SelectUi
                         class="bg-bg-1 flex-1"
                         :options="audioDevices"
-                        label="Source name"
+                        label="Audio device"
                         :value="device.name? device.name + ' - ' + device.apiName :  ''"
                         keyvalue="name,apiName"
                         @update="(d: AudioDevice) => updateDevice(d, index)"

@@ -78,8 +78,7 @@ onEnterPress(() => {
                 {{ store.profiles.list.length > 0? 'My new profile' : 'My first profile' }}
             </h1>
             <span class="text-content-2 text-sm">
-                A profile allows you to save your settings in Gabin. 
-                You will be able to save several profiles later on. 
+                Let's create your first Gabin profile.
                 <span v-if="false">You can also import an existing profile.</span>
             </span>
             <ButtonUi

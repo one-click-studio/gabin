@@ -44,8 +44,8 @@ onEnterPress(() => {
                     Step 1
                 </h3>
                 <p class="text-sm text-content-2 my-5">
-                    Go to Obs and create an Obs scene in which you will overlay all your camera sources.
-                    This is call a <span class="text-white font-bold">Container</span>.
+                    Go to OBS and create an scene in which you will overlay all your camera sources on top of each other.<br>
+                    Gabin will <span class="text-white font-bold">automatically</span> toggle their visibility.
                 </p>
                 <div class="flex justify-between items-stretch w-full">
                     <div class="w-1/2 pr-2">
@@ -113,7 +113,8 @@ onEnterPress(() => {
                     Step 2
                 </h3>
                 <p class="text-sm text-content-2 my-5">
-                    Now use your Scene Container in your other scenes where you want the cameras to appear.
+                    You can now embed and place your Container scene in your main scenes.<br>
+                    Create <span class="text-white font-bold">at least one main scene</span> before next step.
                 </p>
                 <div class="flex justify-between items-stretch w-full h-44">
                     <img

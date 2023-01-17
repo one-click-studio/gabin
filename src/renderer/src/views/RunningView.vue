@@ -12,7 +12,7 @@ import type { SpeakingMic } from '@src/types/protocol'
 
 const { invoke, handle } = window.api
 
-const INIT_MSG = 'Not displaying anything'
+const INIT_MSG = 'Not showing any camera.'
 
 const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
@@ -35,7 +35,7 @@ handle.handlePower(async (_, power) => {
 })
 
 handle.handleNewShot(async (_, shoot) => {
-    msg.value.default = 'I\'m now displaying'
+    msg.value.default = 'I\'m now showing'
     msg.value.main = `${shoot.data.shotId.name}`
 })
 
