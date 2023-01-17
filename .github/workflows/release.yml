@@ -6,6 +6,11 @@ on:
     branches:
       - test-ci
 
+
+env:
+  USE_HARD_LINKS: false
+  # DEBUG: electron-builder
+
 jobs:
   release:
     name: build on ${{ matrix.os }}
@@ -41,6 +46,12 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
+
+      #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
+      - name: Tweak pnpm.cjs
+        run: sed -i 's/\/usr\/bin\/env node/node/g' /c/npm/prefix/node_modules/pnpm/bin/pnpm.cjs
+        shell: bash
+
       - name: Install dependencies
         run: pnpm install
 
