@@ -27,13 +27,13 @@ export default defineConfig({
       green: '#27AE60',
     },
     fontSize: {
-      xxs: ['0.563rem', { lineHeight: '0.844rem' }],
-      xs: ['0.688rem', { lineHeight: '1rem' }],
-      sm: ['0.813rem', { lineHeight: '1.219rem' }],
-      base: ['1rem', { lineHeight: '1.35rem' }],
-      m: ['1.5rem', { lineHeight: '1.5rem' }],
-      lg: ['2rem', { lineHeight: '2rem' }],
-      xl: ['3rem', { lineHeight: '3.6rem' }],
+      xxs: ['0.563rem'],
+      xs: ['0.688rem'],
+      sm: ['0.813rem'],
+      base: ['1rem'],
+      m: ['1.5rem'],
+      lg: ['2rem'],
+      xl: ['3rem'],
     }
   },
 })
