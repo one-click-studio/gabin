@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - test-ci
 
 jobs:
   release:
@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest, macOS-latest]
+        os: [windows-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -48,17 +48,11 @@ jobs:
         if: matrix.os == 'macOS-latest'
         run: pnpm release
         env:
-          # electron-builder reports an error on CI machines due to unpack ffmpeg-static
-          # https://github.com/electron-userland/electron-builder/issues/3179
-          USE_HARD_LINKS: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: build windows
         if: matrix.os == 'windows-latest'
         run: pnpm release
         env:
-          # electron-builder reports an error on CI machines due to unpack ffmpeg-static
-          # https://github.com/electron-userland/electron-builder/issues/3179
-          USE_HARD_LINKS: false
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           # todo: add windows signing
