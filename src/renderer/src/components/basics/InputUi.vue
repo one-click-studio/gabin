@@ -27,21 +27,16 @@ const onFocus = (focus: boolean) => {
     isFocused.value = focus
 }
 
-const classToAdd = (): string => {
-    let classes = ''
-
-    classes += isFocused.value? ' is-focused' : ''
-    classes += props.error? ' is-error' : ''
-    classes += props.center? ' is-centered' : ''
-
-    return classes
-}
 </script>
 
 <template>
     <div
         class="inputui-container"
-        :class="classToAdd()"
+        :class="{
+            'is-focused': isFocused,
+            'is-error': props.error,
+            'is-centered': props.center
+        }"
     >
         <label
             class="inputui-label"
@@ -61,7 +56,7 @@ const classToAdd = (): string => {
 
 <style scoped>
 .inputui-container {
-    @apply flex h-14 relative bg-bg-1 border-b-mainhighlight transition-all;
+    @apply flex h-14 relative bg-bg-1 border-b-mainhighlight border-solid border-y-0 border-x-0 transition-all;
 }
 .inputui-container.is-focused {
     @apply border-b-2;

@@ -27,7 +27,11 @@ const onClick = () => {
 <template>
     <button
         class="btn"
-        :class="(disabled? 'disable' : '') + (active? ' active' : '') + (loading? ' loading disable' : '')"
+        :class="{
+            'disable': (props.disabled || props.loading),
+            'active': props.active,
+            'loading': props.loading
+        }"
         @click="onClick"
     >
         <slot />

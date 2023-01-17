@@ -25,7 +25,7 @@ const run = () => {
 }
 
 const setup = () => {
-    router.push('/setup/audio')
+    router.push('/setup/landing')
 }
 
 const goSettings = () => {
@@ -38,7 +38,7 @@ const deleteProfile = async () => {
     store.profiles.setDefaultToCurrent()
 
     if (!store.profiles.current) {
-        router.push('/onboarding/profile')
+        router.push('/setup/profile')
     }
 
     deleteModal.value = false

@@ -120,7 +120,7 @@ button.btn.loading {
 button.btn.loading::after {
     content: "";
     animation: button-loading-spinner 1s ease infinite;
-    @apply absolute w-6 h-6 right-3 m-auto border-4 border-transparent border-t-white rounded-full;
+    @apply absolute w-6 h-6 right-3 m-auto border-4 border-solid border-transparent border-t-white rounded-full;
 }
 
 button.btn.small.loading::after {

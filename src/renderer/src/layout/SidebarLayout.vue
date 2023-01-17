@@ -72,7 +72,7 @@ const changeProfile = async (id: string) => {
                             </div>
                             <ButtonUi
                                 class="i-round small ml-4"
-                                @click="() => router.push('/onboarding/profile')"
+                                @click="() => router.push('/setup/profile')"
                             >
                                 <PlusIcon />
                             </ButtonUi>

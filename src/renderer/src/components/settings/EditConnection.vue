@@ -8,6 +8,7 @@ interface Props {
     connection: Connection
     label: string
     password?: boolean
+    error?: boolean
 }
 interface Emits {
     (e: 'update', connection: Connection): void
@@ -39,7 +40,7 @@ const update = (c: Connection) => {
         class="min-w-full"
         :label="label + ' IP'"
         :value="connection.ip"
-        :error="!validURL(connection.ip)"
+        :error="!validURL(connection.ip) || error"
         @update="updateIp"
     />
     <InputUi

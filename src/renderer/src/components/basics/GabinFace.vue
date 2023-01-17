@@ -52,7 +52,7 @@ const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
 }
 .message {
     @apply bg-white h-5 rounded-3xl text-bg-3 text-sm px-2 py-1 font-bold relative uppercase;
-    @apply flex items-center;
+    @apply flex flex-col items-center;
 }
 .message > span {
     @apply text-main;

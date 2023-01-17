@@ -58,7 +58,7 @@ const submitProfileId = async () => {
         @close="close"
     />
 
-    <div class="flex w-full justify-between items-center z-20">
+    <div class="flex w-full justify-between items-center z-20 mb-4">
         <div class="flex flex-col justify-start items-start">
             <p v-if="subtitle">
                 {{ subtitle }}

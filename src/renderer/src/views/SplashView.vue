@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
 
-import { store } from '@src/renderer/src/store/store'
+// import { store } from '@src/renderer/src/store/store'
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
 import { fetchProfiles } from '@src/renderer/src/components//setup/FetchProfile.vue';
 
@@ -9,11 +9,7 @@ const router = useRouter()
 const version = __APP_VERSION__
 
 fetchProfiles(() => {
-    if (store.profiles.list.length > 0) {
-        router.push('/home')
-    } else {
-        router.push('/onboarding/landing')
-    }
+    router.push('/home')
 })
 
 </script>
@@ -27,7 +23,7 @@ fetchProfiles(() => {
                 Gabin
             </h1>
             <span class="text-content-2 text-sm">Version beta {{ version }}</span>
-            <span class="text-content-2 text-sm">© {{ (new Date()).getFullYear() }} Odianz</span>
+            <span class="text-content-2 text-sm">© {{ (new Date()).getFullYear() }} Micorp</span>
         </div>
     </div>
 </template>
