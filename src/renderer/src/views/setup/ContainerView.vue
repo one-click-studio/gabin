@@ -32,7 +32,7 @@ onEnterPress(() => {
     <div class="w-full scroll-hidden">
         <div class="w-full">
             <ToggleUi
-                label="I need a split view with several simultaneous camera"
+                label="I need a split view with several simultaneous cameras"
                 :value="splitview"
                 @update="update"
             />
