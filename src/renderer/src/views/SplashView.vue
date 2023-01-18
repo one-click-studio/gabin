@@ -27,7 +27,7 @@ fetchProfiles(() => {
                 Gabin
             </h1>
             <span class="text-content-2 text-sm">Version beta {{ version }}</span>
-            <span class="text-content-2 text-sm">© {{ (new Date()).getFullYear() }} Odianz</span>
+            <span class="text-content-2 text-sm">© {{ (new Date()).getFullYear() }} OneClickStudio</span>
         </div>
     </div>
 </template>

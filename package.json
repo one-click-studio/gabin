@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "packageManager": "pnpm@7.24.3",
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
-  "author": "Micorp Studio",
-  "homepage": "https://micorp.studio",
+  "author": "OneClickStudio",
+  "homepage": "https://oneclickstudio.fr",
   "repository": "github:micorp-studio/gabin",
   "main": "./out/main/index.js",
   "scripts": {

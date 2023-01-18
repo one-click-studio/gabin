@@ -11,8 +11,7 @@
 <img src="https://github.com/micorp-studio/gabin/actions/workflows/release.yml/badge.svg">
 </p>
 
-<br />
-<br />
+<img width="1392" alt="Screenshot 2023-01-18 at 10 08 19" src="https://user-images.githubusercontent.com/26444186/213129682-a180d396-4142-4cee-8ef8-7116b22483e5.png">
 
 ## Download
 
@@ -51,3 +50,7 @@ pnpm test
 ## Known issues
 
 - ASIO is not working with XR32 audio mixer
+
+
+---
+Made in 🇫🇷 by [OneClickStudio](https://oneclickstudio.fr/).
