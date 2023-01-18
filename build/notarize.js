@@ -15,7 +15,7 @@ module.exports = async (context) => {
     return
   }
 
-  const appId = 'com.electron.app'
+  const appId = 'studio.micorp.gabin'
 
   const { appOutDir } = context
 
