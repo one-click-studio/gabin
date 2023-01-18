@@ -5,8 +5,11 @@
 <div align="center">
   <h1>Gabin</h1>
 </div>
-<p align="center">Automate show production using <em>OBS, Bitfocus Companion and any audio api</em>.</p>
+<p align="center">Automate camera switching with <em>OBS, Bitfocus Companion and any audio api</em>.</p>
 
+<p align="center">
+<img src="https://github.com/micorp-studio/gabin/actions/workflows/release.yml/badge.svg">
+</p>
 
 <br />
 <br />

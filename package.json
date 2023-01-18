@@ -2,7 +2,7 @@
   "name": "gabin",
   "version": "0.1.0",
   "packageManager": "pnpm@7.24.3",
-  "description": "Automated camera switcher for OBS, Bitfocus Companion and any audio api.",
+  "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "Micorp Studio",
   "homepage": "https://micorp.studio",
   "repository": "github:micorp-studio/gabin",
