@@ -7,29 +7,35 @@ import { store } from '@src/renderer/src/store/store'
 
 import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
 import ModalUi from '@src/renderer/src/components/basics/ModalUi.vue'
+import ToggleUi from '@src/renderer/src/components/basics/ToggleUi.vue'
 
 import MainProfile from '@src/renderer/src/components/home/MainProfile.vue'
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
 
 import PenIcon from '@src/renderer/src/components/icons/PenIcon.vue'
-import SettingsIcon from '@src/renderer/src/components/icons/SettingsIcon.vue'
 import PlayIcon from '@src/renderer/src/components/icons/PlayIcon.vue'
 import BinIcon from '@src/renderer/src/components/icons/BinIcon.vue'
 
 const router = useRouter()
+
+const current = store.profiles.getCurrent()
+
 const settings = ref(store.profiles.settings())
 const deleteModal = ref(false)
+
+store.profiles.editProfile = false
 
 const run = () => {
     router.push('/running')
 }
 
-const setup = () => {
-    router.push('/setup/landing')
-}
-
-const goSettings = () => {
-    router.push('/settings')
+const setup = (edit: 0|1=0) => {
+    if (edit === 1) {
+        store.profiles.editProfile = true
+        router.push('/setup/profile')
+    } else {
+        router.push('/setup/landing')
+    }
 }
 
 const deleteProfile = async () => {
@@ -44,12 +50,19 @@ const deleteProfile = async () => {
     deleteModal.value = false
 }
 
+const toggleAutostart = async () => {
+    if (!current) return
+
+    current.autostart = !current.autostart
+    await window.api.invoke.setAutostart({ id: current.id, autostart: current.autostart })
+}
+
 const prepareHomeView = () => {
     settings.value = store.profiles.settings()
 
     const profile = store.profiles.getCurrent()
     store.layout.header.subtitle = ''
-    store.layout.header.title = profile?.id || ''
+    store.layout.header.title = profile?.name || ''
     store.layout.header.iconEdit = true
 
     store.layout.header.dotMenu = (settings.value.autocam.length > 0)
@@ -98,7 +111,7 @@ prepareHomeView()
             <Teleport to="#header-btn-slot">
                 <ButtonUi
                     class="i-first mx-1"
-                    @click="setup"
+                    @click="() => setup(1)"
                 >
                     <PenIcon />
                     Edit
@@ -115,13 +128,14 @@ prepareHomeView()
 
             <Teleport to="#header-dotmenu-slot">
                 <div class="w-full flex flex-col">
-                    <ButtonUi
-                        class="i-first mx-1 small"
-                        @click="goSettings"
-                    >
-                        <SettingsIcon />
-                        Edit settings
-                    </ButtonUi>
+
+                    <div class="w-full mx-4 my-4 text-sm">
+                        <ToggleUi
+                            label="Autostart"
+                            :value="current?.autostart || false"
+                            @update="toggleAutostart"
+                        />
+                    </div>
 
                     <ButtonUi
                         class="i-first mx-1 small"
