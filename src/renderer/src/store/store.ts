@@ -25,6 +25,10 @@ const DEFAULT_CONNECTIONS = (): ConnectionsConfig => {
     }
 }
 
+const generateId = (): number => {
+    return Date.now()
+}
+
 export const store = reactive({
     keyPress$: new Subject<string>(),
     isFirstRun: true,
@@ -58,21 +62,24 @@ export const store = reactive({
     },
     profiles: {
         list: <Profile[]>[],
-        current: <Profile['id']>'',
-        newProfileId: '',
-        ids: () => {
+        current: <Profile['id']>0,
+        newProfileId: <Profile['id']>0,
+        editProfile: false,
+        ids: (): Profile['id'][] => {
             return store.profiles.list.map(p => p.id)
         },
-        newProfile: (id: string) => {
+        newProfile: (name: string) => {
+            const id = generateId()
             store.profiles.list.push({ 
                 id,
+                name,
                 icon:'folder',
                 settings: DEFAULT_SETTINGS(),
                 connections: DEFAULT_CONNECTIONS(),
             })
             store.profiles.current = id
         },
-        deleteProfile: (id: string) => {
+        deleteProfile: (id: number) => {
             const ids = store.profiles.ids()
             const index = ids.indexOf(id)
             if (index > -1) {
@@ -80,7 +87,7 @@ export const store = reactive({
             }
         },
         setDefaultToCurrent: () => {
-            store.profiles.current = ''
+            store.profiles.current = 0
             for (const p of store.profiles.list) {
                 if (p.active) {
                     store.profiles.setCurrent(p.id)
@@ -91,7 +98,7 @@ export const store = reactive({
                 store.profiles.setCurrent(store.profiles.list[0].id)
             }
         },
-        setCurrent: (id: string) => {
+        setCurrent: (id: Profile['id']) => {
             const ids = store.profiles.ids()
             if (ids.indexOf(id) > -1) {
                 store.profiles.current = id
@@ -107,13 +114,12 @@ export const store = reactive({
 
             return undefined
         },
-        updateId: (old: string, id: string) => {
+        updateName: (name: Profile['name']) => {
             const ids = store.profiles.ids()
-            const index = ids.indexOf(old)
+            const index = ids.indexOf(store.profiles.current)
 
             if (index > -1) {
-                store.profiles.list[index].id = id
-                store.profiles.setCurrent(id)
+                store.profiles.list[index].name = name
             }
         },
         updateIcon: (iconName: IconName) => {
