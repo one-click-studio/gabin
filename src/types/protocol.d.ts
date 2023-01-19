@@ -94,7 +94,8 @@ export interface Connection {
 /********** PROFILE **********/
 export type IconName = 'folder' | 'pizza' | 'rocket' | 'smile' | 'paperclip' | 'sandwich'
 export interface Profile {
-    id: string
+    id: number
+    name: string
     icon: IconName
     active?: boolean
     settings: ProfileSettings

@@ -25,6 +25,7 @@ export class ObsServer extends Server {
     private obsConfig: Connection | undefined
     private _expo = new expoAttempt()
     private isTryingToConnect = false
+    private tryToConnectOnce = false
 
     constructor(fromProfile = true) {
         super('obs-server')
@@ -37,12 +38,13 @@ export class ObsServer extends Server {
         this.scenes$ = new BehaviorSubject<ObsScene[]>([])
     }
 
-    async connect(connection?: Connection) {
+    async connect(connection?: Connection, once: boolean = false) {
         if (connection) {
             this.obsConfig = connection
         }
 
         this.isTryingToConnect = true
+        this.tryToConnectOnce = once
         this.websocketConnection()
     }
 
@@ -64,14 +66,16 @@ export class ObsServer extends Server {
         const obsConfig = db.getSpecificAndDefault(['connections', 'obs'], true)
         this.obsConfig = obsConfig.defaultValue
 
-        obsConfig.configPart$.subscribe((config: Connection) => {
-            this.obsConfig = config
+        this.addSubscription(
+            obsConfig.configPart$.subscribe((config: Connection) => {
+                this.obsConfig = config
 
-            this.clean()
-            if (this.isTryingToConnect || this.isReachable){
-                this.connect()
-            }
-        })
+                this.clean()
+                if (this.isTryingToConnect || this.isReachable){
+                    this.connect()
+                }
+            })
+        )
     }
 
     private async websocketConnection() {
@@ -80,7 +84,9 @@ export class ObsServer extends Server {
         this.websocket.once('ConnectionError', (err) => this.logger.error('socket error', err))
 
         this.websocket.once('ConnectionClosed', () => {
-            this._expo.reconnectAfterError(() => { this.connect() })
+            if (!this.tryToConnectOnce) {
+                this._expo.reconnectAfterError(() => { this.connect() })
+            }
             this.reachable$.next(false)
         })
 
@@ -94,8 +100,10 @@ export class ObsServer extends Server {
         } catch (err) {
             this.logger.error('obs connect error', err)
             this.logger.error(JSON.stringify(err))
-            this.logger.info(`reconnection try in ${this._expo.humanTimeout()}`)
-            this._expo.reconnectAfterError(() => { this.connect() })
+            if (!this.tryToConnectOnce) {
+                this.logger.info(`reconnection try in ${this._expo.humanTimeout()}`)
+                this._expo.reconnectAfterError(() => { this.connect() })
+            }
         }
 
     }

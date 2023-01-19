@@ -1,10 +1,13 @@
 import { BehaviorSubject } from 'rxjs'
 import { getLogger } from '@src/main/utils/logger'
+
+import type { Subscription } from 'rxjs'
 import type { Logger } from '@src/main/utils/logger'
 
 export class Server {
     reachable$ = new BehaviorSubject(false)
     logger: Logger
+    private serverSubscriptions: Subscription[] = []
 
     constructor(public name: string) {
         this.logger = getLogger(name)
@@ -22,6 +25,17 @@ export class Server {
 
     clean() {
         this.logger.info(`cleaning ${this.name} server`)
+        this.cleanServerSubscriptions()
+    }
+
+    protected addSubscription(subscription: Subscription) {
+        this.serverSubscriptions.push(subscription)
+    }
+
+    private cleanServerSubscriptions() {
+        for (const s of this.serverSubscriptions) {
+            s.unsubscribe()
+        }
     }
 
     get isReachable() {

@@ -9,7 +9,7 @@ import db from '@src/main/utils/db'
 import { isDev } from '@src/main/utils/utils'
 
 const { invoke, handle } = ipcMain
-let gabin: Gabin
+let gabin: Gabin | undefined
 
 const initGabin = () => {
   gabin = new Gabin()
@@ -70,17 +70,20 @@ function handler() {
   
   // PROFILE
   handle.saveProfile(async (_, p) => profileSetup.setProfile(p.data))
-  handle.deleteProfile(async (_, id) => profileSetup.deleteProfile(id.data))
   handle.getProfiles(async () => profileSetup.getProfiles())
   handle.setDefaultProfile(async (_, id) => profileSetup.setDefault(id.data))
-  handle.setIconProfile(async (_, p) => profileSetup.setIcon(p.data.id, p.data.icon))
+  handle.setProfileIcon(async (_, p) => profileSetup.setIcon(p.data.id, p.data.icon))
+  handle.setProfileName(async (_, p) => profileSetup.setName(p.data.id, p.data.name))
   handle.setAutostart(async (_, p) => profileSetup.setAutostart(p.data.id, p.data.autostart))
-  handle.setProfileId(async (_, p) => profileSetup.editId(p.data.old, p.data.id))
+  handle.deleteProfile(async (_, id) => {
+    profileSetup.deleteProfile(id.data)
+    gabin = undefined
+  })
 
   // SHOTS
-  handle.triggerShot(async (_, s) => gabin.triggeredShot$.next(s.data))
-  handle.toggleAvailableMic(async (_, m) => gabin.toggleAvailableMic(m.data))
-  handle.toggleAutocam(async (_, a) => gabin.autocam$.next(a.data))
+  handle.triggerShot(async (_, s) => gabin?.triggeredShot$.next(s.data))
+  handle.toggleAvailableMic(async (_, m) => gabin?.toggleAvailableMic(m.data))
+  handle.toggleAutocam(async (_, a) => gabin?.autocam$.next(a.data))
 
   // GABIN
   handle.togglePower(async (_, power) => {

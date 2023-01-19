@@ -1,12 +1,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { store } from '@src/renderer/src/store/store'
 
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
-import ArrowLeftIcon from '@src/renderer/src/components/icons/ArrowLeftIcon.vue'
-import ArrowRightIcon from '@src/renderer/src/components/icons/ArrowRightIcon.vue'
 import InfoIcon from '@src/renderer/src/components/icons/InfoIcon.vue'
 
 import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
@@ -17,30 +14,31 @@ import { onEnterPress } from '@src/renderer/src/components/utils/KeyPress.vue'
 
 import type { Connection } from '@src/types/protocol'
 
-const router = useRouter()
 const tcpConnection = ref<Connection>(store.profiles.connections().tcp)
 
 const update = (c: Connection) => {
     tcpConnection.value = c
+    updateNextBtn()
 }
 
-const goBack = () => {
-    router.push('/onboarding/profile')
+const updateNextBtn = () => {
+    store.layout.footer.next.disable = !validURL(tcpConnection.value.ip)
 }
-const goNext = async () => {
+
+onEnterPress(() => {
+    if (validURL(tcpConnection.value.ip) && store.layout.footer.next.trigger) {
+        store.layout.footer.next.trigger()
+    }
+})
+
+store.layout.footer.next.callback = () => {
     const current = store.profiles.getCurrent()
     if (current) {
         current.connections.tcp = tcpConnection.value
     }
-
-    router.push('/onboarding/vision-mixer')
 }
 
-onEnterPress(() => {
-    if (validURL(tcpConnection.value.ip)) {
-        goNext()
-    }
-})
+updateNextBtn()
 
 </script>
 
@@ -72,22 +70,6 @@ onEnterPress(() => {
                     :connection="tcpConnection"
                     @update="update"
                 />
-            </div>
-            <div class="mt-5 w-full flex justify-between">
-                <ButtonUi
-                    class="w-1/3 "
-                    @click="goBack"
-                >
-                    <ArrowLeftIcon />
-                    Back
-                </ButtonUi>
-                <ButtonUi
-                    class="primary flex-1 ml-5"
-                    :disabled="!validURL(tcpConnection.ip)"
-                    @click="goNext"
-                >
-                    Next <ArrowRightIcon />
-                </ButtonUi>
             </div>
         </div>
     </div>

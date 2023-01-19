@@ -26,6 +26,9 @@ onEnterPress(() => {
     }
 })
 
+store.layout.footer.back.disable = false
+store.layout.footer.next.disable = false
+
 </script>
 
 <template>

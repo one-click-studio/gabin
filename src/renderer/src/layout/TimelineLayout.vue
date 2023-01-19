@@ -64,16 +64,16 @@ const classToAdd = (step: Step): string => {
     content: '';
     left: 19px;
     @apply bg-bg-1 w-0.5;
-    @apply absolute top-6 bottom-7;
+    @apply absolute top-8 bottom-4;
 }
 .timeline-setup > .timeline-item:not(:first-child)::before {
     content: '';
     left: -1.313rem;
     @apply bg-white w-0.5 transition-all duration-500 ;
-    @apply absolute -top-11 bottom-20 z-20;
+    @apply absolute -top-8 bottom-20 z-20;
 }
 .timeline-setup > .timeline-item.active:not(:first-child)::before {
-    @apply bottom-3 z-20;
+    @apply bottom-0 z-20;
 }
 
 /* CIRCLES */

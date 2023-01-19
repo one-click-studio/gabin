@@ -1,21 +1,28 @@
 <script lang="ts" setup>
-import { useRouter } from 'vue-router'
+
 import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
-import ArrowRightIcon from '@src/renderer/src/components/icons/ArrowRightIcon.vue'
 import InfoIcon from '@src/renderer/src/components/icons/InfoIcon.vue'
+
+import { store } from '@src/renderer/src/store/store'
 
 import { onEnterPress } from '@src/renderer/src/components/utils/KeyPress.vue'
 
-const router = useRouter()
+onEnterPress(() => {
+    if (store.layout.footer.next.trigger) {
+        store.layout.footer.next.trigger()
+    }
+})
 
-const goNext = () => {
-    router.push('/onboarding/profile')
+store.layout.footer.back.callback = () => {
+    if (store.profiles.newProfileId) {
+        store.profiles.deleteProfile(store.profiles.newProfileId)
+    }
+    store.profiles.setDefaultToCurrent()
 }
 
-onEnterPress(() => {
-    goNext()
-})
+store.layout.footer.back.disable = false
+store.layout.footer.next.disable = false
 
 </script>
 
@@ -40,12 +47,12 @@ onEnterPress(() => {
             >
                 <InfoIcon class="w-4" /> What is Gabin?
             </ButtonUi>
-            <ButtonUi
+            <!-- <ButtonUi
                 class="primary w-96 mt-10"
                 @click="goNext"
             >
                 Let's go! <ArrowRightIcon />
-            </ButtonUi>
+            </ButtonUi> -->
         </div>
     </div>
 </template>

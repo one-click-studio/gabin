@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-import { ref, watch, toRaw } from 'vue'
+import { ref, watch } from 'vue'
 
 import { store } from '@src/renderer/src/store/store'
 
@@ -116,16 +116,6 @@ const updateNextBtn = () => {
     store.layout.footer.next.disable = nextIsInvalid()
 }
 
-const connectObs = () => {
-    obsConnectionLoading.value = true
-    const obsConnections = store.profiles.connections().obs
-    if (obsConnections) {
-        window.api.invoke.connectObs(toRaw(obsConnections))
-    } else {
-        console.warn('there are no obs connections')
-    }
-}
-
 watch(() => store.assets.scenes, () => {
     obsScenesFiltered.value = filterScenes(store.assets.scenes)
     updateNextBtn()
@@ -149,32 +139,7 @@ updateNextBtn()
 </script>
 
 <template>
-    <div v-if="!store.connections.obs">
-        <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
-            <span class="emoji">🔌</span>
-            <p>
-                Before going any further, Gabin will need to connect with OBS.
-                Open OBS and click the button below ! It should be instant !
-                <br>
-                <span class="italic text-sm">
-                    If not, check your websocket server settings.
-                    It should be enabled and matching the port you set in Gabin ({{ store.profiles.getCurrent()?.connections.obs?.ip }}).
-                </span>
-            </p>
-        </div>
-
-        <ButtonUi
-            class="primary txt-only my-4 w-full"
-            :loading="obsConnectionLoading"
-            @click="connectObs"
-        >
-            Connect to obs
-        </ButtonUi>
-    </div>
-    <div
-        v-else
-        class="flex flex-col w-full scroll-hidden pb-10"
-    >
+    <div class="flex flex-col w-full scroll-hidden pb-10">
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">📺</span>
             <p>Tell Gabin which scenes you want him to manage.</p>

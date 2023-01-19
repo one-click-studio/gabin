@@ -7,11 +7,17 @@ export interface Step {
 }
 
 export const TimelineSteps: Step[] = [
-    { name: 'Audio device', path: 'audio', order: 0 },
-    { name: 'Container', path: 'container', order: 1 },
-    { name: 'Mapping', path: 'mapping', order: 2 },
-    { name: 'Auto cam settings', path: 'settings', order: 3 },
-    { name: 'Summary', path: 'summary', order: 4 },
+    { name: 'Hello 👋', path: 'landing', order: 0 },
+    { name: 'Profile 👤', path: 'profile', order: 1 },
+    { name: 'TCP 🔗', path: 'tcp', order: 2 },
+    { name: 'Vision Mixer 📼', path: 'vision-mixer', order: 3 },
+    { name: 'OBS 🔗', path: 'obs', order: 4 },
+
+    { name: 'Audio device 🎧', path: 'audio', order: 5 },
+    { name: 'Container 🗃️', path: 'container', order: 6 },
+    { name: 'Mapping 🗺️', path: 'mapping', order: 7 },
+    { name: 'Auto cam settings 🔧', path: 'settings', order: 8 },
+    { name: 'Summary 🏁', path: 'summary', order: 9 }
 ]
 
 export default {

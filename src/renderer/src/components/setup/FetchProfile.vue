@@ -3,7 +3,7 @@
 import { store } from '@src/renderer/src/store/store'
 import type { Callback } from '@src/types/protocol'
 
-export const fetchProfiles = async (callback: Callback, minDelay= 3000) => {
+export const fetchProfiles = async (callback?: Callback, minDelay= 3000) => {
     const date = new Date()
     store.profiles.list = await window.api.invoke.getProfiles()
 

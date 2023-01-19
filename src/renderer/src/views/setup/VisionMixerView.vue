@@ -2,21 +2,20 @@
 import { useRouter } from 'vue-router'
 
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
-import ArrowLeftIcon from '@src/renderer/src/components/icons/ArrowLeftIcon.vue'
 import ArrowRightIcon from '@src/renderer/src/components/icons/ArrowRightIcon.vue'
-
 import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
-
+import { onEnterPress } from '@src/renderer/src/components/utils/KeyPress.vue'
 
 const router = useRouter()
 
-const goBack = () => {
-    router.push('/onboarding/tcp')
+const goNext = (route: string) => {
+    router.push('/setup/'+route)
 }
 
-const goNext = (route: string) => {
-    router.push('/onboarding/'+route)
-}
+onEnterPress(() => {
+    goNext('obs')
+})
+
 </script>
 
 <template>
@@ -57,7 +56,7 @@ const goNext = (route: string) => {
                 </ButtonUi>
             </div>
 
-            <div class="mt-5 w-full flex justify-between">
+            <!-- <div class="mt-5 w-full flex justify-between">
                 <ButtonUi
                     class="w-full "
                     @click="goBack"
@@ -65,7 +64,7 @@ const goNext = (route: string) => {
                     <ArrowLeftIcon />
                     Back
                 </ButtonUi>
-            </div>
+            </div> -->
         </div>
     </div>
 </template>

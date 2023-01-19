@@ -77,15 +77,18 @@ export class AutocamClient extends Client {
         this.currentShots$ = new BehaviorSubject(new Map())
         this.timeline$ = new BehaviorSubject('')
 
-        audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
-            this.audioDevices = aDevices
-            this.micsSpeaking = this.getMicsMap(this.audioDevices)
-        })
-
-        autocamMapping.configPart$.subscribe((mapping: AutocamSettings[]) => {
-            this.autocamMapping = mapping
-        })
-
+        this.addSubscription(
+            audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
+                this.audioDevices = aDevices
+                this.micsSpeaking = this.getMicsMap(this.audioDevices)
+            })
+        )
+            
+        this.addSubscription(
+            autocamMapping.configPart$.subscribe((mapping: AutocamSettings[]) => {
+                this.autocamMapping = mapping
+            })
+        )
     }
 
     override async connect() {

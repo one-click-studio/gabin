@@ -13,8 +13,11 @@ store.layout.footer.next.callback = async () => {
     if (current) {
         const currentClone = klona(current)
         await window.api.invoke.saveProfile(currentClone)
+        store.profiles.newProfileId = 0
         invoke.disconnectObs()
     }
+
+    store.redirect.path = '/home'
 }
 
 onEnterPress(() => {

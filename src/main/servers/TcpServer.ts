@@ -26,14 +26,16 @@ export class TcpServer extends Server {
         const tcpConfig = db.getSpecificAndDefault(['connections', 'tcp'], true)
         this.tcpConfig = tcpConfig.defaultValue
 
-        tcpConfig.configPart$.subscribe((config: Connection) => {
-            this.tcpConfig = config
+        this.addSubscription(
+            tcpConfig.configPart$.subscribe((config: Connection) => {
+                this.tcpConfig = config
 
-            if (this.server){
-                this.clean()
-                this.listen()
-            }
-        })
+                if (this.server){
+                    this.clean()
+                    this.listen()
+                }
+            })
+        )
     }
 
     override listen() {

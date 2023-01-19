@@ -32,7 +32,7 @@ export class ProfileSetup {
 
     connectObs(connection: Connection) {
         if (!this.obs.isReachable) {
-            this.obs.connect(connection)
+            this.obs.connect(connection, true)
         }
     }
 
@@ -109,6 +109,19 @@ export class ProfileSetup {
         this.profiles.edit(profiles)
     }
 
+    setName(id: Profile['id'], name: Profile['name']) {
+        const profiles: Profile[] = this.profiles.defaultValue
+
+        const ids = profiles.map(p => p.id)
+        const index = ids.indexOf(id)
+
+        if (index > -1) {
+            profiles[index].name = name
+        }
+
+        this.profiles.edit(profiles)
+    }
+
     setIcon(id: Profile['id'], icon: Profile['icon']) {
         const profiles: Profile[] = this.profiles.defaultValue
 
@@ -130,19 +143,6 @@ export class ProfileSetup {
 
         if (index > -1) {
             profiles[index].autostart = autostart
-        }
-
-        this.profiles.edit(profiles)
-    }
-
-    editId(oldId: Profile['id'], id: Profile['id']) {
-        const profiles: Profile[] = this.profiles.defaultValue
-
-        const ids = profiles.map(p => p.id)
-        const index = ids.indexOf(oldId)
-
-        if (index > -1) {
-            profiles[index].id = id
         }
 
         this.profiles.edit(profiles)

@@ -34,19 +34,28 @@ const editTitle = (v: string) => {
     eTitle.value = v
 }
 
+const availableProfileName = (name: string): boolean => {
+    const names = store.profiles.list
+        .filter(p => p.id !== store.profiles.current)
+        .map(p => p.name )
+
+    if (!name) return false
+
+    return (names.indexOf(name) === -1)
+}
+
 const submitProfileId = async () => {
     if (eTitle.value.trim() === props.title) {
         return
     }
 
-    if (!eTitle.value.trim()) {
+    if (!eTitle.value.trim() || !availableProfileName(eTitle.value.trim())) {
         eTitle.value = props.title
         return
     }
 
-
-    store.profiles.updateId(props.title, eTitle.value.trim())
-    await window.api.invoke.setProfileId({old:props.title, id:eTitle.value.trim()})
+    store.profiles.updateName(eTitle.value.trim())
+    await window.api.invoke.setProfileName({id:store.profiles.current, name:eTitle.value.trim()})
 }
 
 </script>
@@ -58,30 +67,33 @@ const submitProfileId = async () => {
         @close="close"
     />
 
-    <div class="flex w-full justify-between items-center z-20">
+    <div class="flex w-full justify-between items-center z-20 mb-4">
         <div class="flex flex-col justify-start items-start">
             <p v-if="subtitle">
                 {{ subtitle }}
             </p>
-            <h2
-                v-if="iconEdit"
-                class="flex justify-start items-center w-full h-10"
-            >
-                <EditIcon />
-                <InputUi
-                    id="header-title-input"
-                    label=""
-                    :value="eTitle"
-                    @update="editTitle"
-                    @focusout="submitProfileId"
-                />
-            </h2>
-            <h2
-                v-else
-                class="flex justify-start items-center w-full h-10"
-            >
-                {{ title }}
-            </h2>
+            <template v-if="props.title">
+                <h2
+                    v-if="iconEdit"
+                    class="flex justify-start items-center w-full h-10"
+                >
+                    <EditIcon />
+                    <InputUi
+                        id="header-title-input"
+                        label=""
+                        :value="eTitle"
+                        :error="!availableProfileName(eTitle)"
+                        @update="editTitle"
+                        @focusout="submitProfileId"
+                    />
+                </h2>
+                <h2
+                    v-else
+                    class="flex justify-start items-center w-full h-10"
+                >
+                    {{ title }}
+                </h2>
+            </template>
         </div>
 
         <div class="flex items-center relative">

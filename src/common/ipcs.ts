@@ -23,9 +23,9 @@ export const { ipcMain, ipcRenderer, exposeApiToGlobalWindow } = createInterproc
         async deleteProfile(_, data: Profile['id']) {},
         async getProfiles(_, data: void) { return {} as Promise<Profile[]>},
         async setDefaultProfile(_, data: Profile['id']) {},
-        async setIconProfile(_, data: {id: Profile['id'], icon: Profile['icon']}) {},
+        async setProfileIcon(_, data: {id: Profile['id'], icon: Profile['icon']}) {},
+        async setProfileName(_, data: {id: Profile['id'], name: Profile['name']}) {},
         async setAutostart(_, data: {id: Profile['id'], autostart: Profile['autostart']}) {},
-        async setProfileId(_, data: {old: Profile['id'], id: Profile['id']}) {},
 
         async triggerShot(_, data: ObsAssetId['source']) {},
         async toggleAvailableMic(_, data: MicId) {},

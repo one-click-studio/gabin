@@ -9,19 +9,16 @@ import 'uno.css'
 
 import SplashView from '@src/renderer/src/views/SplashView.vue'
 
-import OnboardingView from '@src/renderer/src/views/onboarding/IndexView.vue'
-import OnboardingLandingView from '@src/renderer/src/views/onboarding/LandingView.vue'
-import OnboardingProfileView from '@src/renderer/src/views/onboarding/ProfileView.vue'
-import OnboardingTcpView from '@src/renderer/src/views/onboarding/TcpView.vue'
-import OnboardingVisionMixerView from '@src/renderer/src/views/onboarding/VisionMixerView.vue'
-import OnboardingObsView from '@src/renderer/src/views/onboarding/ObsView.vue'
-
 import LoadingView from '@src/renderer/src/views/LoadingView.vue'
 import HomeView from '@src/renderer/src/views/HomeView.vue'
 import RunningView from '@src/renderer/src/views/RunningView.vue'
-import SettingsView from '@src/renderer/src/views/SettingsView.vue'
 
 import SetupView from '@src/renderer/src/views/setup/IndexView.vue'
+import SetupLandingView from '@src/renderer/src/views/setup/LandingView.vue'
+import SetupProfileView from '@src/renderer/src/views/setup/ProfileView.vue'
+import SetupTcpView from '@src/renderer/src/views/setup/TcpView.vue'
+import SetupVisionMixerView from '@src/renderer/src/views/setup/VisionMixerView.vue'
+import SetupObsView from '@src/renderer/src/views/setup/ObsView.vue'
 import SetupAudioView from '@src/renderer/src/views/setup/AudioView.vue'
 import SetupContainerView from '@src/renderer/src/views/setup/ContainerView.vue'
 import SetupMappingView from '@src/renderer/src/views/setup/MappingView.vue'
@@ -40,38 +37,6 @@ const routes = [
         meta: { type: 0, order: 1 },
     },
     {
-        path: '/onboarding',
-        component: OnboardingView,
-        meta: { type: 1, order: 0 },
-        children: [
-            {
-                path: 'landing',
-                component: OnboardingLandingView,
-                meta: { type: 1, order: 0 },
-            },
-            {
-                path: 'profile',
-                component: OnboardingProfileView,
-                meta: { type: 1, order: 1 },
-            },
-            {
-                path: 'tcp',
-                component: OnboardingTcpView,
-                meta: { type: 1, order: 2 },
-            },
-            {
-                path: 'vision-mixer',
-                component: OnboardingVisionMixerView,
-                meta: { type: 1, order: 3 },
-            },
-            {
-                path: 'obs',
-                component: OnboardingObsView,
-                meta: { type: 1, order: 4 },
-            },
-        ],
-    },
-    {
         path: '/home',
         component: HomeView,
         meta: { type: 2, order: 0, sidebar: true, header: true },
@@ -82,39 +47,59 @@ const routes = [
         meta: { type: 2, order: 1, footer: true },
     },
     {
-        path: '/settings',
-        component: SettingsView,
-        meta: { type: 2, order: 1, sidebar: true, header: true, footer: true },
-    },
-    {
         path: '/setup',
         component: SetupView,
-        meta: { type: 3, order: 0, header: true, footer: true, timeline: true, sidebar: true },
+        meta: { type: 3, order: 0, header: true, footer: true, timeline: true, sidebar: false },
         children: [
+            {
+                path: 'landing',
+                component: SetupLandingView,
+                meta: { type: 3, order: 0, header: true, footer: true, timeline: true, sidebar: false, back: '/home', next: '/setup/profile' },
+            },
+            {
+                path: 'profile',
+                component: SetupProfileView,
+                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/landing', next: '/setup/tcp' },
+            },
+            {
+                path: 'tcp',
+                component: SetupTcpView,
+                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/profile', next: '/setup/vision-mixer' },
+            },
+            {
+                path: 'vision-mixer',
+                component: SetupVisionMixerView,
+                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/tcp' },
+            },
+            {
+                path: 'obs',
+                component: SetupObsView,
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/vision-mixer', next: '/setup/audio' },
+            },
             {
                 path: 'audio',
                 component: SetupAudioView,
-                meta: { type: 3, order: 0, header: true, footer: true, timeline: true, sidebar: true, back: '/home', next: '/setup/container' },
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/obs', next: '/setup/container' },
             },
             {
                 path: 'container',
                 component: SetupContainerView,
-                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, sidebar: true, back: '/setup/audio', next: '/setup/mapping' },
+                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/audio', next: '/setup/mapping' },
             },
             {
                 path: 'mapping',
                 component: SetupMappingView,
-                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, sidebar: true, back: '/setup/container', next: '/setup/settings' },
+                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/container', next: '/setup/settings' },
             },
             {
                 path: 'settings',
                 component: SetupSettingsView,
-                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, sidebar: true, back: '/setup/mapping', next: '/setup/summary' },
+                meta: { type: 3, order: 8, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/mapping', next: '/setup/summary' },
             },
             {
                 path: 'summary',
                 component: SetupSummaryView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, sidebar: true, back: '/setup/settings', next: '/home' },
+                meta: { type: 3, order: 9, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/settings', next: '/loading' },
             },
         ],
     },

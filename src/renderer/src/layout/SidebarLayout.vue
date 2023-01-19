@@ -32,7 +32,7 @@ const toggleOpen = () => {
     $emit('isOpen', open.value)
 }
 
-const changeProfile = async (id: string) => {
+const changeProfile = async (id: number) => {
     store.profiles.setCurrent(id)
 
     if (store.profiles.getCurrent()?.settings.autocam.length) {
@@ -40,6 +40,15 @@ const changeProfile = async (id: string) => {
     }
 
     router.push('/home')
+}
+
+const newProfile = () => {
+    store.profiles.current = 0
+    router.push('/setup/profile')
+}
+
+if (store.profiles.current === 0) {
+    toggleOpen()
 }
 
 </script>
@@ -72,7 +81,7 @@ const changeProfile = async (id: string) => {
                             </div>
                             <ButtonUi
                                 class="i-round small ml-4"
-                                @click="() => router.push('/onboarding/profile')"
+                                @click="newProfile"
                             >
                                 <PlusIcon />
                             </ButtonUi>
@@ -89,7 +98,7 @@ const changeProfile = async (id: string) => {
                         >
                             <component :is="getIcon(profile.icon)" />
                             <div class="display-toggle whitespace-nowrap">
-                                {{ profile.id }}
+                                {{ profile.name }}
                             </div>
                         </ButtonUi>
                     </div>
