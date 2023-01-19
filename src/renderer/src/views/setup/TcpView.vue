@@ -26,7 +26,7 @@ const updateNextBtn = () => {
 }
 
 onEnterPress(() => {
-    if (!validURL(tcpConnection.value.ip) && store.layout.footer.next.trigger) {
+    if (validURL(tcpConnection.value.ip) && store.layout.footer.next.trigger) {
         store.layout.footer.next.trigger()
     }
 })

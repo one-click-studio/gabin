@@ -4,12 +4,18 @@ import { useRouter } from 'vue-router'
 import Gabin from '@src/renderer/src/components/basics/GabinFace.vue'
 import ArrowRightIcon from '@src/renderer/src/components/icons/ArrowRightIcon.vue'
 import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
+import { onEnterPress } from '@src/renderer/src/components/utils/KeyPress.vue'
 
 const router = useRouter()
 
 const goNext = (route: string) => {
     router.push('/setup/'+route)
 }
+
+onEnterPress(() => {
+    goNext('obs')
+})
+
 </script>
 
 <template>

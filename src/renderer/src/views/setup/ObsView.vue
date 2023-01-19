@@ -47,7 +47,7 @@ const resetObsConnection = () => {
 }
 
 const updateNextBtn = () => {
-    store.layout.footer.next.disable = !store.connections.obs
+    store.layout.footer.next.disable = !obsConnectionOk.value
 }
 
 onEnterPress(() => {
@@ -63,6 +63,7 @@ watch(() => store.connections.obs, () => {
         setTimeout(() => {
             obsConnectionOk.value = true
             obsConnectionLoading.value = false
+            updateNextBtn()
         }, 1000)
     }
     updateNextBtn()
@@ -95,6 +96,12 @@ updateNextBtn()
             </span>
 
             <div class="mt-10 w-full flex flex-col justify-start items-start">
+                <span
+                    v-if="obsConnectionError"
+                    class="text-content-negative text-sm pb-2"
+                >
+                    Connection failed, please check your ip and password. Is OBS running?
+                </span>
                 <EditConnection
                     label="Obs websocket"
                     :connection="obsConnection"

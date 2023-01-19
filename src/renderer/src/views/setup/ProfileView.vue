@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, toRaw } from 'vue'
+import { ref } from 'vue'
 
 import { store } from '@src/renderer/src/store/store'
 
@@ -11,44 +11,43 @@ import InputUi from '@src/renderer/src/components/basics/InputUi.vue'
 
 import { onEnterPress } from '@src/renderer/src/components/utils/KeyPress.vue'
 
-let defaultId = 'My auto cam #1'
-if (store.profiles.newProfileId) {
-    store.profiles.deleteProfile(store.profiles.newProfileId)
-    defaultId = toRaw(store.profiles.newProfileId)
-}
-const profileName = ref<string>(defaultId)
+const profile = store.profiles.getCurrent()
+const defaultName = profile? profile.name : 'My auto cam #1'
+
+const profileName = ref<string>(defaultName)
 
 const update = (value: string) => {
     profileName.value = value
     updateNextBtn()
 }
 
-const availableProfileId = (id: string): boolean => {
-    const ids = store.profiles.ids()
-    if (!id) {
-        return false
-    }
-    if (id !== store.profiles.newProfileId) {
-        return (ids.indexOf(id) === -1)
-    }
+const availableProfileName = (name: string): boolean => {
+    const names = store.profiles.list
+        .filter(p => p.id !== store.profiles.current)
+        .map(p => p.name )
 
-    return true
+    if (!name) return false
+
+    return (names.indexOf(name) === -1)
 }
 
 const updateNextBtn = () => {
-    store.layout.footer.next.disable = !availableProfileId(profileName.value)
+    store.layout.footer.next.disable = !availableProfileName(profileName.value)
 }
 
 onEnterPress(() => {
-    if (!availableProfileId(profileName.value) && store.layout.footer.next.trigger) {
+    if (availableProfileName(profileName.value) && store.layout.footer.next.trigger) {
         store.layout.footer.next.trigger()
     }
 })
 
-
 store.layout.footer.next.callback = () => {
-    store.profiles.newProfileId = profileName.value
-    store.profiles.newProfile(profileName.value)
+    if (profile) {
+        store.profiles.updateName(profileName.value)
+    } else {
+        store.profiles.newProfile(profileName.value)
+        store.profiles.newProfileId = store.profiles.current
+    }
 }
 updateNextBtn()
 
@@ -63,7 +62,7 @@ updateNextBtn()
             />
 
             <h1 class="my-4">
-                {{ store.profiles.list.length > 0? 'My new profile' : 'My first profile' }}
+                {{ store.profiles.list.length > 0? (store.profiles.editProfile? 'My profile':'My new profile') : 'My first profile' }}
             </h1>
             <span class="text-content-2 text-sm">
                 A profile allows you to save your settings in Gabin. 
@@ -81,26 +80,9 @@ updateNextBtn()
                 class="min-w-full mt-10"
                 label="Profile name"
                 :value="profileName"
-                :error="!availableProfileId(profileName)"
+                :error="!availableProfileName(profileName)"
                 @update="update"
             />
-
-            <!-- <div class="mt-5 w-full flex justify-between">
-                <ButtonUi
-                    class="w-1/3 "
-                    @click="goBack"
-                >
-                    <ArrowLeftIcon />
-                    Back
-                </ButtonUi>
-                <ButtonUi
-                    class="primary flex-1 ml-5"
-                    :disabled="!availableProfileId(profileName)"
-                    @click="goNext"
-                >
-                    Next <ArrowRightIcon />
-                </ButtonUi>
-            </div> -->
         </div>
     </div>
 </template>

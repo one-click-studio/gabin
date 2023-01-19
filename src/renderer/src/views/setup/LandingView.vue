@@ -14,6 +14,13 @@ onEnterPress(() => {
     }
 })
 
+store.layout.footer.back.callback = () => {
+    if (store.profiles.newProfileId) {
+        store.profiles.deleteProfile(store.profiles.newProfileId)
+    }
+    store.profiles.setDefaultToCurrent()
+}
+
 store.layout.footer.back.disable = false
 store.layout.footer.next.disable = false
 
