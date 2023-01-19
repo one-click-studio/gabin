@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
 import { store } from '@src/renderer/src/store/store'
+import { getOS } from '@src/renderer/src/components//utils/UtilsTools.vue'
 
 import Background from '@src/renderer/src/layout/BackgroundLayout.vue'
 import Layout from '@src/renderer/src/layout/GlobalLayout.vue'
@@ -31,24 +32,33 @@ window.addEventListener('keyup', e => {
     store.keyPress$.next(e.key)
 })
 
+// console.log(platform)
+
 </script>
 
 <template>
-  <Background />
+    <div v-if="getOS() === 'Mac OS'" id="draggable-slide" />
 
-  <Layout>
-      <router-view v-slot="{ Component, route }">
-          <transition :name="(route.meta.transition as string)">
-              <component
-                  :is="Component"
-                  :key="route.path"
-              />
-          </transition>
-      </router-view>
-  </Layout>
+    <Background />
+
+    <Layout>
+        <router-view v-slot="{ Component, route }">
+            <transition :name="(route.meta.transition as string)">
+                <component
+                    :is="Component"
+                    :key="route.path"
+                />
+            </transition>
+        </router-view>
+    </Layout>
 </template>
 
 <style>
+#draggable-slide {
+    @apply absolute top-0 left-0 right-0 h-8 z-50;
+    -webkit-app-region: drag;
+}
+
 /* TRANSITIONS */
 .slide-top-enter-active,
 .slide-bottom-enter-active,

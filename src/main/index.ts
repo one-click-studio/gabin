@@ -1,6 +1,8 @@
 import { app, shell, BrowserWindow } from 'electron'
+
 import * as path from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { electronApp, optimizer, is, platform } from '@electron-toolkit/utils'
+import { attachTitlebarToWindow, setupTitlebar } from 'custom-electron-titlebar/main'
 
 import { ipcMain } from '@src/common/ipcs'
 import { Gabin } from '@src/main/gabin';
@@ -102,26 +104,26 @@ function handler() {
 }
 
 async function createWindow(): Promise<void> {
+  if (!platform.isMacOS) setupTitlebar()
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    show: false,
     width: 1280,
     height: 720,
     minWidth: 768,
     minHeight: 550,
-    show: false,
     title: 'Gabin',
     titleBarStyle: 'hidden',
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux'
-      ? {
-          icon: path.join(__dirname, '../../build/icon.png')
-        }
-      : {}),
+    trafficLightPosition: { x: 20, y: 20 },
+    backgroundColor: '#000',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
+
+  if (!platform.isMacOS) attachTitlebarToWindow(mainWindow)
 
   if (isDev()) mainWindow.webContents.openDevTools()
 

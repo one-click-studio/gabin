@@ -144,7 +144,7 @@ if (store.profiles.current === 0) {
 
 <style scoped>
 .side-bar {
-    @apply h-screen bg-bg-2 flex flex-col overflow-hidden;
+    @apply h-full bg-bg-2 flex flex-col overflow-hidden;
     @apply w-20;
     -webkit-app-region: drag;
 }

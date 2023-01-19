@@ -26,6 +26,7 @@
     "@electron-toolkit/utils": "^1.0.2",
     "@headlessui/vue": "^1.7.7",
     "audify": "^1.8.1",
+    "custom-electron-titlebar": "^4.1.6",
     "deep-equal": "^2.1.0",
     "electron-updater": "^5.3.0",
     "interprocess": "^0.2.4",
