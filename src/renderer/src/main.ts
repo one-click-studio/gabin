@@ -9,17 +9,9 @@ import 'uno.css'
 
 import SplashView from '@src/renderer/src/views/SplashView.vue'
 
-// import OnboardingView from '@src/renderer/src/views/onboarding/IndexView.vue'
-// import OnboardingLandingView from '@src/renderer/src/views/onboarding/LandingView.vue'
-// import OnboardingProfileView from '@src/renderer/src/views/onboarding/ProfileView.vue'
-// import OnboardingTcpView from '@src/renderer/src/views/onboarding/TcpView.vue'
-// import OnboardingVisionMixerView from '@src/renderer/src/views/onboarding/VisionMixerView.vue'
-// import OnboardingObsView from '@src/renderer/src/views/onboarding/ObsView.vue'
-
 import LoadingView from '@src/renderer/src/views/LoadingView.vue'
 import HomeView from '@src/renderer/src/views/HomeView.vue'
 import RunningView from '@src/renderer/src/views/RunningView.vue'
-import SettingsView from '@src/renderer/src/views/SettingsView.vue'
 
 import SetupView from '@src/renderer/src/views/setup/IndexView.vue'
 import SetupLandingView from '@src/renderer/src/views/setup/LandingView.vue'
@@ -44,38 +36,6 @@ const routes = [
         component: LoadingView,
         meta: { type: 0, order: 1 },
     },
-    // {
-    //     path: '/onboarding',
-    //     component: OnboardingView,
-    //     meta: { type: 1, order: 0 },
-    //     children: [
-    //         {
-    //             path: 'landing',
-    //             component: OnboardingLandingView,
-    //             meta: { type: 1, order: 0 },
-    //         },
-    //         {
-    //             path: 'profile',
-    //             component: OnboardingProfileView,
-    //             meta: { type: 1, order: 1 },
-    //         },
-    //         {
-    //             path: 'tcp',
-    //             component: OnboardingTcpView,
-    //             meta: { type: 1, order: 2 },
-    //         },
-    //         {
-    //             path: 'vision-mixer',
-    //             component: OnboardingVisionMixerView,
-    //             meta: { type: 1, order: 3 },
-    //         },
-    //         {
-    //             path: 'obs',
-    //             component: OnboardingObsView,
-    //             meta: { type: 1, order: 4 },
-    //         },
-    //     ],
-    // },
     {
         path: '/home',
         component: HomeView,
@@ -85,11 +45,6 @@ const routes = [
         path: '/running',
         component: RunningView,
         meta: { type: 2, order: 1, footer: true },
-    },
-    {
-        path: '/settings',
-        component: SettingsView,
-        meta: { type: 2, order: 1, sidebar: true, header: true, footer: true },
     },
     {
         path: '/setup',
@@ -144,7 +99,7 @@ const routes = [
             {
                 path: 'summary',
                 component: SetupSummaryView,
-                meta: { type: 3, order: 9, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/settings', next: '/home' },
+                meta: { type: 3, order: 9, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/settings', next: '/loading' },
             },
         ],
     },
