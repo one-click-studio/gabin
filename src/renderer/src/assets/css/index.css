@@ -78,7 +78,7 @@ button.btn {
 
 button.btn.active,
 button.btn:focus-visible,
-button.btn:hover {
+button.btn:hover:not(.disable) {
     @apply bg-bg-1;
 }
 
@@ -100,7 +100,7 @@ button.btn.i-round {
     @apply rounded-full w-10 h-10 flex p-0 bg-transparent;
 }
 button.btn.i-round:focus-visible,
-button.btn.i-round:hover {
+button.btn.i-round:hover:not(.disable) {
     background-color: #00000040;
 }
 button.btn > svg {
@@ -155,7 +155,7 @@ button.btn.primary {
 }
 
 button.btn.primary:focus-visible,
-button.btn.primary:hover {
+button.btn.primary:hover:not(.disable) {
     @apply bg-mainhover;
 }
 
@@ -164,7 +164,7 @@ button.btn.danger {
 }
 
 button.btn.danger:focus-visible,
-button.btn.danger:hover {
+button.btn.danger:hover:not(.disable) {
     @apply bg-negative-hover;
 }
 
