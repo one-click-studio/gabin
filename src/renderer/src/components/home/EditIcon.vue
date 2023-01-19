@@ -17,7 +17,7 @@ const onClick = async (iconName: IconName) => {
 
     const current = store.profiles.getCurrent()
     if (current && current.active !== undefined) {
-        await window.api.invoke.setIconProfile({id:current.id, icon:current.icon})
+        await window.api.invoke.setProfileIcon({id:current.id, icon:current.icon})
     }
 
     close()

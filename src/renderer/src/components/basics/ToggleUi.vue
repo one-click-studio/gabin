@@ -29,7 +29,7 @@ const update = () => {
         <button
             class="toggleui-btn"
             :class="hasValue() ? 'active' : ''"
-            @click="update"
+            @click.stop="update"
         >
             <span
                 class="toggleui-circle"
@@ -38,7 +38,7 @@ const update = () => {
         <span
             v-if="label"
             class="toggleui-label cursor-pointer"
-            @click="update"
+            @click.stop="update"
         >
             {{ label }}
         </span>

@@ -36,7 +36,10 @@ const DEFAULT = {
     },
 }
 
-const goBack = () => {
+const goBack = async () => {
+    if (props.back?.callback) {
+        await props.back.callback()
+    }
     if (props.back?.url) {
         router.push(props.back.url)
     }
