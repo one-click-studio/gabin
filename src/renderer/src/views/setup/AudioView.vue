@@ -8,6 +8,7 @@ import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
 import InputUi from '@src/renderer/src/components/basics/InputUi.vue'
 import SelectUi from '@src/renderer/src/components/basics/SelectUi.vue'
 import TagUi from '@src/renderer/src/components/basics/TagUi.vue'
+// import TooltipUi from '@src/renderer/src/components/basics/TooltipUi.vue'
 
 import PlusIcon from '@src/renderer/src/components/icons/PlusIcon.vue'
 import BinIcon from '@src/renderer/src/components/icons/BinIcon.vue'
@@ -38,6 +39,22 @@ const addDevice = () => {
     updateNextBtn()
 }
 
+const assignDefaultMicName = (index: number, mic: number, value: string) => {
+    const names = getAllNames(index, mic)
+
+    let micName = choosenDevices.value[index].micsName[mic]
+    if (micName) return micName
+
+    let i = 1
+    micName = 'Person ' + i
+    while (names.indexOf(micName) !== -1) {
+        i++
+        micName = 'Person ' + i
+    }
+
+    return micName
+}
+
 const removeDevice = (index: number) => {
     choosenDevices.value.splice(index, 1)
     duplicate.value.splice(index, 1)
@@ -58,8 +75,11 @@ const updateDevice = (device: AudioDevice, index: number) => {
 }
 
 const updateMic = (index: number, mic: number, value: boolean) => {
-    choosenDevices.value[index].mics[mic] = value? true : false
-    updateMicName(index, mic, choosenDevices.value[index].micsName[mic])
+    choosenDevices.value[index].mics[mic] = value
+
+    let micName = assignDefaultMicName(index, mic, choosenDevices.value[index].micsName[mic])
+
+    updateMicName(index, mic, micName)
     recalculateDuplicate()
 }
 
@@ -199,14 +219,22 @@ updateNextBtn()
                     v-if="device.nChannels > 1"
                     class="flex flex-wrap w-full"
                 >
-                    <TagUi
+                    <div class="w-full text-content-2 text-sm mt-2">
+                        <span>Add or remove channels as a mics.</span>
+                    </div>
+                    <template
                         v-for="(_e, mic) in device.nChannels"
                         :key="'tag-mic-' + mic"
-                        class="mr-2 mt-2"
-                        :label="'Mic ' + (mic+1)"
-                        :value="device.mics[mic]"
-                        @update="(v: boolean) => updateMic(index, mic, v)"
-                    />
+                    >
+                        <!-- <TooltipUi :value="device.mics[mic]? 'Remove this channel as a Mic.':'Add this channel as a Mic.'"> -->
+                        <TagUi
+                            class="mr-2 mt-2"
+                            :label="'Channel ' + (mic+1)"
+                            :value="device.mics[mic]"
+                            @update="(v: boolean) => updateMic(index, mic, v)"
+                        />
+                        <!-- </TooltipUi> -->
+                    </template>
                 </div>
                 <div class="flex flex-col w-full">
                     <div
@@ -217,7 +245,7 @@ updateNextBtn()
                         <InputUi
                             v-if="device.mics[mic]"
                             class="min-w-full mt-2"
-                            :label="'Mic ' + (mic+1) + ' Custom Name'"
+                            :label="'Channel ' + (mic+1) + ' name'"
                             :error="duplicate[index][mic]"
                             :value="device.micsName[mic]"
                             @update="(v: string) => updateMicName(index, mic, v)"
