@@ -68,15 +68,19 @@ export class StreamdeckClient extends Client {
         this.triggeredShot$ = new BehaviorSubject(<ObsAssetId['source'] | undefined>undefined)
         this.toggleMicAvailability$ = new Subject()
 
-        videoContainers.configPart$.subscribe((containers: VideoDeviceSettings[]) => {
-            this.videoContainers = containers
-            this.sendPresets()
-        })
+        this.addSubscription(
+            videoContainers.configPart$.subscribe((containers: VideoDeviceSettings[]) => {
+                this.videoContainers = containers
+                this.sendPresets()
+            })
+        )
 
-        audioDevices.configPart$.subscribe((devices: AudioDeviceSettings[]) => {
-            this.audioDevices = devices
-            this.sendPresets()
-        })
+        this.addSubscription(
+            audioDevices.configPart$.subscribe((devices: AudioDeviceSettings[]) => {
+                this.audioDevices = devices
+                this.sendPresets()
+            })
+        )
     }
 
     override connect() {

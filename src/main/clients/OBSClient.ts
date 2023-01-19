@@ -32,20 +32,24 @@ export class ObsClient extends Client {
         this.mainScene$ = new BehaviorSubject('')
         this.mainScenes = this.getMainScenes()
 
-        containers.configPart$.subscribe(() => {
-            if (this.isReachable) {
-                this.mainScenes = this.getMainScenes()
-            }
-        })
-
-        this.obs.reachable$.subscribe(r => {
-            if (r !== this.isReachable){
-                this.reachable$.next(r)
-                if (r){
-                    this.sceneTransition(this.obs.initScene)
+        this.addSubscription(
+            containers.configPart$.subscribe(() => {
+                if (this.isReachable) {
+                    this.mainScenes = this.getMainScenes()
                 }
-            }
-        })
+            })
+        )
+
+        this.addSubscription(
+            this.obs.reachable$.subscribe(r => {
+                if (r !== this.isReachable){
+                    this.reachable$.next(r)
+                    if (r){
+                        this.sceneTransition(this.obs.initScene)
+                    }
+                }
+            })
+        )
 
         this.scenes$.subscribe(scenes => {
             if (scenes.length > 0 && !this.isReachable){
