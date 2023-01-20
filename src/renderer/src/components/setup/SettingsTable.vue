@@ -6,10 +6,12 @@ import { store } from '@src/renderer/src/store/store'
 import ButtonUi from '@src/renderer/src/components/basics/ButtonUi.vue'
 import InputUi from '@src/renderer/src/components/basics/InputUi.vue'
 import ToggleUi from '@src/renderer/src/components/basics/ToggleUi.vue'
+import TooltipUi from '@src/renderer/src/components/basics/TooltipUi.vue'
 
 import ReturnIcon from '@src/renderer/src/components/icons/ReturnIcon.vue'
 import PlusCircleIcon from '@src/renderer/src/components/icons/PlusCircleIcon.vue'
 import MinCircleIcon from '@src/renderer/src/components/icons/MinCircleIcon.vue'
+import InfoIcon from '@src/renderer/src/components/icons/InfoIcon.vue'
 
 import type {
     AudioDeviceSettings,
@@ -78,15 +80,14 @@ const defaultSettings = (mics: AudioDeviceSettings[], containers: VideoDeviceSet
             }
 
             const cams: AutocamSource[] = []
-            const percent = Math.round(100/containers[i].cams.length)
-            const last = 100 - (containers[i].cams.length - 1) * percent
             for (const k in containers[i].cams) {
                 const oldCam = oldMic? getCam(oldMic, containers[i].cams[k]) : undefined
                 cams.push({
                     source: containers[i].cams[k],
-                    weight: oldCam? oldCam.weight : (isLast(containers[i].cams, parseInt(k))? last : percent),
+                    weight: oldCam? oldCam.weight : (j===k? 100 : 0),
                 })
             }
+
             c.mics.push({ id: flatMics[j], cams })
         }
         s.push(c)
@@ -160,7 +161,7 @@ update()
             Reset All
         </ButtonUi>
     </div>
-    <div class="w-full h-full">
+    <div class="w-full">
         <table :class="editable? 'editable' : ''">
             <thead>
                 <tr>
@@ -178,13 +179,28 @@ update()
                         class="column-4"
                     />
                     <th class="column-5">
-                        Probability
+                        <TooltipUi
+                            value="Describes how often this camera will be shown (between 0 and 100%)"
+                        >
+                            Probability
+                            <InfoIcon class="w-3 h-3 px-1" />
+                        </TooltipUi>
                     </th>
                     <th class="column-6">
-                        Min
+                        <TooltipUi
+                            value="Minimum duration a camera is shown. 0s will allow ugly glitches."
+                        >
+                            Min
+                            <InfoIcon class="w-3 h-3 px-1" />
+                        </TooltipUi>
                     </th>
                     <th class="column-7">
-                        Max
+                        <TooltipUi
+                            value="Maximum duration a camera is shown before changing to other available camera angles. Not useful if no other cameras are enabled for this mic."
+                        >
+                            Max
+                            <InfoIcon class="w-3 h-3 px-1" />
+                        </TooltipUi>
                     </th>
                 </tr>
             </thead>
@@ -243,6 +259,7 @@ update()
                                             <InputUi
                                                 label=""
                                                 center
+                                                unit="%"
                                                 :value="cam.weight + ''"
                                                 :class="correctPercent(mic.cams)? '' : 'incorrect-percent'"
                                                 @update="(v) => updateWeightSettings(i, j, k, parseInt(v))"
@@ -268,12 +285,13 @@ update()
                                         <InputUi
                                             label=""
                                             center
+                                            unit="s"
                                             :value="container.durations.min + ''"
                                             @update="(v) => updateDurationsSettings(i, 'min', parseFloat(v))"
                                         />
                                     </template>
                                     <template v-else>
-                                        {{ container.durations.min }}
+                                        {{ container.durations.min }}s
                                     </template>
                                 </td>
                                 <td
@@ -285,12 +303,13 @@ update()
                                         <InputUi
                                             label=""
                                             center
+                                            unit="s"
                                             :value="container.durations.max + ''"
                                             @update="(v) => updateDurationsSettings(i, 'max', parseFloat(v))"
                                         />
                                     </template>
                                     <template v-else>
-                                        {{ container.durations.max }}
+                                        {{ container.durations.max }}s
                                     </template>
                                 </td>
                             </tr>
@@ -316,18 +335,18 @@ tr.no-weight .inputui-container.incorrect-percent {
     @apply text-content-3;
 }
 
-.weight-cell button.btn.i-round {
-    @apply opacity-0 hover:opacity-100 hover:bg-transparent transition-all;
+tr .weight-cell button.btn.i-round {
+    @apply opacity-0 transition-all;
+}
+tr:hover .weight-cell button.btn.i-round {
+    @apply opacity-100 bg-transparent;
 }
 tr.no-weight > td.column-3,
 tr.no-weight > td.column-5 {
     @apply text-content-3;
 }
 table.editable {
-    @apply mt-9 mb-32;
-}
-table.editable > thead {
-    @apply absolute top-12 left-0 right-0 z-20;
+    @apply mt-2;
 }
 table > thead > tr > th.column-1,
 table > tbody > tr > td.column-1 {
