@@ -70,7 +70,7 @@ defineProps<Props>()
     @apply top-4;
 }
 .n-line > span:last-child > .inner-path::before {
-    @apply bottom-4;
+    @apply bottom-[0.9rem];
 }
 .n-line > span > .inner-circle::before {
     content: '';
