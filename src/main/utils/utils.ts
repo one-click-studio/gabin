@@ -151,7 +151,7 @@ export function isDev(): boolean {
 }
 
 export function getPath(str: string): string {
-    let strPath = join(__dirname, 'models/silero.onnx')
+    let strPath = join(__dirname, str)
     if (!isDev()) strPath = strPath.replace('app.asar', 'app.asar.unpacked')
 
     return strPath
