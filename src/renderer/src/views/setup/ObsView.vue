@@ -18,7 +18,7 @@ if (!connections.obs) {
 }
 
 const obsConnection = ref<Connection>(connections.obs)
-const obsConnectionOk = ref(false)
+const obsConnectionOk = ref(store.connections.obs ? true : false)
 const obsConnectionLoading = ref(false)
 const obsConnectionError = ref(false)
 
