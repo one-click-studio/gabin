@@ -84,6 +84,15 @@ initOptions()
                 />
             </ListboxButton>
             <ListboxOptions class="selectui-opts scroll-bar">
+
+                <ListboxOption
+                    v-if="!options.length"
+                    class="selectui-opt empty"
+                    value="Empty"
+                >
+                    Empty
+                </ListboxOption>
+
                 <ListboxOption
                     v-for="option in options"
                     :key="option"
@@ -125,7 +134,10 @@ initOptions()
     @apply absolute top-full left-0 max-h-60 w-full overflow-auto py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5;
 }
 .selectui-opt {
-    @apply bg-bg-2 w-full p-3 hover:bg-bg-1 cursor-pointer text-content-2 relative z-12;
+    @apply bg-bg-2 w-full p-3 text-content-2 relative z-12;
+}
+.selectui-opt:not(.empty) {
+    @apply hover:bg-bg-1 cursor-pointer;
 }
 .selectui-opt.selected {
     @apply font-bold;
