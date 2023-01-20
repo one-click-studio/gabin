@@ -78,7 +78,7 @@ initOptions()
             </ListboxLabel>
 
             <ListboxButton class="selectui-btn">
-                {{ value || '' }}
+                <div>{{ value || '' }}</div>
                 <ChevronBottomIcon
                     class="absolute right-0 top-1/4"
                 />
@@ -112,6 +112,10 @@ initOptions()
 }
 .selectui-btn {
     @apply w-full bg-transparent outline-none h-9 mx-3 mt-4 p-0 text-left relative border-0 cursor-pointer color-white;
+}
+.selectui-btn > div {
+    @apply text-ellipsis whitespace-nowrap overflow-hidden;
+    width: calc(100% - 29px);
 }
 .selectui-btn > svg {
     @apply color-white;
