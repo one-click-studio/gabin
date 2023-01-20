@@ -90,6 +90,10 @@ button.btn:hover:not(.disable) {
     @apply bg-bg-1;
 }
 
+button.btn:active {
+    @apply !brightness-70;
+}
+
 button.btn.i-last,
 button.btn.i-first {
     @apply justify-start;
