@@ -17,6 +17,9 @@ import SettingsTable from '@src/renderer/src/components/setup/SettingsTable.vue'
                         <th>
                             Mic name
                         </th>
+                        <th>
+                            Mic channel
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,6 +37,9 @@ import SettingsTable from '@src/renderer/src/components/setup/SettingsTable.vue'
                                 </td>
                                 <td>
                                     {{ mic }}
+                                </td>
+                                <td>
+                                    Channel {{ j + 1 }}
                                 </td>
                             </tr>
                         </template>
