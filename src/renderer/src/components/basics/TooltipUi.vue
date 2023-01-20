@@ -2,6 +2,7 @@
 
 interface Props {
     value: string
+    position?: string
 }
 
 defineProps<Props>()
@@ -9,7 +10,7 @@ defineProps<Props>()
 </script>
 
 <template>
-    <div class="tooltip-slot">
+    <div class="tooltip-slot" :class="position? position:'top left'">
         <slot />
 
         <div class="tooltip-popover">
@@ -24,10 +25,23 @@ defineProps<Props>()
 }
 .tooltip-popover {
     @apply opacity-0;
-    @apply absolute z-10 -top-8;
-    @apply bg-bg-3 text-content-2 text-sm py-2 px-1 rounded;
+    @apply absolute z-20 whitespace-break-spaces min-w-36;
+    @apply bg-bg-3 text-content-2 text-sm font-normal py-2 px-1 rounded;
     @apply transition-opacity duration-200 ease-in-out;
 }
+.tooltip-slot.bottom .tooltip-popover {
+    top: 100%;
+}
+.tooltip-slot.top .tooltip-popover {
+    bottom: 100%;
+}
+.tooltip-slot.left .tooltip-popover {
+    right: 50%;
+}
+.tooltip-slot.right .tooltip-popover {
+    left: 50%;
+}
+
 /* .tooltip-slot .tooltip-popover, */
 .tooltip-slot:hover .tooltip-popover {
     @apply block opacity-100;
