@@ -37,6 +37,14 @@ html, body {
     @apply bg-bg-3 m-0 h-full w-screen overflow-hidden flex text-content-1 position-relative;
 }
 
+* {
+    @apply select-none;
+}
+
+input {
+    @apply select-text;
+}
+
 h1, h2 {
     @apply m-0;
 }
