@@ -139,7 +139,7 @@ updateNextBtn()
 </script>
 
 <template>
-    <div class="flex flex-col w-full scroll-hidden pb-10">
+    <div class="flex flex-col w-full pb-10">
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">📺</span>
             <p>Tell Gabin which scenes you want him to manage.</p>

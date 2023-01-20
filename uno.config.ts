@@ -2,9 +2,10 @@
 
 import { defineConfig, presetIcons, presetWind } from 'unocss'
 import transformerDirective from '@unocss/transformer-directives'
+import { presetScrollbar } from 'unocss-preset-scrollbar'
 
 export default defineConfig({
-  presets: [presetWind(), presetIcons()],
+  presets: [presetWind(), presetIcons(), presetScrollbar()],
   transformers: [transformerDirective()],
   theme: {
     colors: {

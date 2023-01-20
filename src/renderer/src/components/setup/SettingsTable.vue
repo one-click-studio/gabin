@@ -160,7 +160,7 @@ update()
             Reset All
         </ButtonUi>
     </div>
-    <div class="w-full h-full scroll-hidden">
+    <div class="w-full h-full">
         <table :class="editable? 'editable' : ''">
             <thead>
                 <tr>

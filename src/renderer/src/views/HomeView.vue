@@ -81,7 +81,7 @@ prepareHomeView()
 </script>
 
 <template>
-    <div class="flex w-full h-full flex-col scroll-hidden">
+    <div class="flex w-full h-full flex-col scroll-bar">
         <template v-if="settings.autocam.length > 0">
             <ModalUi
                 :open="deleteModal"

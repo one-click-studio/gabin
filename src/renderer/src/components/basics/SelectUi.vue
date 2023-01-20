@@ -83,7 +83,7 @@ initOptions()
                     class="absolute right-0 top-1/4"
                 />
             </ListboxButton>
-            <ListboxOptions class="selectui-opts scroll-hidden">
+            <ListboxOptions class="selectui-opts scroll-bar">
                 <ListboxOption
                     v-for="option in options"
                     :key="option"

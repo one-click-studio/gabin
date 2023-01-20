@@ -32,7 +32,7 @@ store.layout.footer.next.disable = false
 </script>
 
 <template>
-    <div class="w-full scroll-hidden">
+    <div class="w-full">
         <div class="w-full">
             <ToggleUi
                 label="I need a split view with several simultaneous cameras"

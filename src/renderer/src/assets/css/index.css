@@ -228,10 +228,6 @@ div {
 	line-height: 3.6rem;
 }
 
-.scroll-hidden {
-    @apply overflow-auto;
-}
-/* Hide scrollbar for Chrome, Safari and Opera */
-.scroll-hidden::-webkit-scrollbar {
-    @apply hidden;
+.scroll-bar {
+    @apply scrollbar scrollbar-track-color-transparent scrollbar-thumb-color-bg-1 scrollbar-h-0;
 }

@@ -89,7 +89,7 @@ router.beforeResolve((to) => {
 
                 <div
                     id="body"
-                    class="w-full flex-1 overflow-hidden"
+                    class="w-full flex-1 scroll-bar"
                 >
                     <slot />
                 </div>
