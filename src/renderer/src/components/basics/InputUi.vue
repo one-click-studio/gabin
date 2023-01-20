@@ -4,6 +4,7 @@ import { ref } from 'vue'
 interface Props {
     label: string
     value?: string
+    unit?: string
     center?: boolean
     error?: boolean
 }
@@ -23,8 +24,24 @@ const hasValue = (): boolean => {
     return false
 }
 
+const update = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    let value = target.value
+    if (props.unit) {
+        value = target.value.replace(props.unit, '')
+    }
+    $emit('update', value)
+}
+
 const onFocus = (focus: boolean) => {
     isFocused.value = focus
+}
+
+const withUnit = (value: string): string => {
+    if (props.unit && !isFocused.value) {
+        return `${value}${props.unit}`
+    }
+    return value
 }
 
 </script>
@@ -46,8 +63,8 @@ const onFocus = (focus: boolean) => {
         </label>
         <input
             type="text"
-            :value="value? value : ''"
-            @input="$emit('update', ($event.target as HTMLInputElement).value)"
+            :value="value? withUnit(value) : ''"
+            @input="update"
             @focusout="() => onFocus(false)"
             @focusin="() => onFocus(true)"
         >
@@ -72,7 +89,7 @@ const onFocus = (focus: boolean) => {
     @apply w-full bg-transparent outline-none z-10 h-9 border-0 color-white mx-3 mt-4 p-0;
 }
 .inputui-container.is-centered > input {
-    @apply text-center mt-0;
+    @apply text-center mt-0.5;
 }
 .inputui-container > .inputui-label.has-value {
     @apply text-xs;
