@@ -111,7 +111,7 @@ init()
 }
 .connected-module::before {
     content: '';
-    @apply absolute h-3 w-3 m-auto left-0 top-1.5 rounded-full;
+    @apply absolute h-3 w-3 m-auto left-0 top-[0.3rem] rounded-full;
     @apply bg-content-negative;
 }
 .connected-module.is-connected::before {

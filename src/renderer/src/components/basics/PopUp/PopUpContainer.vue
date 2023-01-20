@@ -30,7 +30,7 @@ const close = () => {
 <style scoped>
 .pop-up-container {
     @apply flex justify-center items-center py-2 z-50;
-    @apply bg-bg-2 border-bg-1 border rounded-lg;
+    @apply bg-bg-2 border-bg-1 border;
     @apply absolute;
 }
 </style>

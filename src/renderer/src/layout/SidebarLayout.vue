@@ -61,7 +61,7 @@ if (store.profiles.current === 0) {
         <div class="side-bar-main-container">
             <div
                 class="h-10 transition-all delay-100 flex justify-end z-10"
-                :class="open? '-mr-6' : 'mr-3'"
+                :class="{'mr-3':!open}"
             >
                 <ButtonUi
                     class="i-round small text-content-2 hover:text-white"

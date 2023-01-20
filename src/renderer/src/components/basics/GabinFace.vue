@@ -51,7 +51,7 @@ const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
     @apply h-52;
 }
 .message {
-    @apply bg-white h-5 rounded-3xl text-bg-3 text-sm px-2 py-1 font-bold relative uppercase;
+    @apply bg-white h-5 rounded-3xl text-bg-3 text-sm px-2 py-1 font-bold relative;
     @apply flex flex-col items-center;
 }
 .message > span {
@@ -84,7 +84,7 @@ const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
 }
 
 .gabin-container.xl.has-msg > .message {
-    @apply h-16 text-base text-center py-2 lowercase;
+    @apply h-16 text-base text-center py-2;
     @apply w-3/4;
 }
 .gabin-container.xl.has-msg > .message > .triangle {

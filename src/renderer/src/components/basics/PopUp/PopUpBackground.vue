@@ -34,6 +34,6 @@ onEscapePress(() => {
 .pop-up-background {
     @apply h-screen w-screen z-50;
     @apply absolute top-0 left-0;
-    background-color: #00000040;
+    background-color: #00000050;
 }
 </style>

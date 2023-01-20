@@ -35,8 +35,9 @@ const close = () => {
 
 <style scoped>
 .modal-background {
-    @apply h-screen w-screen bg-black-disable z-30;
+    @apply h-screen w-screen z-30;
     @apply absolute top-0 left-0;
+    background-color: #00000080;
 }
 
 .modal-container {

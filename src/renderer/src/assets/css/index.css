@@ -219,25 +219,25 @@ div {
 }
 
 .text-xxs {
-	line-height: 0.844rem;
+	line-height: 0.844rem !important;
 }
 .text-xs {
-	line-height: 1rem;
+	line-height: 1rem !important;
 }
 .text-sm {
-	line-height: 1.219rem;
+	line-height: 1.219rem !important;
 }
 .text-base {
-	line-height: 1.35rem;
+	line-height: 1.35rem !important;
 }
 .text-m {
-	line-height: 1.5rem;
+	line-height: 1.5rem !important;
 }
 .text-lg {
-	line-height: 2rem;
+	line-height: 2rem !important;
 }
 .text-xl {
-	line-height: 3.6rem;
+	line-height: 3.6rem !important;
 }
 
 .scroll-bar {
