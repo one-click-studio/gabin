@@ -17,7 +17,7 @@ import SetupView from '@src/renderer/src/views/setup/IndexView.vue'
 import SetupLandingView from '@src/renderer/src/views/setup/LandingView.vue'
 import SetupProfileView from '@src/renderer/src/views/setup/ProfileView.vue'
 import SetupTcpView from '@src/renderer/src/views/setup/TcpView.vue'
-import SetupVisionMixerView from '@src/renderer/src/views/setup/VisionMixerView.vue'
+import SetupVisionMixerView from '@src/renderer/src/views/setup/VideoMixerView.vue'
 import SetupObsView from '@src/renderer/src/views/setup/ObsView.vue'
 import SetupAudioView from '@src/renderer/src/views/setup/AudioView.vue'
 import SetupContainerView from '@src/renderer/src/views/setup/ContainerView.vue'
@@ -64,17 +64,17 @@ const routes = [
             {
                 path: 'tcp',
                 component: SetupTcpView,
-                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/profile', next: '/setup/vision-mixer' },
+                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/profile', next: '/setup/video-mixer' },
             },
             {
-                path: 'vision-mixer',
+                path: 'video-mixer',
                 component: SetupVisionMixerView,
                 meta: { type: 3, order: 3, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/tcp' },
             },
             {
                 path: 'obs',
                 component: SetupObsView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/vision-mixer', next: '/setup/audio' },
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, sidebar: false, back: '/setup/video-mixer', next: '/setup/audio' },
             },
             {
                 path: 'audio',
