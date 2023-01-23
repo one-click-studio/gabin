@@ -77,13 +77,13 @@ defineProps<Props>()
     content: '';
     left: 19px;
     @apply bg-bg-3 w-0.5;
-    @apply absolute top-8 bottom-4;
+    @apply absolute top-6 bottom-6;
 }
 .timeline-setup:not(.edition) > .timeline-item:not(:first-child)::before {
     content: '';
     left: -1.313rem;
     @apply bg-white w-0.5 transition-all duration-500 ;
-    @apply absolute -top-8 bottom-20 z-20;
+    @apply absolute -top-10 bottom-20 z-20;
 }
 .timeline-setup:not(.edition) > .timeline-item.active:not(:first-child)::before {
     @apply bottom-0 z-20;
@@ -93,7 +93,7 @@ defineProps<Props>()
 .timeline-setup:not(.edition) > .timeline-item::after {
     content: '';
     @apply absolute h-2 w-2 rounded-full z-10;
-    @apply bg-bg-3 -left-6 top-2;
+    @apply bg-bg-3 -left-6 top-1;
     @apply transition-all duration-500;
 }
 .timeline-setup:not(.edition) > .timeline-item.active::after {
