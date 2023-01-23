@@ -73,7 +73,18 @@ init()
 
 <template>
     <div class="flex w-full h-full">
-        <div class="flex flex-col justify-start items-center pr-10 w-2/5">
+        <div class="flex flex-col justify-between items-center pr-10 w-2/5">
+            <Speakers :mics="speakingMics" />
+
+            <div class="flex items-center justify-center w-80 mt-40">
+                <Gabin
+                    size="xl"
+                    :msg="msg.default"
+                    :main-msg="msg.main"
+                    class="mb-8"
+                />
+            </div>
+
             <div class="flex justify-between items-center w-full">
                 <div class="flex flex-col items-start">
                     <div
@@ -86,17 +97,6 @@ init()
                     </div>
                 </div>
             </div>
-
-            <div class="flex items-center justify-center w-80 mt-40">
-                <Gabin
-                    size="xl"
-                    :msg="msg.default"
-                    :main-msg="msg.main"
-                    class="mb-8"
-                />
-            </div>
-
-            <Speakers :mics="speakingMics" />
         </div>
 
         <div class="flex flex-col items-center flex-1 bg-bg-2">
