@@ -63,7 +63,7 @@ const classToAdd = (step: Step): string => {
 .timeline-setup::before {
     content: '';
     left: 19px;
-    @apply bg-bg-1 w-0.5;
+    @apply bg-bg-3 w-0.5;
     @apply absolute top-8 bottom-4;
 }
 .timeline-setup > .timeline-item:not(:first-child)::before {
@@ -80,7 +80,7 @@ const classToAdd = (step: Step): string => {
 .timeline-setup > .timeline-item::after {
     content: '';
     @apply absolute h-2 w-2 rounded-full z-10;
-    @apply bg-bg-1 -left-6 top-2;
+    @apply bg-bg-3 -left-6 top-2;
     @apply transition-all duration-500;
 }
 .timeline-setup > .timeline-item.active::after {

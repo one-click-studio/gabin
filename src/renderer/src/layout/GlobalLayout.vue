@@ -56,7 +56,7 @@ router.beforeResolve((to) => {
             <div
                 v-if="options.timeline"
                 id="timeline"
-                class="h-full z-10"
+                class="h-full z-10 bg-bg-2"
             >
                 <Timeline
                     :current-step="store.layout.timeline.currentStep"
