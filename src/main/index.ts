@@ -5,8 +5,8 @@ import { electronApp, optimizer, is, platform } from '@electron-toolkit/utils'
 import { attachTitlebarToWindow, setupTitlebar } from 'custom-electron-titlebar/main'
 
 import { ipcMain } from '@src/common/ipcs'
-import { Gabin } from '@src/main/gabin';
-import { ProfileSetup } from '@src/main/modules/setup';
+import { Gabin } from '@src/main/gabin'
+import { ProfileSetup } from '@src/main/modules/setup'
 import db from '@src/main/utils/db'
 import { isDev } from '@src/main/utils/utils'
 
@@ -15,50 +15,50 @@ let gabin: Gabin | undefined
 
 const initGabin = () => {
   gabin = new Gabin()
-  gabin.shoot$.subscribe(shoot => {
-    BrowserWindow.getAllWindows().forEach(bw => {
+  gabin.shoot$.subscribe((shoot) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
       invoke.handleNewShot(bw, shoot)
     })
   })
-  gabin.autocam$.subscribe(autocam => {
-    BrowserWindow.getAllWindows().forEach(bw => {
+  gabin.autocam$.subscribe((autocam) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
       invoke.handleAutocam(bw, autocam)
     })
   })
-  gabin.timeline$.subscribe(micId => {
-    BrowserWindow.getAllWindows().forEach(bw => {
+  gabin.timeline$.subscribe((micId) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
       invoke.handleTimeline(bw, micId)
     })
   })
-  gabin.availableMics$.subscribe(availableMics => {
-    BrowserWindow.getAllWindows().forEach(bw => {
+  gabin.availableMics$.subscribe((availableMics) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
       invoke.handleAvailableMics(bw, availableMics)
     })
   })
-  gabin.connections$.subscribe((c => {
-      BrowserWindow.getAllWindows().forEach(bw => {
-        invoke.handleObsConnected(bw, c.obs)
-      })
-      BrowserWindow.getAllWindows().forEach(bw => {
-        invoke.handleStreamdeckConnected(bw, c.streamdeck)
-      })
-  }))
+  gabin.connections$.subscribe((c) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
+      invoke.handleObsConnected(bw, c.obs)
+    })
+    BrowserWindow.getAllWindows().forEach((bw) => {
+      invoke.handleStreamdeckConnected(bw, c.streamdeck)
+    })
+  })
 }
 
 function handler() {
   const profileSetup = new ProfileSetup()
 
-  profileSetup.obs.reachable$.subscribe((reachable => {
-      BrowserWindow.getAllWindows().forEach(bw => {
-        invoke.handleObsConnected(bw, reachable)
-      })
-  }))
+  profileSetup.obs.reachable$.subscribe((reachable) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
+      invoke.handleObsConnected(bw, reachable)
+    })
+  })
 
-  profileSetup.obs.scenes$.subscribe((scenes => {
-      BrowserWindow.getAllWindows().forEach(bw => {
-        invoke.handleObsScenes(bw, scenes)
-      })
-  }))
+  profileSetup.obs.scenes$.subscribe((scenes) => {
+    BrowserWindow.getAllWindows().forEach((bw) => {
+      invoke.handleObsScenes(bw, scenes)
+    })
+  })
 
   // ELECTRON
   handle.openLink(async (_, link) => shell.openExternal(link.data))
@@ -66,10 +66,10 @@ function handler() {
   // OBS
   handle.connectObs(async (_, c) => profileSetup.connectObs(c.data))
   handle.disconnectObs(async () => profileSetup.disconnectObs())
-  
+
   // AUDIO
   handle.getAudioDevices(async () => profileSetup.getAllAudioDevices())
-  
+
   // PROFILE
   handle.saveProfile(async (_, p) => profileSetup.setProfile(p.data))
   handle.getProfiles(async () => profileSetup.getProfiles())
@@ -89,17 +89,17 @@ function handler() {
 
   // GABIN
   handle.togglePower(async (_, power) => {
-      // init Gabin
-      if (!gabin && power.data) {
-          initGabin()
-      }
-      if (gabin) {
-          gabin.power(power.data)
-      }
+    // init Gabin
+    if (!gabin && power.data) {
+      initGabin()
+    }
+    if (gabin) {
+      gabin.power(power.data)
+    }
 
-      BrowserWindow.getAllWindows().forEach(bw => {
-        invoke.handlePower(bw, power.data)
-      })
+    BrowserWindow.getAllWindows().forEach((bw) => {
+      invoke.handlePower(bw, power.data)
+    })
   })
 }
 
@@ -115,7 +115,7 @@ async function createWindow(): Promise<void> {
     minHeight: 550,
     title: 'Gabin',
     titleBarStyle: 'hidden',
-    trafficLightPosition: { x: 20, y: 20 },
+    trafficLightPosition: { x: 12, y: 12 },
     backgroundColor: '#000',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -174,7 +174,6 @@ app.whenReady().then(async () => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) await createWindow()
   })
-
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
