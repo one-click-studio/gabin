@@ -3,7 +3,7 @@ import VAD from "webrtcvad"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getPath } from '@src/main/utils/utils'
 
-const sileroModelPath = getPath('models/silero.onnx')
+const sileroModelPath = getPath('../../resources/models/silero.onnx')
 
 interface Device {
     id: number

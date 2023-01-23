@@ -7,7 +7,6 @@ console.log(__dirname)
 
 export default defineConfig({
   main: {
-    publicDir: 'src/main/public',
     plugins: [externalizeDepsPlugin()],
     resolve: {
       alias: {
