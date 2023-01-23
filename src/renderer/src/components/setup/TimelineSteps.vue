@@ -10,7 +10,7 @@ export const TimelineSteps: Step[] = [
     { name: 'Hello 👋', path: 'landing', order: 0 },
     { name: 'Profile 👤', path: 'profile', order: 1 },
     { name: 'TCP 🔗', path: 'tcp', order: 2 },
-    { name: 'Vision Mixer 📼', path: 'vision-mixer', order: 3 },
+    { name: 'Video Mixer 📼', path: 'video-mixer', order: 3 },
     { name: 'OBS 🔗', path: 'obs', order: 4 },
 
     { name: 'Audio device 🎧', path: 'audio', order: 5 },
