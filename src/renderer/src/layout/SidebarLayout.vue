@@ -60,7 +60,7 @@ if (store.profiles.current === 0) {
     >
         <div class="side-bar-main-container">
             <div
-                class="h-10 transition-all delay-100 flex justify-end z-10"
+                class="h-10 transition-all delay-100 flex justify-end z-10 mt-2"
                 :class="{'mr-3':!open}"
             >
                 <ButtonUi
