@@ -84,15 +84,22 @@ button.btn {
     @apply focus-visible:outline-none;
 }
 
-button.btn.active,
+button.btn.focus-visible,
+button.btn.hover:not(.disable),
 button.btn:focus-visible,
 button.btn:hover:not(.disable) {
-    @apply bg-bg-1;
+    @apply brightness-125;
 }
 
+button.btn.active,
 button.btn:active {
-    @apply !brightness-70;
+    @apply !brightness-175 text-content-2;
 }
+
+button.btn.disable {
+    @apply !brightness-75 cursor-default !text-content-1;
+}
+
 
 button.btn.i-last,
 button.btn.i-first {
@@ -129,10 +136,6 @@ button.btn.i-round > svg {
     @apply m-auto;
 }
 
-button.btn.disable {
-    @apply opacity-25 cursor-default;
-}
-
 button.btn.loading {
     @apply pr-12;
 }
@@ -166,10 +169,10 @@ button.btn.primary {
     @apply bg-main;
 }
 
-button.btn.primary:focus-visible,
+/* button.btn.primary:focus-visible,
 button.btn.primary:hover:not(.disable) {
     @apply bg-mainhover;
-}
+} */
 
 button.btn.danger {
     @apply bg-content-negative;
