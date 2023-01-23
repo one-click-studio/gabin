@@ -32,7 +32,7 @@ const run = () => {
 const setup = (edit: 0|1=0) => {
     if (edit === 1) {
         store.profiles.editProfile = true
-        router.push('/setup/profile')
+        router.push('/setup/settings')
     } else {
         router.push('/setup/landing')
     }
@@ -110,7 +110,7 @@ prepareHomeView()
 
             <Teleport to="#header-btn-slot">
                 <ButtonUi
-                    class="i-first mx-1"
+                    class="i-first mx-1 whitespace-nowrap"
                     @click="() => setup(1)"
                 >
                     <PenIcon />
@@ -118,7 +118,7 @@ prepareHomeView()
                 </ButtonUi>
 
                 <ButtonUi
-                    class="i-first mx-1 primary mr-5"
+                    class="i-first mx-1 primary mr-5 whitespace-nowrap"
                     @click="run"
                 >
                     <PlayIcon />

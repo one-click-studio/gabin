@@ -73,6 +73,7 @@ store.layout.footer.next.callback = () => {
     const current = store.profiles.getCurrent()
     if (current) {
         current.connections.obs = obsConnection.value
+        if (store.profiles.editProfile) store.toast.success('Profile saved !')
     }
 }
 

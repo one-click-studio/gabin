@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-import { ref, watch } from 'vue'
+import { ref, watch, toRaw } from 'vue'
 
 import { store } from '@src/renderer/src/store/store'
 
@@ -18,7 +18,25 @@ import type { ObsScene, ObsAssetId, VideoDeviceSettings } from '@src/types/proto
 
 const obsContainers = ref<VideoDeviceSettings[]>(store.profiles.settings().containers)
 const obsScenesFiltered = ref<ObsScene[]>([])
-const obsConnectionLoading = ref(false)
+
+const connectObs = () => {
+    if (store.connections.obs || !store.profiles.editProfile) return
+
+    const connections = store.profiles.connections()
+    if (!connections.obs) return
+
+    window.api.invoke.connectObs(toRaw(connections.obs))
+    store.toast.info('OBS connection attempt')
+
+    setTimeout(() => {
+        if (store.connections.obs) {
+            store.toast.success('OBS connection succeeded')
+        } else {
+            store.toast.error('OBS connection failed', 'Please check your settings')
+            window.api.invoke.disconnectObs()
+        }
+    }, 3000)
+}
 
 const addAsset = () => {
     obsContainers.value.push({
@@ -121,19 +139,27 @@ watch(() => store.assets.scenes, () => {
     updateNextBtn()
 })
 
-watch(() => store.connections.obs, () => {
-    if (obsConnectionLoading.value && store.connections.obs) {
-        obsConnectionLoading.value = false
-    }
-})
-
 onEnterPress(() => {
     if (!nextIsInvalid() && store.layout.footer.next.trigger) {
         store.layout.footer.next.trigger()
     }
 })
 
+store.layout.footer.back.callback = () => {
+    if (store.profiles.editProfile) {
+        window.api.invoke.disconnectObs()
+    }
+}
+
+store.layout.footer.next.callback = () => {
+    if (store.profiles.editProfile) {
+        window.api.invoke.disconnectObs()
+        store.toast.success('Profile saved !')
+    }
+}
+
 obsScenesFiltered.value = filterScenes(store.assets.scenes)
+connectObs()
 updateNextBtn()
 
 </script>

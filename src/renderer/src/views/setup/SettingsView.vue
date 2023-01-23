@@ -18,6 +18,7 @@ const update = (v: AutocamSettings[]) => {
 store.layout.footer.next.callback = () => {
     store.profiles.settings().autocam = acSettings.value
     store.layout.footer.next.callback = undefined
+    if (store.profiles.editProfile) store.toast.success('Profile saved !')
 }
 
 onEnterPress(() => {

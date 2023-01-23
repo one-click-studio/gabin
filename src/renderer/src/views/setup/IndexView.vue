@@ -22,11 +22,25 @@ const initStore = () => {
         store.layout.footer.back.label = (route.meta.order === 0)? 'Cancel' : 'Back'
         store.layout.footer.back.icon = (route.meta.order === 0)? 'Cross' : 'ArrowLeft'
     }
-    
+
     if (route.meta.next) {
         store.layout.footer.next.url = (route.meta.next as string)
         store.layout.footer.next.label = (route.meta.order === TimelineSteps.length-1)? 'Save profile' : 'Next'
         store.layout.footer.next.icon = 'ArrowRight'
+    }
+
+    if (store.profiles.editProfile) {
+        store.layout.footer.back.url = '/home'
+        store.layout.footer.back.label = 'Cancel'
+        store.layout.footer.back.icon = 'Cross'
+        
+        store.layout.footer.next.url = route.path
+        store.layout.footer.next.label = 'Save'
+        store.layout.footer.next.icon = 'ArrowRight'
+        
+        store.layout.footer.next.callback = () => {
+            store.toast.success('Profile saved !')
+        }
     }
 }
 
