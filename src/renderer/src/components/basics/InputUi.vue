@@ -7,6 +7,7 @@ interface Props {
     unit?: string
     center?: boolean
     error?: boolean
+    warning?: boolean
 }
 
 interface Emits {
@@ -52,6 +53,7 @@ const withUnit = (value: string): string => {
         :class="{
             'is-focused': isFocused,
             'is-error': props.error,
+            'is-warning': props.warning,
             'is-centered': props.center
         }"
     >
@@ -87,6 +89,9 @@ const withUnit = (value: string): string => {
 }
 .inputui-container > input {
     @apply w-full bg-transparent outline-none z-10 h-9 border-0 color-white mx-3 mt-4 p-0;
+}
+.inputui-container.is-warning > input {
+    @apply text-content-negative;
 }
 .inputui-container.is-centered > input {
     @apply text-center mt-0.5;
