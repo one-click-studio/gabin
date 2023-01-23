@@ -70,6 +70,12 @@ export interface SpeakingMic {
 
 export type AvailableMicsMap = Map<MicId, boolean>
 
+export interface Toast {
+    title: string
+    description: string
+    type: 'success' | 'error' | 'info' | ''
+}
+
 
 /*************** SERVER CONFIG ***************/
 

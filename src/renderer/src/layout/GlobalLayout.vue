@@ -9,6 +9,7 @@ import Sidebar from '@src/renderer/src/layout/SidebarLayout.vue'
 import Timeline from '@src/renderer/src/layout/TimelineLayout.vue'
 import Header from '@src/renderer/src/layout/HeaderLayout.vue'
 import Footer from '@src/renderer/src/layout/FooterLayout.vue'
+import ToastUi from '@src/renderer/src/components/basics/ToastUi.vue'
 
 interface Options {
     sidebar: boolean
@@ -40,6 +41,9 @@ router.beforeResolve((to) => {
         id="main"
         class="absolute top-0 left-0 h-full w-screen z-10 flex"
     >
+
+        <ToastUi />
+
         <transition :name="options.sidebar? 'slide-right' : 'slide-left'">
             <div
                 v-if="options.sidebar"

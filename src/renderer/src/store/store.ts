@@ -9,6 +9,7 @@ import type {
     ObsScene,
     AudioDevice,
     ConnectionsConfig,
+    Toast
 } from '@src/types/protocol'
 
 const DEFAULT_SETTINGS = (): ProfileSettings => {
@@ -32,6 +33,21 @@ const generateId = (): number => {
 export const store = reactive({
     keyPress$: new Subject<string>(),
     isFirstRun: true,
+    toast: {
+        show: (title: string, description: string='', type: Toast['type']='') => {
+            store.toast.data = { title, description, type }
+        },
+        success: (title: string, description: string='') => {
+            store.toast.data = { title, description, type:'success' }
+        },
+        info: (title: string, description: string='') => {
+            store.toast.data = { title, description, type:'info' }
+        },
+        error: (title: string, description: string='') => {
+            store.toast.data = { title, description, type:'error' }
+        },
+        data: <Toast|undefined>undefined,
+    },
     layout: {
         sidebar: {
             open: true,
