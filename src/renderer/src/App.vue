@@ -32,8 +32,6 @@ window.addEventListener('keyup', e => {
     store.keyPress$.next(e.key)
 })
 
-// console.log(platform)
-
 </script>
 
 <template>

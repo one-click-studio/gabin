@@ -2,19 +2,12 @@
 import { RouterLink } from 'vue-router'
 
 import { TimelineSteps } from '@src/renderer/src/components/setup/TimelineSteps.vue'
-import type { Step } from '@src/renderer/src/components/setup/TimelineSteps.vue'
 
 interface Props {
     currentStep: number
 }
 
-const props = defineProps<Props>()
-
-const classToAdd = (step: Step): string => {
-    let cta = props.currentStep >= step.order? ' active' : ''
-    cta += props.currentStep === step.order? ' current' : ''
-    return cta
-}
+defineProps<Props>()
 
 </script>
 
@@ -29,14 +22,20 @@ const classToAdd = (step: Step): string => {
                     v-if="currentStep > step.order"
                     :to="'/setup/'+step.path"
                     class="timeline-item"
-                    :class="classToAdd(step)"
+                    :class="{
+                        'active': currentStep >= step.order,
+                        'current': currentStep === step.order,
+                    }"
                 >
                     {{ step.name }}
                 </router-link>
                 <div
                     v-else
                     class="timeline-item"
-                    :class="classToAdd(step)"
+                    :class="{
+                        'active': currentStep >= step.order,
+                        'current': currentStep === step.order,
+                    }"
                 >
                     {{ step.name }}
                 </div>

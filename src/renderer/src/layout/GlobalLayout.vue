@@ -113,3 +113,8 @@ router.beforeResolve((to) => {
         </div>
     </div>
 </template>
+<style scoped>
+#timeline {
+    -webkit-app-region: drag;
+}
+</style>
