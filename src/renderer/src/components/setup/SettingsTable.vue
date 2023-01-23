@@ -111,9 +111,6 @@ const updateDurationsSettings = (i: number, key: 'min'|'max', v: number) => {
 const isLast = (array: unknown[], index: number): boolean => {
     return (array.length - 1 === index)
 }
-const correctPercent = (cams: AutocamSource[]): boolean => {
-    return (Math.round(cams.reduce((p, c) => p + c.weight, 0)) === 100)
-}
 const getCorrectPercent = (cams: AutocamSource[], index: number): number => {
     let percent = 100
     for (const i in cams) {
@@ -224,20 +221,31 @@ update()
                                     v-if="!k"
                                     class="column-2"
                                     :rowspan="mic.cams.length"
-                                    :class="isLast(container.mics, j)? 'border-b-4' : 'border-b-2'"
+                                    :class="{
+                                        'border-b-4': isLast(container.mics, j),
+                                        'border-b-2': !isLast(container.mics, j)
+                                    }"
                                 >
                                     {{ mic.id }}
                                 </td>
                                 <td
                                     class="column-3"
-                                    :class="!isLast(mic.cams, k)? 'border-b' : isLast(container.mics, j)? 'border-b-4' : 'border-b-2'"
+                                    :class="{
+                                        'border-b': !isLast(mic.cams, k),
+                                        'border-b-4': isLast(mic.cams, k) && isLast(container.mics, j),
+                                        'border-b-2': isLast(mic.cams, k) && !isLast(container.mics, j)
+                                    }"
                                 >
                                     {{ cam.source.name }}
                                 </td>
                                 <td
                                     v-if="editable"
                                     class="column-4"
-                                    :class="!isLast(mic.cams, k)? 'border-b' : isLast(container.mics, j)? 'border-b-4' : 'border-b-2'"
+                                    :class="{
+                                        'border-b': !isLast(mic.cams, k),
+                                        'border-b-4': isLast(mic.cams, k) && isLast(container.mics, j),
+                                        'border-b-2': isLast(mic.cams, k) && !isLast(container.mics, j)
+                                    }"
                                 >
                                     <ToggleUi
                                         :value="(cam.weight > 0)"
@@ -246,7 +254,11 @@ update()
                                 </td>
                                 <td
                                     class="column-5"
-                                    :class="!isLast(mic.cams, k)? 'border-b' : isLast(container.mics, j)? 'border-b-4' : 'border-b-2'"
+                                    :class="{
+                                        'border-b': !isLast(mic.cams, k),
+                                        'border-b-4': isLast(mic.cams, k) && isLast(container.mics, j),
+                                        'border-b-2': isLast(mic.cams, k) && !isLast(container.mics, j)
+                                    }"
                                 >
                                     <div class="weight-cell">
                                         <template v-if="editable">
@@ -261,7 +273,6 @@ update()
                                                 center
                                                 unit="%"
                                                 :value="cam.weight + ''"
-                                                :class="correctPercent(mic.cams)? '' : 'incorrect-percent'"
                                                 @update="(v) => updateWeightSettings(i, j, k, parseInt(v))"
                                             />
                                             <ButtonUi
@@ -328,13 +339,6 @@ table .inputui-container {
 .weight-cell {
     @apply flex items-center justify-between;
 }
-.inputui-container.incorrect-percent {
-    @apply text-content-negative;
-}
-tr.no-weight .inputui-container.incorrect-percent {
-    @apply text-content-3;
-}
-
 tr .weight-cell button.btn.i-round {
     @apply opacity-0 transition-all;
 }
