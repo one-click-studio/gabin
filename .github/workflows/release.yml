@@ -40,7 +40,7 @@ jobs:
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
           echo "PNPM_VERSION=$(pnpm -v)" >> $GITHUB_ENV
       - name: Use the value
-        id: print pnpm version
+        id: print-pnpm-version
         run: |
           echo "pnpm version is : ${{ env.PNPM_VERSION }}"
 
