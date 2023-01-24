@@ -101,7 +101,7 @@ updateNextBtn()
                     v-if="obsConnectionError"
                     class="text-content-negative text-sm pb-2"
                 >
-                    Connection failed, please check your ip and password. Is OBS running?
+                    Connection failed, please check your ip and password. Is OBS 28+ running?
                 </span>
                 <EditConnection
                     label="Obs websocket"
