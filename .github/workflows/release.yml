@@ -38,6 +38,12 @@ jobs:
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+          echo "PNPM_VERSION=$(pnpm -v)" >> $GITHUB_ENV
+      - name: Use the value
+        id: print pnpm version
+        run: |
+          echo "pnpm version is : ${{ env.PNPM_VERSION }}"
+
       - uses: actions/cache@v3
         name: Setup pnpm cache
         with:
