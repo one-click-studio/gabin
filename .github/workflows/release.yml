@@ -51,7 +51,7 @@ jobs:
       #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
       - name: Tweak pnpm.cjs
         if: matrix.os == 'windows-latest'
-        run: sed -i 's/\/usr\/bin\/env node/node/g' /c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$env.PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs
+        run: sed -i 's/\/usr\/bin\/env node/node/g' "/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$env.PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs"
         shell: bash
 
       - name: Install dependencies
