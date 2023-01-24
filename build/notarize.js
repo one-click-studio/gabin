@@ -15,7 +15,7 @@ module.exports = async (context) => {
     return
   }
 
-  const appId = 'studio.micorp.gabin'
+  const appId = 'studio.oneclick.gabin'
 
   const { appOutDir } = context
 

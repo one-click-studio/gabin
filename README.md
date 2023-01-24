@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/micorp-studio/gabin/blob/main/build/icon.png?raw=true" width="150px" height="150px">
+    <img src="https://github.com/one-click-studio/gabin/blob/main/build/icon.png?raw=true" width="150px" height="150px">
 </p>
 
 <div align="center">
@@ -8,14 +8,14 @@
 <p align="center">Automate camera switching with <em>OBS, Bitfocus Companion and any audio api</em>.</p>
 
 <p align="center">
-<img src="https://github.com/micorp-studio/gabin/actions/workflows/release.yml/badge.svg">
+<img src="https://github.com/one-click-studio/gabin/actions/workflows/release.yml/badge.svg">
 </p>
 
 <img width="1392" alt="Screenshot 2023-01-18 at 10 08 19" src="https://user-images.githubusercontent.com/26444186/213129682-a180d396-4142-4cee-8ef8-7116b22483e5.png">
 
 ## Download
 
-You can download the latest version of Gabin [here](https://github.com/micorp-studio/gabin/releases).
+You can download the latest version of Gabin [here](https://github.com/one-click-studio/gabin/releases).
 
 ## Features
 

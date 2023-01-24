@@ -5,7 +5,7 @@
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "OneClickStudio",
   "homepage": "https://oneclickstudio.fr",
-  "repository": "github:micorp-studio/gabin",
+  "repository": "github:one-click-studio/gabin",
   "main": "./out/main/index.js",
   "scripts": {
     "lint": "eslint .",

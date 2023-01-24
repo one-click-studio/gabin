@@ -1,4 +1,4 @@
-appId: studio.micorp.gabin
+appId: studio.oneclick.gabin
 productName: Gabin
 directories:
   buildResources: build
@@ -37,7 +37,7 @@ dmg:
 linux:
   target:
     - AppImage
-  maintainer: micorp.studio
+  maintainer: oneclick.studio
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}

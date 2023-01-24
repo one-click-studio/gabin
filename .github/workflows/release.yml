@@ -47,22 +47,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      # - name: Get pnpm version
-      #   id: pnpm-version
-      #   shell: bash
-      #   run: |
-      #     echo "PNPM_VERSION=$(pnpm -v)" >> $GITHUB_ENV
-
       - name: Get pnpm file path
         shell: bash
         run: |
           PNPM_VERSION=$(pnpm -v)
           echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
-
-      - name: Echo pnpm
-        shell: bash
-        run: |
-          echo ${{env.PNPM_FILE}}
 
       #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
       - name: Tweak pnpm.cjs
