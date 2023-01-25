@@ -67,15 +67,20 @@ export class AutocamClient extends Client {
     constructor() {
         super('autocam')
 
+        this.micsSpeaking = new Map()
+        this.autocamMapping = []
+
+        this.currentShots$ = new BehaviorSubject(new Map())
+        this.timeline$ = new BehaviorSubject('')
+    }
+
+    init() {
         const audioDevices = db.getSpecificAndDefault(['settings', 'mics'], true)
         this.audioDevices = audioDevices.defaultValue
         this.micsSpeaking = this.getMicsMap(this.audioDevices)
 
         const autocamMapping = db.getSpecificAndDefault(['settings', 'autocam'], true)
         this.autocamMapping = autocamMapping.defaultValue
-
-        this.currentShots$ = new BehaviorSubject(new Map())
-        this.timeline$ = new BehaviorSubject('')
 
         this.addSubscription(
             audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
@@ -93,6 +98,8 @@ export class AutocamClient extends Client {
 
     override async connect() {
         super.connect()
+        this.init()
+        
         this.enable = true
 
         const devicesData = this.getDevicesData()

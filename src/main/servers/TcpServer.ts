@@ -13,7 +13,7 @@ import db from '@src/main/utils/db'
 const HEADER = '__gabin0istryingtocommunicate__'
 
 export class TcpServer extends Server {
-    private tcpConfig: Connection
+    private tcpConfig: Connection | undefined
     private server: net.Server | undefined
     private sockets: Map<string, net.Socket> = new Map()
     private clients: TcpClient[]
@@ -39,6 +39,8 @@ export class TcpServer extends Server {
     }
 
     override listen() {
+        if (!this.tcpConfig) return
+
         super.listen()
 
         this.server = net.createServer((socket) => this.onConnect(socket));

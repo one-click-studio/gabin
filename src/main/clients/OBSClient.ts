@@ -24,12 +24,17 @@ export class ObsClient extends Client {
     constructor() {
         super('obs')
 
-        const containers = db.getSpecificAndDefault(['settings', 'containers'], true)
-        this.containers = containers.defaultValue
-
         this.obs = new ObsServer()
         this.scenes$ = this.obs.scenes$
         this.mainScene$ = new BehaviorSubject('')
+        this.mainScenes = []
+        this.containers = []
+    }
+
+    init() {
+        const containers = db.getSpecificAndDefault(['settings', 'containers'], true)
+        this.containers = containers.defaultValue
+
         this.mainScenes = this.getMainScenes()
 
         this.addSubscription(
@@ -42,7 +47,9 @@ export class ObsClient extends Client {
 
         this.addSubscription(
             this.obs.reachable$.subscribe(r => {
+                console.log("OBS Client - OBS server reachable sub", r)
                 if (r !== this.isReachable){
+                    console.log("OBS Client - update reachable")
                     this.reachable$.next(r)
                     if (r){
                         this.sceneTransition(this.obs.initScene)
@@ -66,7 +73,8 @@ export class ObsClient extends Client {
 
     override async connect() {
         super.connect()
-        
+        this.init()
+
         this.obs.connect()
     }
 

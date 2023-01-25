@@ -58,6 +58,12 @@ export class StreamdeckClient extends Client {
     constructor() {
         super('streamdeck')
 
+        this.autocam$ = new BehaviorSubject(<boolean>true)
+        this.triggeredShot$ = new BehaviorSubject(<ObsAssetId['source'] | undefined>undefined)
+        this.toggleMicAvailability$ = new Subject()
+    }
+
+    init() {
         const videoContainers = db.getSpecificAndDefault(['settings', 'containers'], true)
         this.videoContainers = videoContainers.defaultValue
 
@@ -85,6 +91,7 @@ export class StreamdeckClient extends Client {
 
     override connect() {
         super.connect()
+        this.init()
     }
 
     override clean() {
