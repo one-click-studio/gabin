@@ -23,7 +23,10 @@ nsis:
 mac:
   target:
     - target: default
-      arch: universal
+      arch: [
+      'x64',
+      'arm64'
+    ]
   mergeASARs: false
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
