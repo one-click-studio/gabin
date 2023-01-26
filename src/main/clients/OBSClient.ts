@@ -47,9 +47,7 @@ export class ObsClient extends Client {
 
         this.addSubscription(
             this.obs.reachable$.subscribe(r => {
-                console.log("OBS Client - OBS server reachable sub", r)
                 if (r !== this.isReachable){
-                    console.log("OBS Client - update reachable")
                     this.reachable$.next(r)
                     if (r){
                         this.sceneTransition(this.obs.initScene)
@@ -95,7 +93,6 @@ export class ObsClient extends Client {
         // DO NOT REMOVE - Catching 'stop recording' event
         // this.obs.websocket.on('RecordingStarted', () => {
         this.obs.websocket.on('RecordStateChanged', (data) => {
-            console.log(data)
             this.logger.info('Recording State Changed.')
 
             // this.logger.info('Recording started.')

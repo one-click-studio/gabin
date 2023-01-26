@@ -58,8 +58,6 @@ const init = () => {
             })
         }
     })
-
-    // console.log(speakingMics.value)
 }
 
 if (!store.power) {

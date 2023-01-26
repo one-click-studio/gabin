@@ -14,57 +14,6 @@ import type { ServerConfig } from '@src/types/protocol'
 
 const CONFIG_FILE = join(app.getPath("userData"), 'db.json')
 
-// USAGE
-/*
-    import configServer from '@src/main/utils/config'
-
-    // SUBSCRIBE TO ALL CHANGES
-    console.log("\nExpected : 'all'")
-    configServer.config$.subscribe(config => {
-        console.log('all')
-    })
-    
-    // SUBSCRIBE TO A SPECIFIC PART OF CONFIGS
-    console.log("\nExpected : 'mics'")
-    const mics$ = configServer.getSpecific(['autocam', 'mics'])
-    mics$.subscribe(mics => {
-        console.log('mics')
-    })
-
-    // EDIT CONFIGS (only trigger 'all' here)
-    let data = configServer.getConfigCopy()
-    console.log("\nExpected : nothing")
-    configServer.editConfig(data)
-
-    // EDIT CONFIGS (only trigger 'all' here)
-    let data1 = configServer.getConfigCopy()
-    data1.browser.showLength.reward = 35000
-    console.log("\nExpected : 'all'")
-    configServer.editConfig(data1)
-
-    // EDIT CONFIGS (trigger 'all' and 'mics' here)
-    let data2 = configServer.getConfigCopy()
-    data2.autocam.mics.push({
-        id: "hostage",
-        channelId: 5
-    })
-    console.log("\nExpected : 'all' && 'mics'")
-    configServer.editConfig(data2)
-
-
-    // EDIT CONFIGS (only trigger 'all' here)
-    let data3 = configServer.getConfigCopy()
-    data3.browser.showLength.reward = 34000
-    console.log("\nExpected : 'all'")
-    configServer.editConfig(data3)
-
-    // EDIT CONFIGS (trigger 'all' and 'mics' here)
-    let data4 = configServer.getConfigCopy()
-    data4.autocam.mics.pop()
-    console.log("\nExpected : 'all' && 'mics'")
-    configServer.editConfig(data4)
-*/
-
 const EMPTY_CONFIG = {
     connections: {
         obs: { ip:''},

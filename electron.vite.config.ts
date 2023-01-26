@@ -3,8 +3,6 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
 import Unocss from 'unocss/vite'
 
-console.log(__dirname)
-
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
