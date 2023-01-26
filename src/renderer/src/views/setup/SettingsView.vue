@@ -15,8 +15,9 @@ const update = (v: AutocamSettings[]) => {
 }
 
 // SAVE CHOOSEN DEVICE
-store.layout.footer.next.callback = () => {
+store.layout.footer.next.callback = async () => {
     store.profiles.settings().autocam = acSettings.value
+    await store.profiles.save()
     store.layout.footer.next.callback = undefined
     if (store.profiles.editProfile) store.toast.success('Profile saved !')
 }

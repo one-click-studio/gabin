@@ -38,7 +38,8 @@ const initStore = () => {
         store.layout.footer.next.label = 'Save'
         store.layout.footer.next.icon = 'ArrowRight'
         
-        store.layout.footer.next.callback = () => {
+        store.layout.footer.next.callback = async () => {
+            await store.profiles.save()
             store.toast.success('Profile saved !')
         }
     }

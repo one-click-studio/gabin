@@ -69,10 +69,11 @@ watch(() => store.connections.obs, () => {
     updateNextBtn()
 })
 
-store.layout.footer.next.callback = () => {
+store.layout.footer.next.callback = async () => {
     const current = store.profiles.getCurrent()
     if (current) {
         current.connections.obs = obsConnection.value
+        await store.profiles.save()
         if (store.profiles.editProfile) store.toast.success('Profile saved !')
     }
 }

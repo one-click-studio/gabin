@@ -41,9 +41,10 @@ onEnterPress(() => {
     }
 })
 
-store.layout.footer.next.callback = () => {
+store.layout.footer.next.callback = async () => {
     if (profile) {
         store.profiles.updateName(profileName.value)
+        await store.profiles.save()
     } else {
         store.profiles.newProfile(profileName.value)
         store.profiles.newProfileId = store.profiles.current

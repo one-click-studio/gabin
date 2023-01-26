@@ -31,10 +31,11 @@ onEnterPress(() => {
     }
 })
 
-store.layout.footer.next.callback = () => {
+store.layout.footer.next.callback = async () => {
     const current = store.profiles.getCurrent()
     if (current) {
         current.connections.tcp = tcpConnection.value
+        await store.profiles.save()
         if (store.profiles.editProfile) store.toast.success('Profile saved !')
     }
 }

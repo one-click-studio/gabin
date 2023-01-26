@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { Subject } from 'rxjs'
+import { klona } from 'klona'
 
 import type { 
     IconName,
@@ -154,6 +155,12 @@ export const store = reactive({
             const current = store.profiles.getCurrent()
             return (current? current.connections : DEFAULT_CONNECTIONS())
         },
+        save: async () => {
+            const current = store.profiles.getCurrent()
+            if (!current) return
+            const currentClone = klona(current)
+            await window.api.invoke.saveProfile(currentClone)
+        }
     },
     assets: {
         scenes: <ObsScene[]>[],

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { klona } from 'klona'
 import { store } from '@src/renderer/src/store/store'
 
 import MainProfile from '@src/renderer/src/components/home/MainProfile.vue'
@@ -9,13 +8,9 @@ import { onEnterPress } from '@src/renderer/src/components/utils/KeyPress.vue'
 const { invoke } = window.api
 
 store.layout.footer.next.callback = async () => {
-    const current = store.profiles.getCurrent()
-    if (current) {
-        const currentClone = klona(current)
-        await window.api.invoke.saveProfile(currentClone)
-        store.profiles.newProfileId = 0
-        invoke.disconnectObs()
-    }
+    await store.profiles.save()
+    store.profiles.newProfileId = 0
+    invoke.disconnectObs()
 
     store.redirect.path = '/home'
 }
