@@ -231,7 +231,8 @@ export class AudioActivity {
     }
 
     private async process(pcm: Buffer) {
-        const buffers = splitBuffer(pcm, 2, this._channels.length)
+        if (!this._device) return
+        const buffers = splitBuffer(pcm, 2, this._device.data.inputChannels)
     
         // STEREO (COPY LEFT (0) TO RIGHT (1)
         // buffers[1] = JSON.parse(JSON.stringify(buffers[0]))
