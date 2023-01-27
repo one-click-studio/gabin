@@ -57,6 +57,13 @@ const toggleAutostart = async () => {
     await window.api.invoke.setAutostart({ id: current.id, autostart: current.autostart })
 }
 
+const toggleStartMinimized = async () => {
+    if (!current) return
+
+    current.startminimized = !current.startminimized
+    await window.api.invoke.setStartMinimized({ id: current.id, minimized: current.startminimized })
+}
+
 const prepareHomeView = () => {
     settings.value = store.profiles.settings()
 
@@ -129,11 +136,19 @@ prepareHomeView()
             <Teleport to="#header-dotmenu-slot">
                 <div class="w-full flex flex-col">
 
-                    <div class="w-full mx-4 my-4 text-sm">
+                    <div class="w-full mx-4 my-2 text-sm">
                         <ToggleUi
                             label="Autostart"
                             :value="current?.autostart || false"
                             @update="toggleAutostart"
+                        />
+                    </div>
+
+                    <div class="w-full mx-4 my-2 text-sm">
+                        <ToggleUi
+                            label="Start minimized"
+                            :value="current?.startminimized || false"
+                            @update="toggleStartMinimized"
                         />
                     </div>
 

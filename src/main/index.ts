@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, Event, Tray, Menu } from 'electron'
 
 import * as path from 'path'
 import { electronApp, optimizer, is, platform } from '@electron-toolkit/utils'
@@ -8,7 +8,8 @@ import { ipcMain } from '@src/common/ipcs'
 import { Gabin } from '@src/main/gabin'
 import { ProfileSetup } from '@src/main/modules/setup'
 import db from '@src/main/utils/db'
-import { isDev } from '@src/main/utils/utils'
+import { isDev, getPath } from '@src/main/utils/utils'
+import { Profile } from '@src/types/protocol'
 
 const { invoke, handle } = ipcMain
 let gabin: Gabin | undefined
@@ -77,6 +78,7 @@ function handler() {
   handle.setProfileIcon(async (_, p) => profileSetup.setIcon(p.data.id, p.data.icon))
   handle.setProfileName(async (_, p) => profileSetup.setName(p.data.id, p.data.name))
   handle.setAutostart(async (_, p) => profileSetup.setAutostart(p.data.id, p.data.autostart))
+  handle.setStartMinimized(async (_, p) => profileSetup.setStartMinimized(p.data.id, p.data.minimized))
   handle.deleteProfile(async (_, id) => {
     profileSetup.deleteProfile(id.data)
     gabin = undefined
@@ -101,6 +103,25 @@ function handler() {
       invoke.handlePower(bw, power.data)
     })
   })
+}
+
+function createTray(win: BrowserWindow) {
+  let appIcon = new Tray(getPath('../../resources/icon.ico'))
+
+  const contextMenu = Menu.buildFromTemplate([{
+      label: 'Show',
+      click: () => win.show()
+    }, {
+      label: 'Exit',
+      click: () => app.quit()
+    }
+  ])
+
+  appIcon.on('double-click', () => win.show())
+  appIcon.setToolTip('Gabin')
+  appIcon.setContextMenu(contextMenu)
+
+  return appIcon
 }
 
 async function createWindow(): Promise<void> {
@@ -133,10 +154,25 @@ async function createWindow(): Promise<void> {
   handler()
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-    // setTimeout(() => {
-    //   invoke.simpleString(mainWindow, "")
-    // }, 1000)
+    const profiles = db.getSpecificAndDefault(['profiles'], false)
+    const profile = profiles.defaultValue.find((p: Profile) => p.active === true)
+
+    if (profile && profile.startminimized) {
+      createTray(mainWindow)
+    } else {
+      mainWindow.show()
+  
+      // setTimeout(() => {
+      //   invoke.simpleString(mainWindow, "")
+      // }, 1000)
+    }
+
+  })
+
+  mainWindow.on('minimize', (event: Event) => {
+    event.preventDefault()
+    mainWindow.hide()
+    createTray(mainWindow)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

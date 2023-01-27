@@ -107,6 +107,7 @@ export interface Profile {
     settings: ProfileSettings
     connections: ConnectionsConfig
     autostart?: boolean
+    startminimized?: boolean
 }
 export interface ProfileSettings {
     mics: AudioDeviceSettings[]
