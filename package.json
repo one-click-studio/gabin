@@ -11,18 +11,17 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "clean": "pnpm clean:build && pnpm clean:dist",
-    "clean:build": "rm -rf ./build",
-    "clean:dist": "rm -rf ./dist",
-    "dev": "cross-env GABIN_CLIENT_PORT=1999 concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
+    "clean:build": "shx rm -rf ./build",
+    "clean:dist": "shx rm -rf ./dist",
+    "dev": "cross-env GABIN_CLIENT_PORT=5999 concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
     "dev:server": "npx nodemon",
     "dev:client": "cd ./src/render && pnpm dev",
     "build": "pnpm clean:build && concurrently \"pnpm run build:client\" \"pnpm run build:server\"",
-    "build:server": "rm -rf ./build && tsc && cp -R ./src/resources ./build/resources",
-    "build:client": "cd ./src/render && pnpm build && cd ../.. && mkdir -p ./build/render/dist && cp -R ./src/render/dist ./build/render",
+    "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
+    "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
     "pkg:mac": "pnpm clean:dist && pnpm build && pkg . --targets x64,arm64 && ./buildMacApp.sh x64 && ./buildMacApp.sh arm64",
-    "pkg:win": "pnpm clean:dist && pnpm build && pkg .",
-    "test": "./test.sh x64",
+    "pkg:win": "pnpm clean:dist && pnpm build && pkg . --targets x64",
     "app": "./dist/gabin"
   },
   "pkg": {
@@ -56,6 +55,7 @@
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",
     "playwright": "^1.29.2",
+    "shx": "^0.3.4",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
   }

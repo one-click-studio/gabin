@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port $GABIN_CLIENT_PORT",
+    "dev": "cross-env-shell \"vite --port $GABIN_CLIENT_PORT\"",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
