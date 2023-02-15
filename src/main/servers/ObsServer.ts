@@ -1,9 +1,9 @@
 import ObsWebSocket from 'obs-websocket-js'
 import type { OBSResponseTypes } from 'obs-websocket-js'
 import { BehaviorSubject } from 'rxjs'
-import deepEqual from 'deep-equal'
+import deepEqual from 'deep-eql'
 
-import { Server } from '@src/main/servers/Server'
+import { Server } from '../../main/servers/Server'
 
 import type {
     Connection,
@@ -11,11 +11,11 @@ import type {
     ObsScene,
     ResponseObsScene,
     ResponseObsItem,
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
-import db from '@src/main/utils/db'
+import db from '../../main/utils/db'
 
-import { expoAttempt } from '@src/main/utils/utils'
+import { expoAttempt } from '../../main/utils/utils'
 
 export class ObsServer extends Server {
     websocket: ObsWebSocket

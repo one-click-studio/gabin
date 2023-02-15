@@ -1,225 +1,175 @@
-import { app, shell, BrowserWindow, Event, Tray, Menu } from 'electron'
-
+import dotenv from 'dotenv'
 import * as path from 'path'
-import { electronApp, optimizer, is, platform } from '@electron-toolkit/utils'
-import { attachTitlebarToWindow, setupTitlebar } from 'custom-electron-titlebar/main'
+import http from "http"
+import serveStatic from 'serve-static'
+import finaleHandler from 'finalhandler'
+import fs from 'fs'
+import Systray from 'systray'
 
-import { ipcMain } from '@src/common/ipcs'
-import { Gabin } from '@src/main/gabin'
-import { ProfileSetup } from '@src/main/modules/setup'
-import db from '@src/main/utils/db'
-import { isDev, getPath } from '@src/main/utils/utils'
-import { Profile } from '@src/types/protocol'
+import { Server } from "socket.io"
 
-const { invoke, handle } = ipcMain
+import { Gabin } from './modules/gabin'
+import { ProfileSetup } from '../main/modules/setup'
+import db from '../main/utils/db'
+import { openUrl } from '../main/utils/utils'
+import { Profile, Connection, ObsSource, MicId } from '../types/protocol'
+
+dotenv.config()
+
+const HOST = process.env.GABIN_HOST || 'localhost'
+const PORT = process.env.GABIN_PORT || 1510
+
 let gabin: Gabin | undefined
 
-const initGabin = () => {
+const initGabin = (io: Server) => {
   gabin = new Gabin()
   gabin.shoot$.subscribe((shoot) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleNewShot(bw, shoot)
-    })
+    io.emit('handleNewShot', shoot)
   })
   gabin.autocam$.subscribe((autocam) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleAutocam(bw, autocam)
-    })
+    io.emit('handleAutocam', autocam)
   })
   gabin.timeline$.subscribe((micId) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleTimeline(bw, micId)
-    })
+    io.emit('handleTimeline', micId)
   })
   gabin.availableMics$.subscribe((availableMics) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleAvailableMics(bw, availableMics)
-    })
+    io.emit('handleAvailableMics', availableMics)
   })
   gabin.connections$.subscribe((c) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleObsConnected(bw, c.obs)
-    })
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleStreamdeckConnected(bw, c.streamdeck)
-    })
+    io.emit('handleObsConnected', c.obs)
+    io.emit('handleStreamdeckConnected', c.streamdeck)
   })
 }
 
-function handler() {
+function handler(io: Server) {
   const profileSetup = new ProfileSetup()
 
-  profileSetup.obs.reachable$.subscribe((reachable) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleObsConnected(bw, reachable)
+  io.on('connection', client => {
+    // client.on('event', data => { console.log(data) })
+    // io.emit('responseEvent', data)
+
+    profileSetup.obs.reachable$.subscribe((reachable, ) => {
+      io.emit('handleObsConnected', reachable)
     })
-  })
 
-  profileSetup.obs.scenes$.subscribe((scenes) => {
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handleObsScenes(bw, scenes)
+    profileSetup.obs.scenes$.subscribe((scenes) => {
+      io.emit('handleObsScenes', scenes)
     })
-  })
 
-  // ELECTRON
-  handle.openLink(async (_, link) => shell.openExternal(link.data))
+    // ELECTRON
+    client.on('openLink', (link: string, callback) => callback(openUrl(link)))
 
-  // OBS
-  handle.connectObs(async (_, c) => profileSetup.connectObs(c.data))
-  handle.disconnectObs(async () => profileSetup.disconnectObs())
-
-  // AUDIO
-  handle.getAudioDevices(async () => profileSetup.getAllAudioDevices())
-
-  // PROFILE
-  handle.saveProfile(async (_, p) => profileSetup.setProfile(p.data))
-  handle.getProfiles(async () => profileSetup.getProfiles())
-  handle.setDefaultProfile(async (_, id) => profileSetup.setDefault(id.data))
-  handle.setProfileIcon(async (_, p) => profileSetup.setIcon(p.data.id, p.data.icon))
-  handle.setProfileName(async (_, p) => profileSetup.setName(p.data.id, p.data.name))
-  handle.setAutostart(async (_, p) => profileSetup.setAutostart(p.data.id, p.data.autostart))
-  handle.setStartMinimized(async (_, p) => profileSetup.setStartMinimized(p.data.id, p.data.minimized))
-  handle.deleteProfile(async (_, id) => {
-    profileSetup.deleteProfile(id.data)
-    gabin = undefined
-  })
-
-  // SHOTS
-  handle.triggerShot(async (_, s) => gabin?.triggeredShot$.next(s.data))
-  handle.toggleAvailableMic(async (_, m) => gabin?.toggleAvailableMic(m.data))
-  handle.toggleAutocam(async (_, a) => gabin?.autocam$.next(a.data))
-
-  // GABIN
-  handle.togglePower(async (_, power) => {
-    // init Gabin
-    if (!gabin && power.data) {
-      initGabin()
-    }
-    if (gabin) {
-      gabin.power(power.data)
-    }
-
-    BrowserWindow.getAllWindows().forEach((bw) => {
-      invoke.handlePower(bw, power.data)
+    // OBS
+    client.on('connectObs', (c: Connection, callback) => {
+      console.log(callback)
+      callback(profileSetup.connectObs(c))
     })
+    client.on('disconnectObs', (_data, callback) => callback(profileSetup.disconnectObs()))
+
+    // AUDIO
+    client.on('getAudioDevices', (_data, callback) => callback(profileSetup.getAllAudioDevices()))
+
+    // PROFILE
+    client.on('saveProfile', (p: Profile, callback) => callback(profileSetup.setProfile(p)))
+
+    client.on('getProfiles', (_data, callback) => {
+      callback(profileSetup.getProfiles())
+    })
+
+    client.on('setDefaultProfile', (id: Profile['id'], callback) => callback(profileSetup.setDefault(id)))
+    client.on('setProfileIcon', (p: {id: Profile['id'], icon: Profile['icon']}, callback) => callback(profileSetup.setIcon(p.id, p.icon)))
+    client.on('setProfileName', (p: {id: Profile['id'], name: Profile['name']}, callback) => callback(profileSetup.setName(p.id, p.name)))
+    client.on('setAutostart', (p: {id: Profile['id'], autostart: Profile['autostart']}, callback) => callback(profileSetup.setAutostart(p.id, p.autostart)))
+    client.on('setStartMinimized', (p: {id: Profile['id'], minimized: Profile['startminimized']}, callback) => callback(profileSetup.setStartMinimized(p.id, p.minimized)))
+    client.on('deleteProfile', (id: Profile['id'], callback) => {
+      profileSetup.deleteProfile(id)
+      gabin = undefined
+      callback()
+    })
+
+    // SHOTS
+    client.on('triggerShot', (s: ObsSource, callback) => callback(gabin?.triggeredShot$.next(s)))
+    client.on('toggleAvailableMic', (m: MicId, callback) => callback(gabin?.toggleAvailableMic(m)))
+    client.on('toggleAutocam', (a: boolean, callback) => callback(gabin?.autocam$.next(a)))
+
+    // GABIN
+    client.on('togglePower', (power: boolean, callback) => {
+      // init Gabin
+      if (!gabin && power) {
+        initGabin(io)
+      }
+      if (gabin) {
+        gabin.power(power)
+      }
+
+      io.emit('handlePower', power)
+      callback()
+    })
+
+    // client.on('disconnect', () => {})
   })
 }
 
-function createTray(win: BrowserWindow) {
-  let appIcon = new Tray(getPath('../../resources/icon.ico'))
+function createTray(): Systray {
+  const icon = fs.readFileSync(path.join(__dirname, `../resources/icons/icon.${process.platform === 'win32' ? 'ico' : 'png'}`))
 
-  const contextMenu = Menu.buildFromTemplate([{
-      label: 'Show',
-      click: () => win.show()
-    }, {
-      label: 'Exit',
-      click: () => app.quit()
-    }
-  ])
+  const systray = new Systray({
+    menu: {
+      icon: icon.toString('base64'),
+      title: "",
+      tooltip: "Gabin",
+      items: [{
+        title: "Open in browser",
+        tooltip: "",
+        checked: false,
+        enabled: true
+      }, {
+        title: "Exit",
+        tooltip: "bb",
+        checked: false,
+        enabled: true
+      }]
+    },
+    debug: false,
+    copyDir: true, // copy go tray binary to outside directory, useful for packing tool like pkg.
+  })
 
-  appIcon.on('double-click', () => win.show())
-  appIcon.setToolTip('Gabin')
-  appIcon.setContextMenu(contextMenu)
-
-  return appIcon
-}
-
-async function createWindow(): Promise<void> {
-  if (!platform.isMacOS) setupTitlebar()
-
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    show: false,
-    width: 1280,
-    height: 720,
-    minWidth: 768,
-    minHeight: 550,
-    title: 'Gabin',
-    titleBarStyle: 'hidden',
-    trafficLightPosition: { x: 12, y: 12 },
-    backgroundColor: '#000',
-    webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: false
+  systray.onClick(action => {
+    if (action.seq_id === 0) {
+      openUrl(`http://${HOST}:${PORT}`)
+    } else if (action.seq_id === 1) {
+      console.log('bye ❤️')
+      systray.kill()
     }
   })
 
-  if (!platform.isMacOS) attachTitlebarToWindow(mainWindow)
+  return systray
+}
 
-  if (isDev()) mainWindow.webContents.openDevTools()
+async function main() {
+
+  const serve = serveStatic(path.join(__dirname, '../render/dist'))
+  const server = http.createServer((req, res) => {
+    serve(req, res, finaleHandler(req, res))
+  })
+
+  const io = new Server(server, {
+    cors: {
+      origin: "http://localhost:5173",
+      methods: ["GET", "POST"]
+    }
+  })
+
+  // @ts-ignore
+  server.listen(PORT, HOST)
 
   // init db
   await db.connect()
 
-  handler()
+  // handler()
+  handler(io)
 
-  mainWindow.on('ready-to-show', () => {
-    const profiles = db.getSpecificAndDefault(['profiles'], false)
-    const profile = profiles.defaultValue.find((p: Profile) => p.active === true)
-
-    if (profile && profile.startminimized) {
-      createTray(mainWindow)
-    } else {
-      mainWindow.show()
-  
-      // setTimeout(() => {
-      //   invoke.simpleString(mainWindow, "")
-      // }, 1000)
-    }
-
-  })
-
-  mainWindow.on('minimize', (event: Event) => {
-    event.preventDefault()
-    mainWindow.hide()
-    createTray(mainWindow)
-  })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
-  }
+  createTray()
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(async () => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
-
-  await createWindow()
-
-  app.on('activate', async function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) await createWindow()
-  })
-})
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
+main()

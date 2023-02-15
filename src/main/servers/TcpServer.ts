@@ -1,14 +1,14 @@
 import net from 'net'
 import type { Subject } from 'rxjs'
 
-import { Server } from '@src/main/servers/Server'
+import { Server } from '../../main/servers/Server'
 import type {
     Connection,
     TcpClient,
     TcpRequest,
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
-import db from '@src/main/utils/db'
+import db from '../../main/utils/db'
 
 const HEADER = '__gabin0istryingtocommunicate__'
 

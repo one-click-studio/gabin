@@ -1,16 +1,16 @@
-import { ObsServer } from '@src/main/servers/ObsServer'
-import { Connections } from '@src/main/servers/Connections';
+import { ObsServer } from '../../main/servers/ObsServer'
+import { Connections } from '../../main/servers/Connections';
 
-import { getDevices } from '@src/main/modules/audioActivity'
+import { getDevices } from '../../main/modules/audioActivity'
 
-import db from '@src/main/utils/db'
-import type { SpecificAndDefault } from '@src/main/utils/db'
+import db from '../../main/utils/db'
+import type { SpecificAndDefault } from '../../main/utils/db'
 
 import type {
     Connection,
     AudioDevice,
     Profile,
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
 export class ProfileSetup {
 

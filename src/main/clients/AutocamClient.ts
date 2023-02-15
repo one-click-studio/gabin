@@ -1,12 +1,12 @@
 import { Subject, BehaviorSubject } from 'rxjs'
 import type { Subscription } from 'rxjs'
 
-import { Client } from '@src/main/clients/Client'
-import db from '@src/main/utils/db'
-import type { Logger } from '@src/main/utils/logger'
-import { getLogger } from '@src/main/utils/logger'
+import { Client } from '../../main/clients/Client'
+import db from '../../main/utils/db'
+import type { Logger } from '../../main/utils/logger'
+import { getLogger } from '../../main/utils/logger'
 
-import { AudioActivity } from '@src/main/modules/audioActivity'
+import { AudioActivity } from '../../main/modules/audioActivity'
 import type { RtAudioApi } from 'audify'
 
 import type {
@@ -19,7 +19,7 @@ import type {
     AudioDeviceSettings,
     AutocamSettings,
     Shoot,
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
 type ContainerMap = Map<ObsAssetId['scene'], Container>
 

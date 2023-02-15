@@ -1,18 +1,19 @@
-import { app } from 'electron'
-
 import JsonDb from 'simple-json-db'
 
-import { join } from 'path'
-import deepEqual from 'deep-equal'
+import path from 'path'
+import dotenv from 'dotenv'
+import deepEqual from 'deep-eql'
 
 import { BehaviorSubject } from 'rxjs'
 import { map, distinctUntilChanged, skip } from 'rxjs/operators'
 import type { Observable } from 'rxjs'
 
-import { deepCopy } from '@src/main/utils/utils'
-import type { ServerConfig } from '@src/types/protocol'
+import { deepCopy } from '../../main/utils/utils'
+import type { ServerConfig } from '../../types/protocol'
 
-const CONFIG_FILE = join(app.getPath("userData"), 'db.json')
+dotenv.config()
+// @ts-ignore
+const CONFIG_FILE = path.join((process.env.GABIN_CONFIG_FOLDER || (process.pkg? path.dirname(process.execPath) : '')), './database.json')
 
 const EMPTY_CONFIG = {
     connections: {

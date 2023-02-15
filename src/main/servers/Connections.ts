@@ -1,11 +1,11 @@
-import db from '@src/main/utils/db'
-import type { SpecificAndDefault } from '@src/main/utils/db'
+import db from '../../main/utils/db'
+import type { SpecificAndDefault } from '../../main/utils/db'
 
 import type {
     ConnectionsConfig,
     ConnectionType,
     Connection,
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
 export class Connections {
 

@@ -1,8 +1,8 @@
 import { BehaviorSubject } from 'rxjs'
-import { getLogger } from '@src/main/utils/logger'
+import { getLogger } from '../../main/utils/logger'
 
 import type { Subscription } from 'rxjs'
-import type { Logger } from '@src/main/utils/logger'
+import type { Logger } from '../../main/utils/logger'
 
 export class Server {
     reachable$ = new BehaviorSubject(false)

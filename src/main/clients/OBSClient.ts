@@ -1,16 +1,16 @@
 import { BehaviorSubject } from 'rxjs'
 
-import { ObsServer } from '@src/main/servers/ObsServer'
-import { Client } from '@src/main/clients/Client'
+import { ObsServer } from '../../main/servers/ObsServer'
+import { Client } from '../../main/clients/Client'
 
-import db from '@src/main/utils/db'
+import db from '../../main/utils/db'
 
 import type {
     VideoDeviceSettings,
     ObsAssetId,
     ObsScene,
     ObsSource,
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
 export class ObsClient extends Client {
 

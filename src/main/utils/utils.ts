@@ -1,5 +1,3 @@
-import { join } from 'path'
-
 export class expoAttempt {
     private max: number
     timeout: NodeJS.Timeout = setTimeout(()=>{ return })
@@ -146,13 +144,18 @@ export class timer {
 
 }
 
-export function isDev(): boolean {
-    return process.argv[0].includes('electron')
-}
+// export function isDev(): boolean {
+//     return process.argv[0].includes('electron')
+// }
 
-export function getPath(str: string): string {
-    let strPath = join(__dirname, str)
-    if (!isDev()) strPath = strPath.replace('app.asar', 'app.asar.unpacked')
+// export function getPath(str: string): string {
+//     let strPath = join(__dirname, str)
+//     if (!isDev()) strPath = strPath.replace('app.asar', 'app.asar.unpacked')
 
-    return strPath
+//     return strPath
+// }
+
+export function openUrl(url: string): void {
+    var start = (process.platform == 'darwin'? 'open': process.platform == 'win32'? 'start': 'xdg-open')
+    require('child_process').exec(start + ' ' + url)
 }

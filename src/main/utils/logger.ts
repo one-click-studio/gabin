@@ -1,4 +1,6 @@
-import { BrowserWindow } from 'electron';
+import path from 'path'
+import fs from 'fs'
+import dotenv from 'dotenv'
 
 const COLORS = {
     Reset : '\x1b[0m',
@@ -44,6 +46,10 @@ export type Log = {
     value: string
 }
 
+dotenv.config()
+// @ts-ignore
+const LOG_FILE = path.join((process.env.GABIN_LOGS_FOLDER || (process.pkg? path.dirname(process.execPath) : '')), './gabin.log')
+
 const getTypeColor = (type: LogType): string => {
     switch (type) {
         case 'info':
@@ -71,13 +77,6 @@ const toString = (obj: any) => {
     return obj
 }
 
-const sendLogToBrowserWindow = (log: Log) => {
-    const bws = BrowserWindow.getAllWindows()
-    if (bws.length > 0){
-        bws[0].webContents.send('get-logs', log)
-    }
-}
-
 export const getLogger = (name: string) => {
 
     const logger = (type: LogType, obj: any, obj2?: any) => {
@@ -92,7 +91,7 @@ export const getLogger = (name: string) => {
         }
 
         process.stdout.write(`\n${getTypeColor(log.type)}${log.time}${COLORS.Bright} [${log.context}]${COLORS.Reset} ${log.value}`)
-        sendLogToBrowserWindow(log)
+        fs.appendFileSync(LOG_FILE, `\n${log.time} [${log.context}] : ${log.value}`)
     }
 
     const info = (obj: any, obj2?: any) => {

@@ -1,9 +1,10 @@
+import path from "path"
+import fs from "fs"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import VAD from "webrtcvad"
 import { InferenceSession, Tensor } from "onnxruntime-node"
-import { getPath } from '@src/main/utils/utils'
 
-const sileroModelPath = getPath('../../resources/models/silero.onnx')
+const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
 
 interface Device {
     id: number
@@ -15,7 +16,7 @@ interface Device {
 class SileroVad {
     private loaded = false;
     private session: any;
-  
+
     public ready = false;
 
     private _h: Tensor
@@ -31,25 +32,26 @@ class SileroVad {
 
     async load() {
         if (this.loaded) return
-    
+
         this.loaded = true
-    
+
         try {
-            this.session = await InferenceSession.create(sileroModelPath)
+            const model = fs.readFileSync(sileroModelPath)
+            this.session = await InferenceSession.create(model)
         } catch (e) {
             return
         }
-    
+
         if (!this.session) return
 
         this.ready = true
     }
-  
+
     async process(audio: number[], batchSize = 1): Promise<number> {
         if (!this.loaded) {
             await this.load()
         }
-    
+
         if (!this.ready) return 0
 
         const result = await this.session.run({

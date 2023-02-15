@@ -1,0 +1,248 @@
+@font-face {
+    font-family: SpaceGrotesk;
+    src: url('@src/assets/fonts/SpaceGrotesk-Regular.ttf');
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: SpaceGrotesk;
+    src: url('@src/assets/fonts/SpaceGrotesk-Bold.ttf');
+    font-weight: bold;
+}
+
+@layer base {
+    html, input, textarea, select, button {
+        font-family: SpaceGrotesk, system-ui, sans-serif;
+    }
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+html, body {
+    @apply bg-bg-3 m-0 h-screen w-screen overflow-hidden flex text-content-1;
+}
+
+.cet-container {
+    @apply overflow-hidden;
+}
+
+#app {
+    @apply bg-bg-3 m-0 h-full w-screen overflow-hidden flex text-content-1 position-relative;
+}
+
+* {
+    @apply select-none;
+}
+
+input {
+    @apply select-text;
+}
+
+h1, h2 {
+    @apply m-0;
+}
+
+h1 {
+    @apply text-xl font-bold;
+}
+
+h2 {
+    @apply text-lg font-bold;
+}
+
+h3 {
+    @apply text-m font-bold;
+}
+
+svg {
+    @apply fill-current;
+}
+
+span.emoji {
+    @apply mr-3 text-[24px];
+}
+
+button.btn {
+    @apply flex justify-between items-center text-content-1 bg-bg-2;
+    @apply border-0 font-bold py-4 px-5;
+    @apply cursor-pointer;
+    @apply relative;
+}
+
+button.btn.txt-only {
+    @apply justify-center;
+}
+
+button.btn {
+    @apply focus-visible:outline-none;
+}
+
+button.btn.focus-visible,
+button.btn.hover:not(.disable),
+button.btn:focus-visible,
+button.btn:hover:not(.disable) {
+    @apply brightness-125;
+}
+
+button.btn.active,
+button.btn:active {
+    @apply !brightness-175 text-content-2;
+}
+
+button.btn.disable {
+    @apply !brightness-75 cursor-default !text-content-1;
+}
+
+
+button.btn.i-last,
+button.btn.i-first {
+    @apply justify-start;
+}
+button.btn.i-first > svg {
+    @apply mr-4;
+}
+button.btn.i-last > svg {
+    @apply ml-4;
+}
+
+button.btn.i-only {
+    @apply w-14 h-14 flex p-0;
+}
+button.btn.i-round {
+    @apply rounded-full w-10 h-10 flex p-0 bg-transparent;
+}
+button.btn.i-round:focus-visible,
+button.btn.i-round:hover:not(.disable) {
+    background-color: #00000040;
+}
+button.btn > svg {
+    min-height: 16px;
+    min-width: 16px;
+}
+button.btn.i-big > svg {
+    min-height: 24px;
+    min-width: 24px;
+}
+
+button.btn.i-only > svg,
+button.btn.i-round > svg {
+    @apply m-auto;
+}
+
+button.btn.loading {
+    @apply pr-12;
+}
+
+button.btn.loading::after {
+    content: "";
+    animation: button-loading-spinner 1s ease infinite;
+    @apply absolute w-6 h-6 right-3 m-auto border-4 border-solid border-transparent border-t-white rounded-full;
+}
+
+button.btn.small.loading::after {
+    @apply w-4 h-4;
+}
+
+button.btn.small {
+    @apply font-normal text-sm py-2 px-3;
+}
+button.btn.small > svg {
+    min-height: 16px;
+    min-width: 16px;
+}
+
+button.btn.small.i-first > svg {
+    @apply mr-3;
+}
+button.btn.small.i-last > svg {
+    @apply ml-3;
+}
+
+button.btn.primary {
+    @apply bg-main;
+}
+
+/* button.btn.primary:focus-visible,
+button.btn.primary:hover:not(.disable) {
+    @apply bg-mainhover;
+} */
+
+button.btn.danger {
+    @apply bg-content-negative;
+}
+
+button.btn.danger:focus-visible,
+button.btn.danger:hover:not(.disable) {
+    @apply bg-negative-hover;
+}
+
+table {
+    @apply w-full border-collapse;
+}
+table > thead {
+    @apply bg-bg-1 text-sm;
+}
+table > thead > tr > th {
+    @apply whitespace-nowrap text-left px-2 py-2;
+}
+table > tbody > tr > td {
+    @apply px-2 py-0.5;
+    @apply border-content-3;
+}
+
+ul {
+    @apply list-none;
+    @apply m-0 p-0;
+}
+
+a {
+    @apply cursor-pointer decoration-none;
+}
+
+input {
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    @apply font-bold m-0 my-1;
+}
+p {
+    @apply m-0;
+}
+
+div {
+    @apply box-border;
+}
+
+.text-xxs {
+	line-height: 0.844rem !important;
+}
+.text-xs {
+	line-height: 1rem !important;
+}
+.text-sm {
+	line-height: 1.219rem !important;
+}
+.text-base {
+	line-height: 1.35rem !important;
+}
+.text-m {
+	line-height: 1.5rem !important;
+}
+.text-lg {
+	line-height: 2rem !important;
+}
+.text-xl {
+	line-height: 3.6rem !important;
+}
+
+.scroll-bar {
+    @apply scrollbar scrollbar-track-color-transparent scrollbar-thumb-color-bg-1 scrollbar-h-0;
+}

@@ -1,6 +1,6 @@
 import { BehaviorSubject, Subject } from 'rxjs'
 
-import { Client } from '@src/main/clients/Client'
+import { Client } from '../../main/clients/Client'
 
 import type {
     TcpClient,
@@ -10,9 +10,9 @@ import type {
     ObsAssetId,
     MicId,
     AvailableMicsMap
-} from '@src/types/protocol'
+} from '../../types/protocol'
 
-import db from '@src/main/utils/db'
+import db from '../../main/utils/db'
 
 type AutoCamParams = {
     autocam: boolean
