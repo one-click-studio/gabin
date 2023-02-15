@@ -9,9 +9,9 @@ import Systray from 'systray'
 import { Server } from "socket.io"
 
 import { Gabin } from './modules/gabin'
-import { ProfileSetup } from '../main/modules/setup'
-import db from '../main/utils/db'
-import { openUrl } from '../main/utils/utils'
+import { ProfileSetup } from './modules/setup'
+import db from './utils/db'
+import { openUrl } from './utils/utils'
 import { Profile, Connection, ObsSource, MicId } from '../types/protocol'
 
 dotenv.config()
@@ -136,7 +136,8 @@ function createTray(): Systray {
 
   systray.onClick(action => {
     if (action.seq_id === 0) {
-      openUrl(`http://${HOST}:${PORT}`)
+      const port = process.env.GABIN_CLIENT_PORT || PORT
+      openUrl(`http://${HOST}:${port}`)
     } else if (action.seq_id === 1) {
       console.log('bye ❤️')
       systray.kill()
@@ -153,12 +154,15 @@ async function main() {
     serve(req, res, finaleHandler(req, res))
   })
 
-  const io = new Server(server, {
-    cors: {
-      origin: "http://localhost:5173",
+  const ioOptions: any = {}
+  if (process.env.GABIN_CLIENT_PORT) {
+    ioOptions.cors = {
+      origin: `http://localhost:${process.env.GABIN_CLIENT_PORT}`,
       methods: ["GET", "POST"]
     }
-  })
+  }
+
+  const io = new Server(server, ioOptions)
 
   // @ts-ignore
   server.listen(PORT, HOST)
