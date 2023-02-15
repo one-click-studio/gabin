@@ -7,7 +7,7 @@
   "homepage": "https://oneclickstudio.fr",
   "repository": "github:one-click-studio/gabin",
   "main": "./src/main/index.ts",
-  "bin": "/.build/main/index.js",
+  "bin": "./build/main/index.js",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "clean": "pnpm clean:build && pnpm clean:dist",
