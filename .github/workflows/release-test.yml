@@ -93,7 +93,7 @@ jobs:
       - name: Decode certificate
         env:
           MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
-        run: echo "${MACOS_CERTIFICATE// /}" | base64 —-decode > certificate.p12
+        run: bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
 
       - name: Codesign executable
         env:
