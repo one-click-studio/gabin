@@ -90,12 +90,22 @@ jobs:
       #   if: matrix.os == 'macOS-latest'
       #   run: pnpm run pkg:mac
 
+      - name: just a test
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
+        run: |
+          echo $MACOS_CERTIFICATE
+
+      - name: just another test
+        run: |
+          echo "${{ secrets.APPLE_ID }}"
+
       - name: Codesign executable
         env:
           MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.APPLEIDPASS }}
         run: |
-          echo $MACOS_CERTIFICATE | base64 —-decode > certificate.p12
+          echo ${{ secrets.APPLE_ID }} | base64 —-decode > certificate.p12
           security create-keychain build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain build.keychain
