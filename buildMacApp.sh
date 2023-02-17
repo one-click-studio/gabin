@@ -15,7 +15,7 @@ codesign --deep --force --verbose --sign - $BIN_PATH/$NAME
 # codesign --deep --force --verbose --sign - $BIN_PATH/$PROJECT
 
 # Copy the executable
-cp $BIN_PATH/$NAME $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
+# cp $BIN_PATH/$NAME $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
 # cp $BIN_PATH/$PROJECT* $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
 
 # Create icons

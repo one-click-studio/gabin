@@ -50,62 +50,62 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: 7
-          run_install: false
+      # - uses: pnpm/action-setup@v2
+      #   name: Install pnpm
+      #   id: pnpm-install
+      #   with:
+      #     version: 7
+      #     run_install: false
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Get pnpm file path
-        shell: bash
-        run: |
-          PNPM_VERSION=$(pnpm -v)
-          echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
-
-      #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
-      - name: Tweak pnpm.cjs
-        if: matrix.os == 'windows-latest'
-        run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
-        shell: bash
-
-      - name: Install dependencies
-        run: pnpm installAll
-
-      - name: build macOS [BIN]
-        if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:mac
-
-      # - name: Codesign executable
-      #   env:
-      #     MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
-      #     MACOS_CERTIFICATE_PWD: ${{ secrets.APPLEIDPASS }}
+      # - name: Get pnpm store directory
+      #   id: pnpm-cache
+      #   shell: bash
       #   run: |
-      #     echo $MACOS_CERTIFICATE | base64 —decode > certificate.p12
-      #     security create-keychain build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain build.keychain
-      #     security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
-      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain
-      #     /usr/bin/codesign --force ./dist/gabin -v
+      #     echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - name: build macOS [APP]
-        if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:macApp
+      # - uses: actions/cache@v3
+      #   name: Setup pnpm cache
+      #   with:
+      #     path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+      #     key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pnpm-store-
+
+      # - name: Get pnpm file path
+      #   shell: bash
+      #   run: |
+      #     PNPM_VERSION=$(pnpm -v)
+      #     echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
+
+      # #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
+      # - name: Tweak pnpm.cjs
+      #   if: matrix.os == 'windows-latest'
+      #   run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
+      #   shell: bash
+
+      # - name: Install dependencies
+      #   run: pnpm installAll
+
+      # - name: build macOS [BIN]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: pnpm run pkg:mac
+
+      - name: Codesign executable
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.APPLEIDPASS }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 —-decode > certificate.p12
+          security create-keychain build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain
+          /usr/bin/codesign --force ./gabin.app -v
+
+      # - name: build macOS [APP]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: pnpm run pkg:macApp
 
       # - name: build windows
       #   if: matrix.os == 'windows-latest'
