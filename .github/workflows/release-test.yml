@@ -91,6 +91,7 @@ jobs:
       #   run: pnpm run pkg:mac
 
       - name: Decode certificate
+        shell: bash
         run: echo ${{ secrets.APPLE_ID }} | base64 —-decode > certificate.p12
 
       - name: Codesign executable
