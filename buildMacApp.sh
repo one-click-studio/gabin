@@ -68,6 +68,9 @@ cat > $BIN_PATH/$PROJECT.app/Contents/Info.plist << EOF
 </plist>
 EOF
 
+# Sign the app
+codesign --deep --force --verbose --sign - $BIN_PATH/$PROJECT.app
+
 # Create the zip file
 cd $BIN_PATH
 zip -r $NAME-macos-$1.zip $PROJECT.app
