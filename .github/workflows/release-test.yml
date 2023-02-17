@@ -94,9 +94,10 @@ jobs:
       #   if: matrix.os == 'macOS-latest'
       #   run: pnpm run pkg:mac
 
+      - name: Codesign executable [decode]
+        run: bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
       - name: Codesign executable
         run: |
-          bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
           security create-keychain -p $KEYCHAIN_PSW build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p $KEYCHAIN_PSW build.keychain
