@@ -84,11 +84,24 @@ jobs:
         shell: bash
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm installAll
 
       - name: build macOS
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac
+
+      # - name: Codesign executable
+      #   env:
+      #     MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
+      #     MACOS_CERTIFICATE_PWD: ${{ secrets.APPLEIDPASS }}
+      #   run: |
+      #     echo $MACOS_CERTIFICATE | base64 —decode > certificate.p12
+      #     security create-keychain -p <your-password> build.keychain
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p <your-password> build.keychain
+      #     security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k <your-password> build.keychain
+      #     /usr/bin/codesign --force -s <identity-id> ./path/to/you/app -v
 
       # - name: build windows
       #   if: matrix.os == 'windows-latest'

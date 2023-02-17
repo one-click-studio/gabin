@@ -9,6 +9,8 @@
   "main": "./src/main/index.ts",
   "bin": "./build/main/index.js",
   "scripts": {
+    "installAll": "pnpm i && cd ./src/render && pnpm i",
+    "iAll": "pnpm i && cd ./src/render && pnpm i",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "clean": "pnpm clean:build && pnpm clean:dist",
     "clean:build": "shx rm -rf ./build",
