@@ -97,15 +97,16 @@ jobs:
         run: bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
 
       - name: Codesign executable 1
-        run: security create-keychain build.keychain
+        run: security create-keychain -p letsgo build.keychain
       - name: Codesign executable 2
         run: security default-keychain -s build.keychain
       - name: Codesign executable 3
-        run: security unlock-keychain build.keychain
+        run: security unlock-keychain -p letsgo build.keychain
       - name: Codesign executable 4
         run: security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
       - name: Codesign executable 5
-        run: security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain
+        run: |
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k letsgo build.keychain
       - name: Codesign executable 6
         run: /usr/bin/codesign --force ./gabin.app -v
 
