@@ -10,6 +10,10 @@ rm -rf $BIN_PATH/$PROJECT.app
 mkdir -p $BIN_PATH/$PROJECT.app/Contents/MacOS
 mkdir -p $BIN_PATH/$PROJECT.app/Contents/Resources
 
+# Sign the executable
+codesign --deep --force --verbose --sign - $BIN_PATH/$NAME
+# codesign --deep --force --verbose --sign - $BIN_PATH/$PROJECT
+
 # Copy the executable
 cp $BIN_PATH/$NAME $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
 # cp $BIN_PATH/$PROJECT* $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
