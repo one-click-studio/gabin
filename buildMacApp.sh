@@ -11,7 +11,8 @@ mkdir -p $BIN_PATH/$PROJECT.app/Contents/MacOS
 mkdir -p $BIN_PATH/$PROJECT.app/Contents/Resources
 
 # Copy the executable
-cp $BIN_PATH/$PROJECT $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
+cp $BIN_PATH/$NAME $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
+# cp $BIN_PATH/$PROJECT* $BIN_PATH/$PROJECT.app/Contents/MacOS/$NAME
 
 # Create icons
 ICONDIR=$BIN_PATH/$PROJECT.app/Contents/Resources/$NAME.iconset
@@ -55,8 +56,6 @@ cat > $BIN_PATH/$PROJECT.app/Contents/Info.plist << EOF
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
-    <key>CFBundleSignature</key>
-    <string>????</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>NSHighResolutionCapable</key>
@@ -64,5 +63,9 @@ cat > $BIN_PATH/$PROJECT.app/Contents/Info.plist << EOF
 </dict>
 </plist>
 EOF
+
+# Create the zip file
+cd $BIN_PATH
+zip -r $NAME-macos-$1.zip $PROJECT.app
 
 echo "Done! ❤️"

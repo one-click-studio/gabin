@@ -20,8 +20,8 @@
     "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
-    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . --targets x64,arm64 && ./buildMacApp.sh x64 && ./buildMacApp.sh arm64",
-    "pkg:win": "pnpm clean:dist && pnpm build && pkg . --targets x64",
+    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t x64 && ./buildMacApp.sh x64",
+    "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/test-pkg-rl.exe ./dist/test-pkg-rl-win.exe",
     "app": "./dist/gabin"
   },
   "pkg": {
@@ -54,6 +54,7 @@
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",
+    "pkg": "^5.8.0",
     "playwright": "^1.29.2",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
