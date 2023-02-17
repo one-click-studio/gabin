@@ -37,8 +37,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: create
     env:
-      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+      MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
       MACOS_CERTIFICATE_PWD: ${{ secrets.APPLEIDPASS }}
+      KEYCHAIN_PSW: blipbloup
 
     strategy:
       matrix:
@@ -93,20 +94,17 @@ jobs:
       #   if: matrix.os == 'macOS-latest'
       #   run: pnpm run pkg:mac
 
-      - name: Decode certificate
-        run: bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
-
-      - name: Codesign executable 1
-        run: security create-keychain -p letsgo build.keychain
-      - name: Codesign executable 2
-        run: security default-keychain -s build.keychain
-      - name: Codesign executable 3
-        run: security unlock-keychain -p letsgo build.keychain
+      - name: Codesign executable
+        run: |
+          bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
+          security create-keychain -p $KEYCHAIN_PSW build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p $KEYCHAIN_PSW build.keychain
       - name: Codesign executable 4
         run: security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
       - name: Codesign executable 5
         run: |
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k letsgo build.keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
       - name: Codesign executable 6
         run: /usr/bin/codesign --force ./gabin.app -v
 
