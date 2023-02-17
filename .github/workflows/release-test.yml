@@ -91,7 +91,9 @@ jobs:
       #   run: pnpm run pkg:mac
 
       - name: Decode certificate
-        run: echo "gfekruhfzer" | base64 —-decode > certificate.p12
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+        run: echo "${MACOS_CERTIFICATE// /}" | base64 —-decode > certificate.p12
 
       - name: Codesign executable
         env:
