@@ -37,8 +37,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: create
     env:
-      MACOS_CERTIFICATE: ${{ secrets.APPLE_ID }}
-      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLEIDPASS }}
+      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
       KEYCHAIN_PSW: blipbloup
 
     strategy:
