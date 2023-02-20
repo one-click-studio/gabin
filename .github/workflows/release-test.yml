@@ -110,7 +110,14 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
       - name: Codesign executable 2
         run: |
-          /usr/bin/codesign --deep --force --verbose ./Gabin.app/Contents/MacOS/Gabin
+          /usr/bin/codesign --deep --force --verbose ./dist1/Gabin.app/Contents/MacOS/Gabin
+          /usr/bin/codesign --deep --force --verbose ./dist1/Gabin.dmg
+          /usr/bin/codesign --deep --force --verbose ./dist1/Gabin.zip
+          /usr/bin/codesign --deep --force --verbose ./dist1/Gabin.tar.gz
+      - name: zip app
+        run: |
+          cd ./dist
+          zip -r Gabin-macos.zip Gabin.app
 
       # - name: build macOS [APP]
       #   if: matrix.os == 'macOS-latest'
@@ -129,7 +136,7 @@ jobs:
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/gabin-macos*.zip"
+          artifacts: "./dist/Gabin*.zip,Gabin.dmg,Gabin.tar.gz"
           draft: true
 
       # - name: upload release window
