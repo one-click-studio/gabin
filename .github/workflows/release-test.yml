@@ -42,6 +42,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+      IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
       CSC_LINK: ${{ secrets.CSC_LINK }}
       CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       KEYCHAIN_PSW: blipbloup
@@ -109,11 +110,16 @@ jobs:
           security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
           security find-identity -v
-          /usr/bin/codesign --deep --force --verbose --sign - ./dist/gabin
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
 
       - name: build macOS [APP]
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:macApp
+
+      - name: Codesign zip/dmg
+        run: |
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.zip
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
 
       # - name: build windows
       #   if: matrix.os == 'windows-latest'
