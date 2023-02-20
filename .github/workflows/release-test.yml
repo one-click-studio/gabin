@@ -39,6 +39,11 @@ jobs:
     env:
       MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
       MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       KEYCHAIN_PSW: blipbloup
 
     strategy:
@@ -95,14 +100,14 @@ jobs:
       #   run: pnpm run pkg:mac
 
       - name: Codesign executable [decode]
-        run: bash -c 'base64 --decode <<< "$MACOS_CERTIFICATE" > certificate.p12'
+        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
       - name: Codesign executable
         run: |
           security create-keychain -p $KEYCHAIN_PSW build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p $KEYCHAIN_PSW build.keychain
       - name: Codesign executable 4
-        run: security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+        run: security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
       - name: Codesign executable 5
         run: |
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
@@ -117,10 +122,10 @@ jobs:
       #   if: matrix.os == 'windows-latest'
       #   run: pnpm run pkg:win
 
-      - name: update release macOS
+      - name: upload release macOS
         if: matrix.os == 'macOS-latest'
         uses: ncipollo/release-action@v1
-        id: update_release_macos
+        id: upload_release_macos
         with:
           token: ${{ secrets.GH_TOKEN }}
           name: ${{ needs.create.outputs.release_name }}
@@ -129,10 +134,10 @@ jobs:
           artifacts: "./dist/gabin-macos*.zip"
           draft: true
 
-      # - name: update release window
+      # - name: upload release window
       #   if: matrix.os == 'windows-latest'
       #   uses: ncipollo/release-action@v1
-      #   id: update_release_win
+      #   id: upload_release_win
       #   with:
       #     token: ${{ secrets.GH_TOKEN }}
       #     name: ${{ needs.create.outputs.release_name }}
