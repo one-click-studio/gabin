@@ -1,16 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>English</string>
+  <dict>
+    <key>CFBundleDisplayName</key>
+    <string>Gabin</string>
     <key>CFBundleExecutable</key>
-    <string>gabin</string>
+    <string>Gabin</string>
     <key>CFBundleIconFile</key>
-    <string>iconfile</string>
+    <string>app.icns</string>
     <key>CFBundleIdentifier</key>
     <string>com.oneclickstudio.gabin</string>
-    <key>CFBundleName</key>
-    <string>gabin</string>
-</dict>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.2.0</string>
+    <key>CFBundleVersion</key>
+    <string>0.2.0</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2023 undefined</string>
+    <key>LSUIElement</key>
+    <false/>
+    <key>NSRequiresAquaSystemAppearance</key>
+    <false/>
+  </dict>
 </plist>

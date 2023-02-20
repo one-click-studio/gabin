@@ -22,9 +22,9 @@
     "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
-    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t x64",
+    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t x64 && embler",
     "pkg:macApp": "./buildMacApp.sh x64",
-    "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/test-pkg-rl.exe ./dist/test-pkg-rl-win.exe",
+    "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe",
     "app": "./dist/gabin"
   },
   "pkg": {
@@ -34,6 +34,16 @@
       "build/resources/**/*"
     ],
     "outputPath": "dist"
+  },
+  "embler": {
+    "realName": "Gabin",
+    "appId": "com.oneclickstudio.gabin",
+    "mac": {
+      "binary": "dist/gabin",
+      "icon": "./src/resources/icons/icon.png",
+      "formats": ["app", "dmg", "zip", "tar.gz"],
+      "embler.mac.category": "public.app-category.utilities"
+    }
   },
   "dependencies": {
     "audify": "^1.8.1",
@@ -56,6 +66,7 @@
     "@types/serve-static": "^1.15.0",
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.3",
+    "embler": "^1.0.0",
     "nodemon": "^2.0.20",
     "pkg": "^5.8.0",
     "playwright": "^1.29.2",
