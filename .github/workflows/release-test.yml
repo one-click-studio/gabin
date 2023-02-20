@@ -136,7 +136,7 @@ jobs:
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/Gabin*.zip,Gabin.dmg,Gabin.tar.gz"
+          artifacts: "./dist/Gabin*.zip,./dist/Gabin.dmg,./dist/Gabin.tar.gz"
           draft: true
 
       # - name: upload release window
