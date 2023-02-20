@@ -109,7 +109,6 @@ jobs:
           security unlock-keychain -p $KEYCHAIN_PSW build.keychain
           security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-          security find-identity -v
           /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
 
       - name: build macOS [APP]
@@ -134,7 +133,7 @@ jobs:
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/Gabin.*"
+          artifacts: "./dist/Gabin.*,gabin"
           draft: true
 
       # - name: upload release window
