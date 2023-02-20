@@ -106,13 +106,12 @@ jobs:
           security create-keychain -p $KEYCHAIN_PSW build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-      - name: Codesign executable 4
-        run: security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-      - name: Codesign executable 5
-        run: |
+          security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-      - name: Codesign executable 6
-        run: /usr/bin/codesign --deep --force --verbose ./gabin.app
+      - name: Codesign executable 2
+        run: |
+          /usr/bin/codesign --deep --force --verbose ./gabin.app/Contents/MacOS/gabin
+          /usr/bin/codesign --deep --force --verbose ./gabin.app
 
       # - name: build macOS [APP]
       #   if: matrix.os == 'macOS-latest'
