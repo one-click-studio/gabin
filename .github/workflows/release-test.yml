@@ -110,8 +110,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
       - name: Codesign executable 2
         run: |
-          /usr/bin/codesign --deep --force --verbose ./gabin.app/Contents/MacOS/gabin
-          /usr/bin/codesign --deep --force --verbose ./gabin.app
+          /usr/bin/codesign --deep --force --verbose ./Gabin.app/Contents/MacOS/Gabin
 
       # - name: build macOS [APP]
       #   if: matrix.os == 'macOS-latest'
