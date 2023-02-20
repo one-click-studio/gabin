@@ -22,8 +22,8 @@
     "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
-    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t x64 && embler",
-    "pkg:macApp": "./buildMacApp.sh x64",
+    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t x64",
+    "pkg:macApp": "embler",
     "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe",
     "app": "./dist/gabin"
   },
@@ -41,7 +41,7 @@
     "mac": {
       "binary": "dist/gabin",
       "icon": "./src/resources/icons/icon.png",
-      "formats": ["app", "dmg", "zip", "tar.gz"],
+      "formats": ["dmg", "zip"],
       "embler.mac.category": "public.app-category.utilities"
     }
   },
