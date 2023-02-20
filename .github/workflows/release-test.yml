@@ -110,10 +110,10 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
       - name: Codesign executable 2
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $APPLE_ID ./dist1/Gabin.app/Contents/MacOS/Gabin
-          /usr/bin/codesign --deep --force --verbose --sign $APPLE_ID ./dist1/Gabin.dmg
-          /usr/bin/codesign --deep --force --verbose --sign $APPLE_ID ./dist1/Gabin.zip
-          /usr/bin/codesign --deep --force --verbose --sign $APPLE_ID ./dist1/Gabin.tar.gz
+          /usr/bin/codesign --deep --force --verbose --sign "$APPLE_ID" ./dist1/Gabin.app/Contents/MacOS/Gabin
+          /usr/bin/codesign --deep --force --verbose --sign "$APPLE_ID" ./dist1/Gabin.dmg
+          /usr/bin/codesign --deep --force --verbose --sign "$APPLE_ID" ./dist1/Gabin.zip
+          /usr/bin/codesign --deep --force --verbose --sign "$APPLE_ID" ./dist1/Gabin.tar.gz
       - name: zip app
         run: |
           cd ./dist
