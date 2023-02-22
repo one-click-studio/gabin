@@ -21,6 +21,11 @@ const PORT = process.env.GABIN_PORT || 1510
 
 let gabin: Gabin | undefined
 
+function openApp() {
+  const port = process.env.GABIN_CLIENT_PORT || PORT
+  openUrl(`http://${HOST}:${port}`)
+}
+
 const initGabin = (io: Server) => {
   gabin = new Gabin()
   gabin.shoot$.subscribe((shoot) => {
@@ -136,8 +141,7 @@ function createTray(): Systray {
 
   systray.onClick(action => {
     if (action.seq_id === 0) {
-      const port = process.env.GABIN_CLIENT_PORT || PORT
-      openUrl(`http://${HOST}:${port}`)
+      openApp()
     } else if (action.seq_id === 1) {
       console.log('bye ❤️')
       systray.kill()
@@ -174,6 +178,7 @@ async function main() {
   handler(io)
 
   createTray()
+  openApp()
 }
 
 main()

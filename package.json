@@ -23,9 +23,17 @@
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
     "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t host",
-    "pkg:macApp": "embler",
+    "pkg:macApp": "pnpm i -D embler && embler",
     "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe",
     "app": "./dist/gabin"
+  },
+  "pkg": {
+    "scripts": "build/main/*.js",
+    "assets": [
+      "build/render/**/*",
+      "build/resources/**/*"
+    ],
+    "outputPath": "dist"
   },
   "embler": {
     "realName": "Gabin",

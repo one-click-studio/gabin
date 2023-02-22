@@ -3,8 +3,11 @@ import fs from "fs"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import VAD from "webrtcvad"
 import { InferenceSession, Tensor } from "onnxruntime-node"
+import { getLogger } from '../../main/utils/logger'
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
+
+const logger = getLogger('audio Activity')
 
 interface Device {
     id: number
@@ -39,6 +42,7 @@ class SileroVad {
             const model = fs.readFileSync(sileroModelPath)
             this.session = await InferenceSession.create(model)
         } catch (e) {
+            logger.error(e)
             return
         }
 
