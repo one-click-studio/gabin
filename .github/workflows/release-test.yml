@@ -27,8 +27,10 @@ jobs:
       matrix:
         arch:
           - x64
-        os:
-          - win
+        os: [windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v3
 
@@ -81,7 +83,6 @@ jobs:
           entrypoint: ./build/main/*.js
           arch: ${{ matrix.arch }}
           node-version: latest
-          os: ${{ matrix.os }}
           upload: true
 
       - name: upload pkgs
