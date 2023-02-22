@@ -39,10 +39,7 @@ jobs:
       matrix:
         arch:
           - x64
-          - arm64
         os:
-          - linux
-          - macos
           - win
     steps:
       - uses: actions/checkout@v3
