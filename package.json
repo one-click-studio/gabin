@@ -23,16 +23,21 @@
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
     "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t host",
-    "pkg:macApp": "pnpm i -D embler && embler",
+    "pkg:mac:app": "pnpm i -D embler && embler",
+    "pkg:mac:dmg": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin\" -fs HFS+ -srcfolder \"./dist/Gabin.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin.dmg",
     "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe",
     "app": "./dist/gabin"
   },
+
   "pkg": {
     "scripts": "build/main/*.js",
     "assets": [
       "build/render/**/*",
       "build/resources/**/*",
-      "node_modules/audify/build/Release/audify.node"
+      "node_modules/.pnpm/onnxruntime-node@*/node_modules/onnxruntime-node/bin/napi-v3/**/**/*",
+      "node_modules/.pnpm/webrtcvad@*/node_modules/webrtcvad/build/Release/*",
+      "node_modules/.pnpm/audify@*/node_modules/audify/build/Release/*",
+      "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js"
     ],
     "outputPath": "dist"
   },
@@ -42,7 +47,7 @@
     "mac": {
       "binary": "dist/gabin",
       "icon": "./src/resources/icons/icon.png",
-      "formats": ["dmg","zip"],
+      "formats": ["app"],
       "category": "public.app-category.video"
     }
   },
