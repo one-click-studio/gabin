@@ -95,28 +95,28 @@ jobs:
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac
 
-      - name: Codesign executable [decode]
-        if: matrix.os == 'macOS-latest'
-        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
-      - name: Codesign executable
-        if: matrix.os == 'macOS-latest'
-        run: |
-          security create-keychain -p $KEYCHAIN_PSW build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-          security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
+      # - name: Codesign executable [decode]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+      # - name: Codesign executable
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     security create-keychain -p $KEYCHAIN_PSW build.keychain
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p $KEYCHAIN_PSW build.keychain
+      #     security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
+      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
 
       - name: build macOS [APP]
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:macApp
 
-      - name: Codesign zip/dmg
-        if: matrix.os == 'macOS-latest'
-        run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.zip
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
+      # - name: Codesign zip/dmg
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.zip
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
 
       - name: upload release macOS
         if: matrix.os == 'macOS-latest'

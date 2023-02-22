@@ -42,11 +42,7 @@
     "mac": {
       "binary": "dist/gabin",
       "icon": "./src/resources/icons/icon.png",
-      "formats": [
-        "dmg",
-        "zip",
-        "app"
-      ],
+      "formats": ["dmg","zip"],
       "category": "public.app-category.video"
     }
   },
