@@ -106,7 +106,8 @@ jobs:
           security unlock-keychain -p $KEYCHAIN_PSW build.keychain
           security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
 
       - name: build macOS [APP]
         if: matrix.os == 'macOS-latest'
@@ -115,7 +116,8 @@ jobs:
       - name: Codesign app
         if: matrix.os == 'macOS-latest'
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.app
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
 
       - name: build macOS [DMG]
         if: matrix.os == 'macOS-latest'
@@ -124,7 +126,8 @@ jobs:
       - name: Codesign app
         if: matrix.os == 'macOS-latest'
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
 
       - name: upload release macOS
         if: matrix.os == 'macOS-latest'
@@ -135,7 +138,7 @@ jobs:
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/Gabin.dmg,./dist/gabin"
+          artifacts: "./dist/Gabin-*.dmg,./dist/gabin"
           draft: true
 
       # - name: upload release window
