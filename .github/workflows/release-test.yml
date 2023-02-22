@@ -33,25 +33,17 @@ jobs:
           allowUpdates: true
 
   build:
-    name: Build & upload release [${{ matrix.os }}]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     needs: create
-    env:
-      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
-      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
-      IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
-      CSC_LINK: ${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      KEYCHAIN_PSW: blipbloup
-
     strategy:
       matrix:
-        os: [macOS-latest]
-        # os: [windows-latest, macOS-latest]
-
+        arch:
+          - x64
+          - arm64
+        os:
+          - linux
+          - macos
+          - win
     steps:
       - uses: actions/checkout@v3
 
@@ -81,69 +73,142 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Get pnpm file path
-        shell: bash
-        run: |
-          PNPM_VERSION=$(pnpm -v)
-          echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
-
-      #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
-      - name: Tweak pnpm.cjs
-        if: matrix.os == 'windows-latest'
-        run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
-        shell: bash
-
       - name: Install dependencies
         run: pnpm installAll
 
-      # - name: build macOS [BIN]
-      #   if: matrix.os == 'macOS-latest'
-      #   run: pnpm run pkg:mac
+      - name: Package into node binary
+        uses: lando/pkg-action@v2
+        id: pkg-action
+        with:
+          entrypoint: ./build/main/*.js
+          arch: ${{ matrix.arch }}
+          node-version: latest
+          os: ${{ matrix.os }}
+          upload: true
 
-      - name: Codesign executable [decode]
-        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
-      - name: Codesign executable
-        run: |
-          security create-keychain -p $KEYCHAIN_PSW build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-          security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
-
-      - name: build macOS [APP]
-        if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:macApp
-
-      - name: Codesign zip/dmg
-        run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.zip
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
-
-      # - name: build windows
-      #   if: matrix.os == 'windows-latest'
-      #   run: pnpm run pkg:win
-
-      - name: upload release macOS
-        if: matrix.os == 'macOS-latest'
+      - name: upload pkgs
         uses: ncipollo/release-action@v1
-        id: upload_release_macos
+        id: upload_pkgs
         with:
           token: ${{ secrets.GH_TOKEN }}
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/Gabin.*,./dist/gabin"
+          artifacts: ${{ steps.pkg-action.outputs.file }}
           draft: true
 
-      # - name: upload release window
-      #   if: matrix.os == 'windows-latest'
-      #   uses: ncipollo/release-action@v1
-      #   id: upload_release_win
-      #   with:
-      #     token: ${{ secrets.GH_TOKEN }}
-      #     name: ${{ needs.create.outputs.release_name }}
-      #     tag: ${{ needs.create.outputs.tag_name }}
-      #     allowUpdates: true
-      #     artifacts: "./dist/test-pkg-rl-win.exe"
-      #     draft: true
+  # build:
+  #   name: Build & upload release [${{ matrix.os }}]
+  #   runs-on: ${{ matrix.os }}
+  #   needs: create
+  #   env:
+  #     MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+  #     MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
+  #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  #     APPLE_ID: ${{ secrets.APPLE_ID }}
+  #     APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+  #     IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
+  #     CSC_LINK: ${{ secrets.CSC_LINK }}
+  #     CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+  #     KEYCHAIN_PSW: blipbloup
+
+  #   strategy:
+  #     matrix:
+  #       os: [macOS-latest]
+  #       # os: [windows-latest, macOS-latest]
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - uses: actions/setup-node@v3
+  #       name: Install Node.js
+  #       with:
+  #         node-version: 18
+
+  #     - uses: pnpm/action-setup@v2
+  #       name: Install pnpm
+  #       id: pnpm-install
+  #       with:
+  #         version: 7
+  #         run_install: false
+
+  #     - name: Get pnpm store directory
+  #       id: pnpm-cache
+  #       shell: bash
+  #       run: |
+  #         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+  #     - uses: actions/cache@v3
+  #       name: Setup pnpm cache
+  #       with:
+  #         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-pnpm-store-
+
+  #     - name: Get pnpm file path
+  #       shell: bash
+  #       run: |
+  #         PNPM_VERSION=$(pnpm -v)
+  #         echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
+
+  #     #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
+  #     - name: Tweak pnpm.cjs
+  #       if: matrix.os == 'windows-latest'
+  #       run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
+  #       shell: bash
+
+  #     - name: Install dependencies
+  #       run: pnpm installAll
+
+  #     # - name: build macOS [BIN]
+  #     #   if: matrix.os == 'macOS-latest'
+  #     #   run: pnpm run pkg:mac
+
+  #     # - name: Codesign executable [decode]
+  #     #   run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+  #     # - name: Codesign executable
+  #     #   run: |
+  #     #     security create-keychain -p $KEYCHAIN_PSW build.keychain
+  #     #     security default-keychain -s build.keychain
+  #     #     security unlock-keychain -p $KEYCHAIN_PSW build.keychain
+  #     #     security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
+  #     #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
+  #     #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
+
+  #     # - name: build macOS [APP]
+  #     #   if: matrix.os == 'macOS-latest'
+  #     #   run: pnpm run pkg:macApp
+
+  #     # - name: Codesign zip/dmg
+  #     #   run: |
+  #     #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.zip
+  #     #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
+
+  #     # - name: build windows
+  #     #   if: matrix.os == 'windows-latest'
+  #     #   run: pnpm run pkg:win
+
+  #     # - name: upload release macOS
+  #     #   if: matrix.os == 'macOS-latest'
+  #     #   uses: ncipollo/release-action@v1
+  #     #   id: upload_release_macos
+  #     #   with:
+  #     #     token: ${{ secrets.GH_TOKEN }}
+  #     #     name: ${{ needs.create.outputs.release_name }}
+  #     #     tag: ${{ needs.create.outputs.tag_name }}
+  #     #     allowUpdates: true
+  #     #     artifacts: "./dist/Gabin.*,./dist/gabin"
+  #     #     draft: true
+
+  #     # - name: upload release window
+  #     #   if: matrix.os == 'windows-latest'
+  #     #   uses: ncipollo/release-action@v1
+  #     #   id: upload_release_win
+  #     #   with:
+  #     #     token: ${{ secrets.GH_TOKEN }}
+  #     #     name: ${{ needs.create.outputs.release_name }}
+  #     #     tag: ${{ needs.create.outputs.tag_name }}
+  #     #     allowUpdates: true
+  #     #     artifacts: "./dist/test-pkg-rl-win.exe"
+  #     #     draft: true
