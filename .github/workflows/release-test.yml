@@ -27,8 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: read package.json
-        uses: dutscher/read-package-json-endpoint-actions@v1.33.7
+      - name: read package.json version
+        uses: Saionaro/extract-package-version@v1.2.1
         id: package-json
 
       - uses: actions/setup-node@v3
