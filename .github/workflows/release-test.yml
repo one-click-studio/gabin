@@ -175,11 +175,12 @@ jobs:
           security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
 
-      - name: Codesign binary
+      - name: codesign binary [x64]
         if: matrix.os == 'macOS-latest'
-        run: |
-          [ -f ./dist/gabin-x64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
-          [ -f ./dist/gabin-arm64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
+        run: [ -f ./dist/gabin-x64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
+      - name: codesign binary [arm64]
+        if: matrix.os == 'macOS-latest'
+        run: [ -f ./dist/gabin-arm64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
 
       - name: build macOS [APP]
         if: matrix.os == 'macOS-latest'
@@ -188,7 +189,7 @@ jobs:
           pnpm run mac:app-x64
           pnpm run mac:app-post
 
-      - name: Codesign app
+      - name: codesign app
         if: matrix.os == 'macOS-latest'
         run: |
           [ -f ./dist/Gabin-x64.app ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
@@ -198,7 +199,7 @@ jobs:
         if: matrix.os == 'macOS-latest'
         run: pnpm run mac:dmg-x64
 
-      - name: Codesign dmg
+      - name: codesign dmg
         if: matrix.os == 'macOS-latest'
         run: |
           [ -f ./dist/Gabin-x64.dmg ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
