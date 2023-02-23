@@ -132,7 +132,7 @@ if (store.profiles.current === 0) {
                     class="ml-6"
                 />
                 <div class="display-toggle flex-1 ml-2 text-xs text-content-2">
-                    Gabin v0.1
+                    Gabin
                     <span
                         v-if="false"
                         class="underline"

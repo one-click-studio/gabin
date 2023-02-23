@@ -6,7 +6,6 @@ import Gabin from '@src/components/basics/GabinFace.vue'
 import { fetchProfiles } from '@src/components//setup/FetchProfile.vue';
 
 const router = useRouter()
-const version = __APP_VERSION__
 
 fetchProfiles(() => {
     router.push('/home')
@@ -22,7 +21,6 @@ fetchProfiles(() => {
             <h1 class="my-4">
                 Gabin
             </h1>
-            <span class="text-content-2 text-sm">Version beta {{ version }}</span>
             <span class="text-content-2 text-sm">© {{ (new Date()).getFullYear() }} OneClickStudio</span>
         </div>
     </div>
