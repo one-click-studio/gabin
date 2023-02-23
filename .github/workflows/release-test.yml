@@ -27,11 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: get-npm-version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@main
-        with:
-          path: ./package.json
+      - name: read package.json
+        uses: dutscher/read-package-json-endpoint-actions@v1.33.7
+        id: package-json
 
       - uses: actions/setup-node@v3
         name: Install Node.js
@@ -150,8 +148,8 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          name: ${{ steps.package-version.outputs.current-version }}
-          tag: v${{ steps.package-version.outputs.current-version }}
+          name: ${{ steps.package-json.outputs.version }}
+          tag: v${{ steps.package-json.outputs.version }}
           commit: ${{ github.sha }}
           allowUpdates: true
           artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
