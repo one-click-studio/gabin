@@ -1,0 +1,31 @@
+name: Sign mac-arm64 release
+
+on:
+  release:
+  types: [edited]
+
+jobs:
+  sign:
+    name: Sign mac-arm64 release
+    runs-on: macOS-latest
+    env:
+      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+      IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      KEYCHAIN_PSW: blipbloup
+      RELEASE_TAG: ${{ github.ref }}
+
+    steps:
+      - uses: robinraju/release-downloader@v1.7
+        with:
+          tag: $RELEASE_TAG
+          fileName: "Gabin-mac-*"
+
+      - name: see what is here
+        run: |
+          ls -la
