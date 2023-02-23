@@ -175,12 +175,15 @@ jobs:
           security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
 
-      - name: codesign binary [x64]
+      - name: codesign binary
         if: matrix.os == 'macOS-latest'
-        run: [ -f ./dist/gabin-x64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
-      - name: codesign binary [arm64]
-        if: matrix.os == 'macOS-latest'
-        run: [ -f ./dist/gabin-arm64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
+        run: |
+          if [ -f ./dist/gabin-x64 ]; then
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
+          fi
+          if [ -f ./dist/gabin-arm64 ]; then
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
+          fi
 
       - name: build macOS [APP]
         if: matrix.os == 'macOS-latest'
@@ -192,8 +195,12 @@ jobs:
       - name: codesign app
         if: matrix.os == 'macOS-latest'
         run: |
-          [ -f ./dist/Gabin-x64.app ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
-          [ -f ./dist/Gabin-arm64.app ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
+          if [ -f ./dist/Gabin-x64.app ]; then
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
+          fi
+          if [ -f ./dist/Gabin-arm64.app ]; then
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
+          fi
 
       - name: build macOS [DMG]
         if: matrix.os == 'macOS-latest'
@@ -202,8 +209,12 @@ jobs:
       - name: codesign dmg
         if: matrix.os == 'macOS-latest'
         run: |
-          [ -f ./dist/Gabin-x64.dmg ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
-          [ -f ./dist/Gabin-arm64.dmg ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
+          if [ -f ./dist/Gabin-x64.dmg ]; then
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
+          fi
+          if [ -f ./dist/Gabin-arm64.dmg ]; then
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
+          fi
 
       - name: upload release macOS
         if: matrix.os == 'macOS-latest'
