@@ -22,24 +22,9 @@ jobs:
           echo "NOW=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
   build:
-    name: Build & upload release [${{ matrix.os }}]
-    runs-on: ${{ matrix.os }}
+    name: Build & upload release
+    runs-on: ubuntu-latest
     needs: create
-    env:
-      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
-      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
-      IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
-      CSC_LINK: ${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      KEYCHAIN_PSW: blipbloup
-
-    strategy:
-      matrix:
-        os: [macOS-latest]
-        # os: [windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -70,64 +55,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
-      - name: Get pnpm file path
-        if: matrix.os == 'windows-latest'
-        shell: bash
-        run: |
-          PNPM_VERSION=$(pnpm -v)
-          echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
-
-      #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
-      - name: Tweak pnpm.cjs
-        if: matrix.os == 'windows-latest'
-        run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
-        shell: bash
-
       - name: Install dependencies
         run: pnpm installAll
-
-      # - name: build windows
-      #   if: matrix.os == 'windows-latest'
-      #   run: pnpm run pkg:win
 
       - name: build macOS [BIN]
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac
 
-      - name: Codesign executable [decode]
-        if: matrix.os == 'macOS-latest'
-        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
-      - name: Codesign executable
-        if: matrix.os == 'macOS-latest'
+      - name: what is there
         run: |
-          security create-keychain -p $KEYCHAIN_PSW build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-          security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
-
-      - name: build macOS [APP]
-        if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:mac:app
-
-      - name: Codesign app
-        if: matrix.os == 'macOS-latest'
-        run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
+          ls ./dist
 
       - name: build macOS [DMG]
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac:dmg
-
-      - name: Codesign app
-        if: matrix.os == 'macOS-latest'
-        run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
 
       - name: upload release macOS
         if: matrix.os == 'macOS-latest'
@@ -138,17 +79,138 @@ jobs:
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/Gabin-*.dmg,./dist/gabin"
+          artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
           draft: true
 
-      # - name: upload release window
-      #   if: matrix.os == 'windows-latest'
-      #   uses: ncipollo/release-action@v1
-      #   id: upload_release_win
-      #   with:
-      #     token: ${{ secrets.GH_TOKEN }}
-      #     name: ${{ needs.create.outputs.release_name }}
-      #     tag: ${{ needs.create.outputs.tag_name }}
-      #     allowUpdates: true
-      #     artifacts: "./dist/test-pkg-rl-win.exe"
-      #     draft: true
+
+  # build:
+  #   name: Build & upload release [${{ matrix.os }}]
+  #   runs-on: ${{ matrix.os }}
+  #   needs: create
+  #   env:
+  #     MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+  #     MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
+  #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  #     APPLE_ID: ${{ secrets.APPLE_ID }}
+  #     APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+  #     IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
+  #     CSC_LINK: ${{ secrets.CSC_LINK }}
+  #     CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+  #     KEYCHAIN_PSW: blipbloup
+
+  #   strategy:
+  #     matrix:
+  #       os: [macOS-latest]
+  #       # os: [windows-latest, macOS-latest]
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - uses: actions/setup-node@v3
+  #       name: Install Node.js
+  #       with:
+  #         node-version: 18
+
+  #     - uses: pnpm/action-setup@v2
+  #       name: Install pnpm
+  #       id: pnpm-install
+  #       with:
+  #         version: 7
+  #         run_install: false
+
+  #     - name: Get pnpm store directory
+  #       id: pnpm-cache
+  #       shell: bash
+  #       run: |
+  #         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+  #     - uses: actions/cache@v3
+  #       name: Setup pnpm cache
+  #       with:
+  #         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-pnpm-store-
+
+  #     #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
+  #     - name: Get pnpm file path
+  #       if: matrix.os == 'windows-latest'
+  #       shell: bash
+  #       run: |
+  #         PNPM_VERSION=$(pnpm -v)
+  #         echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
+
+  #     #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
+  #     - name: Tweak pnpm.cjs
+  #       if: matrix.os == 'windows-latest'
+  #       run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
+  #       shell: bash
+
+  #     - name: Install dependencies
+  #       run: pnpm installAll
+
+  #     # - name: build windows
+  #     #   if: matrix.os == 'windows-latest'
+  #     #   run: pnpm run pkg:win
+
+  #     - name: build macOS [BIN]
+  #       if: matrix.os == 'macOS-latest'
+  #       run: pnpm run pkg:mac
+
+  #     - name: Codesign executable [decode]
+  #       if: matrix.os == 'macOS-latest'
+  #       run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+  #     - name: Codesign executable
+  #       if: matrix.os == 'macOS-latest'
+  #       run: |
+  #         security create-keychain -p $KEYCHAIN_PSW build.keychain
+  #         security default-keychain -s build.keychain
+  #         security unlock-keychain -p $KEYCHAIN_PSW build.keychain
+  #         security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
+  #         security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
+  #         /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
+  #         /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
+
+  #     - name: build macOS [APP]
+  #       if: matrix.os == 'macOS-latest'
+  #       run: pnpm run pkg:mac:app
+
+  #     - name: Codesign app
+  #       if: matrix.os == 'macOS-latest'
+  #       run: |
+  #         /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
+  #         /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
+
+  #     - name: build macOS [DMG]
+  #       if: matrix.os == 'macOS-latest'
+  #       run: pnpm run pkg:mac:dmg
+
+  #     - name: Codesign app
+  #       if: matrix.os == 'macOS-latest'
+  #       run: |
+  #         /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
+  #         /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
+
+  #     - name: upload release macOS
+  #       if: matrix.os == 'macOS-latest'
+  #       uses: ncipollo/release-action@v1
+  #       id: upload_release_macos
+  #       with:
+  #         token: ${{ secrets.GH_TOKEN }}
+  #         name: ${{ needs.create.outputs.release_name }}
+  #         tag: ${{ needs.create.outputs.tag_name }}
+  #         allowUpdates: true
+  #         artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
+  #         draft: true
+
+  #     # - name: upload release window
+  #     #   if: matrix.os == 'windows-latest'
+  #     #   uses: ncipollo/release-action@v1
+  #     #   id: upload_release_win
+  #     #   with:
+  #     #     token: ${{ secrets.GH_TOKEN }}
+  #     #     name: ${{ needs.create.outputs.release_name }}
+  #     #     tag: ${{ needs.create.outputs.tag_name }}
+  #     #     allowUpdates: true
+  #     #     artifacts: "./dist/test-pkg-rl-win.exe"
+  #     #     draft: true
