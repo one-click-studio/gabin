@@ -55,11 +55,12 @@ const APP_DATA_FOLDER = path.join(process.env.APPDATA || (process.platform === '
 const LOG_FILE = path.join((process.env.GABIN_LOGS_FOLDER || (process.pkg? APP_DATA_FOLDER : '')), './gabin.log')
 // create folder if not exists
 if (!fs.existsSync(path.dirname(LOG_FILE))) fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
+// create file if not exists
+if (!fs.existsSync(LOG_FILE)) fs.writeFileSync(LOG_FILE, '')
 
 const regulateLogSize = () => {
     const MAX_LOG_SIZE = 1000000 // 1MB
     const logSize = fs.statSync(LOG_FILE).size
-    console.log(logSize)
     if (logSize > MAX_LOG_SIZE) {
         const data = fs.readFileSync(LOG_FILE, 'utf8')
         const lines = data.split('\n')
