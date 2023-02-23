@@ -6,90 +6,9 @@ on:
       - rm-electron
 
 jobs:
-  create:
-    name: Create release
-    runs-on: ubuntu-latest
-    env:
-      tag_prefix: nightly-tag-
-      release_prefix: Release 
-    outputs:
-      tag_name: ${{ env.tag_prefix }}${{ steps.date.outputs.NOW }}
-      release_name: ${{ env.release_prefix }}${{ steps.date.outputs.NOW }}
-    steps:
-      - name: Get current date
-        id: date
-        run: |
-          echo "NOW=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-
-  # build:
-  #   name: Build & upload release
-  #   runs-on: ubuntu-latest
-  #   needs: create
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-
-  #     - name: Install ALSA API
-  #       run: sudo apt-get install -y libasound2-dev
-
-  #     - uses: actions/setup-node@v3
-  #       name: Install Node.js
-  #       with:
-  #         node-version: 18
-
-  #     - uses: pnpm/action-setup@v2
-  #       name: Install pnpm
-  #       id: pnpm-install
-  #       with:
-  #         version: 7
-  #         run_install: false
-
-  #     - name: Get pnpm store directory
-  #       id: pnpm-cache
-  #       shell: bash
-  #       run: |
-  #         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-  #     - uses: actions/cache@v3
-  #       name: Setup pnpm cache
-  #       with:
-  #         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-pnpm-store-
-
-  #     - name: Install dependencies
-  #       run: pnpm installAll
-
-  #     - name: fetch pkg macOS
-  #       run: pnpm run pkg:fetch
-
-  #     - name: build macOS [BIN]
-  #       run: pnpm run pkg:mac
-
-  #     - name: what is there
-  #       run: |
-  #         ls ./dist
-
-  #     - name: build macOS [DMG]
-  #       run: pnpm run pkg:mac:dmg
-
-  #     - name: upload release macOS
-  #       uses: ncipollo/release-action@v1
-  #       id: upload_release_macos
-  #       with:
-  #         token: ${{ secrets.GH_TOKEN }}
-  #         name: ${{ needs.create.outputs.release_name }}
-  #         tag: ${{ needs.create.outputs.tag_name }}
-  #         allowUpdates: true
-  #         artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
-  #         draft: true
-
-
   build:
     name: Build & upload release [${{ matrix.os }}]
     runs-on: ${{ matrix.os }}
-    needs: create
     env:
       MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
       MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
@@ -103,11 +22,16 @@ jobs:
 
     strategy:
       matrix:
-        os: [macOS-latest]
-        # os: [windows-latest, macOS-latest]
+        os: [windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
+        with:
+          path: ./package.json
 
       - uses: actions/setup-node@v3
         name: Install Node.js
@@ -152,9 +76,9 @@ jobs:
       - name: Install dependencies
         run: pnpm installAll
 
-      # - name: build windows
-      #   if: matrix.os == 'windows-latest'
-      #   run: pnpm run win:pkg
+      - name: build windows
+        if: matrix.os == 'windows-latest'
+        run: pnpm run win:pkg
 
       - name: build macOS [BIN]
         if: matrix.os == 'macOS-latest'
@@ -222,26 +146,13 @@ jobs:
             /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
           fi
 
-      - name: upload release macOS
-        if: matrix.os == 'macOS-latest'
+      - name: upload releases
         uses: ncipollo/release-action@v1
-        id: upload_release_macos
         with:
           token: ${{ secrets.GH_TOKEN }}
-          name: ${{ needs.create.outputs.release_name }}
-          tag: ${{ needs.create.outputs.tag_name }}
+          name: ${{ steps.package-version.outputs.current-version }}
+          tag: v${{ steps.package-version.outputs.current-version }}
+          commit: ${{ github.sha }}
           allowUpdates: true
           artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
           draft: true
-
-      # - name: upload release window
-      #   if: matrix.os == 'windows-latest'
-      #   uses: ncipollo/release-action@v1
-      #   id: upload_release_win
-      #   with:
-      #     token: ${{ secrets.GH_TOKEN }}
-      #     name: ${{ needs.create.outputs.release_name }}
-      #     tag: ${{ needs.create.outputs.tag_name }}
-      #     allowUpdates: true
-      #     artifacts: "./dist/test-pkg-rl-win.exe"
-      #     draft: true
