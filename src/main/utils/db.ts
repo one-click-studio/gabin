@@ -12,8 +12,12 @@ import { deepCopy } from '../../main/utils/utils'
 import type { ServerConfig } from '../../types/protocol'
 
 dotenv.config()
+
+// default app data folder
+const APP_DATA_FOLDER = path.join(process.env.APPDATA || (process.platform === 'darwin'? process.env.HOME + '/Library/Application Support' : process.env.HOME + "/.local/share"), 'gabin')
+
 // @ts-ignore
-const CONFIG_FILE = path.join((process.env.GABIN_CONFIG_FOLDER || (process.pkg? path.dirname(process.execPath) : '')), './database.json')
+const CONFIG_FILE = path.join((process.env.GABIN_CONFIG_FOLDER || (process.pkg? APP_DATA_FOLDER : '')), './database.json')
 
 const EMPTY_CONFIG = {
     connections: {

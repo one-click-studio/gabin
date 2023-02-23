@@ -47,8 +47,14 @@ export type Log = {
 }
 
 dotenv.config()
+
+// default app data folder
+const APP_DATA_FOLDER = path.join(process.env.APPDATA || (process.platform === 'darwin'? process.env.HOME + '/Library/Application Support' : process.env.HOME + "/.local/share"), 'gabin')
+
 // @ts-ignore
-const LOG_FILE = path.join((process.env.GABIN_LOGS_FOLDER || (process.pkg? path.dirname(process.execPath) : '')), './gabin.log')
+const LOG_FILE = path.join((process.env.GABIN_LOGS_FOLDER || (process.pkg? APP_DATA_FOLDER : '')), './gabin.log')
+// create folder if not exists
+if (!fs.existsSync(path.dirname(LOG_FILE))) fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
 
 const getTypeColor = (type: LogType): string => {
     switch (type) {
