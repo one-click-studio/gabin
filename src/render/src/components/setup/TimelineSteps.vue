@@ -15,7 +15,7 @@ export const TimelineSteps: Step[] = [
     { name: 'OBS 🔗', path: 'obs', order: 4, edit: true },
 
     { name: 'Audio device 🎧', path: 'audio', order: 5, edit: true },
-    { name: 'Container 🗃️', path: 'container', order: 6 },
+    { name: 'Container 🗃️', path: 'container', order: 6, edit: true },
     { name: 'Mapping 🗺️', path: 'mapping', order: 7, edit: true },
     { name: 'Auto cam settings 🔧', path: 'settings', order: 8, edit: true },
     { name: 'Summary 🏁', path: 'summary', order: 9 }
