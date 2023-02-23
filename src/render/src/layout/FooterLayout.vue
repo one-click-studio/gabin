@@ -8,6 +8,8 @@ import ButtonUi from '@src/components/basics/ButtonUi.vue'
 import ArrowLeftIcon from '@src/components/icons/ArrowLeftIcon.vue'
 import ArrowRightIcon from '@src/components/icons/ArrowRightIcon.vue'
 import CrossIcon from '@src/components/icons/CrossIcon.vue'
+import CheckIcon from '@src/components/icons/CheckIcon.vue'
+import ReturnIcon from '@src/components/icons/ReturnIcon.vue'
 
 import type { NavBtn } from '../../../types/protocol'
 
@@ -20,6 +22,8 @@ const icons = {
     'ArrowLeft': ArrowLeftIcon,
     'ArrowRight': ArrowRightIcon,
     'Cross': CrossIcon,
+    'Check': CheckIcon,
+    'Return': ReturnIcon,
 }
 
 const props = defineProps<Props>()

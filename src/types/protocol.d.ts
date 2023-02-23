@@ -139,7 +139,7 @@ export interface AutocamMic {
 
 /*************** STORE ***************/
 
-type Icon = 'ArrowLeft' | 'ArrowRight' | 'Cross' | undefined
+type Icon = 'ArrowLeft' | 'ArrowRight' | 'Cross' | 'Check' | 'Return' | undefined
 export interface NavBtn {
     url?: string
     label?: string
