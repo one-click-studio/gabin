@@ -197,11 +197,11 @@ jobs:
       - name: codesign app
         if: matrix.os == 'macOS-latest'
         run: |
-          if [ -f ./dist/Gabin-mac-x64.app ]; then
+          if [ -d ./dist/Gabin-mac-x64.app ]; then
             echo "codesign : Gabin-mac-x64.app"
             /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
           fi
-          if [ -f ./dist/Gabin-mac-arm64.app ]; then
+          if [ -d ./dist/Gabin-mac-arm64.app ]; then
             echo "codesign : Gabin-mac-arm64.app"
             /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.app
           fi
