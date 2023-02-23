@@ -2,7 +2,7 @@ name: Sign mac-arm64 release
 
 on:
   release:
-  types: [edited]
+    types: [edited]
 
 jobs:
   sign:
