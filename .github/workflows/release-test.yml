@@ -3,8 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - blabla
-      # - rm-electron
+      - rm-electron
 
 jobs:
   build:
