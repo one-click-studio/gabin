@@ -23,7 +23,7 @@
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
     "pkg:fetch": "pkg-fetch -p macos -a arm64 && pkg-fetch -p macos -a x64",
-    "pkg:mac1": "pnpm clean:dist && pnpm build && pkg . -t host",
+    "pkg:mac1": "pnpm clean:dist && pnpm build && pkg . -t x64",
     "pkg:mac:app1": "pnpm i -D embler && node buildMacApp.js && pnpm rm embler",
     "pkg:mac:dmg1": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin\" -fs HFS+ -srcfolder \"./dist/Gabin.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin.dmg",
     "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t node18-macos-arm64,node18-macos-x64",
