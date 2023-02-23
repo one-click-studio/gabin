@@ -56,6 +56,25 @@ const LOG_FILE = path.join((process.env.GABIN_LOGS_FOLDER || (process.pkg? APP_D
 // create folder if not exists
 if (!fs.existsSync(path.dirname(LOG_FILE))) fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
 
+const regulateLogSize = () => {
+    const MAX_LOG_SIZE = 1000000 // 1MB
+    const logSize = fs.statSync(LOG_FILE).size
+    console.log(logSize)
+    if (logSize > MAX_LOG_SIZE) {
+        const data = fs.readFileSync(LOG_FILE, 'utf8')
+        const lines = data.split('\n')
+
+        const avg = logSize / lines.length
+        const toDel = logSize - (MAX_LOG_SIZE/2)
+        const delLines = Math.floor(toDel / avg)
+
+        lines.splice(0, delLines)
+        fs.writeFileSync(LOG_FILE, lines.join('\n'))
+    }
+}
+
+regulateLogSize()
+
 const getTypeColor = (type: LogType): string => {
     switch (type) {
         case 'info':
