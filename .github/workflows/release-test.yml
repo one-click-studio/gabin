@@ -62,7 +62,6 @@ jobs:
         run: pnpm installAll
 
       - name: build macOS [BIN]
-        if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac
 
       - name: what is there
@@ -70,11 +69,9 @@ jobs:
           ls ./dist
 
       - name: build macOS [DMG]
-        if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac:dmg
 
       - name: upload release macOS
-        if: matrix.os == 'macOS-latest'
         uses: ncipollo/release-action@v1
         id: upload_release_macos
         with:
