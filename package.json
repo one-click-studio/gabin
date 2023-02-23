@@ -22,17 +22,23 @@
     "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
-    "pkg:fetch": "pkg-fetch -p macos -a arm64 && pkg-fetch -p macos -a x64",
-    "pkg:mac1": "pnpm clean:dist && pnpm build && pkg . -t host",
-    "pkg:mac:app1": "pnpm i -D embler && node buildMacApp.js && pnpm rm embler",
-    "pkg:mac:dmg1": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin\" -fs HFS+ -srcfolder \"./dist/Gabin.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin.dmg",
-    "pkg:mac": "pnpm clean:dist && pnpm build && pkg . -t node18-macos-arm64,node18-macos-x64",
-    "pkg:mac:app": "pnpm i -D embler && node buildMacApp.js arm64 && node buildMacApp.js x64 && pnpm rm embler",
-    "pkg:mac:dmg": "pnpm pkg:mac:dmg-arm64 && pnpm pkg:mac:dmg-x64",
-    "pkg:mac:dmg-arm64": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin-arm64\" -fs HFS+ -srcfolder \"./dist/Gabin-arm64.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin-arm64.dmg",
-    "pkg:mac:dmg-x64": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin-x64\" -fs HFS+ -srcfolder \"./dist/Gabin-x64.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin-x64.dmg",
-    "pkg:win": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe",
-    "app": "./dist/gabin"
+
+    "mac:pkg-pre": "pnpm clean:dist && pnpm build",
+    "mac:pkg": "pnpm mac:pkg-arm64 && pnpm mac:pkg-x64",
+    "mac:pkg-x64": "pkg . -t macos-x64 && shx mv ./dist/gabin ./dist/gabin-x64",
+    "mac:pkg-arm64": "pkg . -t macos-arm64 && shx mv ./dist/gabin ./dist/gabin-arm64",
+
+    "mac:app-pre": "pnpm i -D embler",
+    "mac:app": "pnpm mac:app-arm64 && pnpm mac:app-x64",
+    "mac:app-x64": "node buildMacApp.js x64",
+    "mac:app-arm64": "node buildMacApp.js arm64",
+    "mac:app-post": "pnpm rm embler",
+
+    "mac:dmg": "pnpm mac:dmg-arm64 && pnpm mac:dmg-x64",
+    "mac:dmg-arm64": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin-arm64\" -fs HFS+ -srcfolder \"./dist/Gabin-arm64.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin-arm64.dmg",
+    "mac:dmg-x64": "hdiutil create /tmp/tmp.dmg -ov -volname \"Gabin-x64\" -fs HFS+ -srcfolder \"./dist/Gabin-x64.app/\" && hdiutil convert /tmp/tmp.dmg -format UDZO -o ./dist/Gabin-x64.dmg",
+
+    "win:pkg": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe"
   },
   "pkg": {
     "scripts": "build/main/*.js",
@@ -81,7 +87,6 @@
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",
     "pkg": "github:vercel/pkg",
-    "pkg-fetch": "^3.4.2",
     "playwright": "^1.29.2",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",

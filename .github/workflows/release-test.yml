@@ -154,11 +154,13 @@ jobs:
 
       # - name: build windows
       #   if: matrix.os == 'windows-latest'
-      #   run: pnpm run pkg:win
+      #   run: pnpm run win:pkg
 
       - name: build macOS [BIN]
         if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:mac1
+        run: |
+          pnpm run mac:pkg-pre
+          pnpm run mac:pkg-x64
 
       - name: prepare codesign [decode]
         if: matrix.os == 'macOS-latest'
@@ -173,43 +175,34 @@ jobs:
           security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
 
-      # - name: Codesign binary
-      #   if: matrix.os == 'macOS-latest'
-      #   run: |
-      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
-      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
       - name: Codesign binary
         if: matrix.os == 'macOS-latest'
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin
+          [ -f ./dist/gabin-x64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-x64
+          [ -f ./dist/gabin-arm64 ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-arm64
 
       - name: build macOS [APP]
         if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:mac:app1
+        run: |
+          pnpm run mac:app-pre
+          pnpm run mac:app-x64
+          pnpm run mac:app-post
 
-      # - name: Codesign app
-      #   if: matrix.os == 'macOS-latest'
-      #   run: |
-      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
-      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
       - name: Codesign app
         if: matrix.os == 'macOS-latest'
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.app
+          [ -f ./dist/Gabin-x64.app ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.app
+          [ -f ./dist/Gabin-arm64.app ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.app
 
       - name: build macOS [DMG]
         if: matrix.os == 'macOS-latest'
-        run: pnpm run pkg:mac:dmg1
+        run: pnpm run mac:dmg-x64
 
-      # - name: Codesign dmg
-      #   if: matrix.os == 'macOS-latest'
-      #   run: |
-      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
-      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
       - name: Codesign dmg
         if: matrix.os == 'macOS-latest'
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
+          [ -f ./dist/Gabin-x64.dmg ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
+          [ -f ./dist/Gabin-arm64.dmg ] && /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
 
       - name: upload release macOS
         if: matrix.os == 'macOS-latest'
@@ -220,7 +213,7 @@ jobs:
           name: ${{ needs.create.outputs.release_name }}
           tag: ${{ needs.create.outputs.tag_name }}
           allowUpdates: true
-          artifacts: "./dist/Gabin*.dmg,./dist/gabin*"
+          artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
           draft: true
 
       # - name: upload release window
