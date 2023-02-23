@@ -201,11 +201,15 @@ jobs:
         if: matrix.os == 'macOS-latest'
         run: pnpm run pkg:mac:dmg1
 
-      - name: Codesign app
+      # - name: Codesign dmg
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
+      - name: Codesign dmg
         if: matrix.os == 'macOS-latest'
         run: |
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-arm64.dmg
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-x64.dmg
+          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin.dmg
 
       - name: upload release macOS
         if: matrix.os == 'macOS-latest'
