@@ -163,6 +163,8 @@ jobs:
           product-path: ./dist/Gabin-mac-x64.dmg
           appstore-connect-username: ${{ secrets.APPLE_ID }}
           appstore-connect-password: ${{ secrets.APPLEIDPASS }}
+          verbose: true
+          bundle: studio.oneclick.gabin
 
       - name: upload releases
         uses: ncipollo/release-action@v1
