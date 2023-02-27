@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - rm-electron
+      - rm-electron-blip
 
 jobs:
   build:
@@ -162,8 +162,7 @@ jobs:
         #   primary-bundle-id: studio.oneclick.gabin
         run: |
           xcrun notarytool submit ./dist/Gabin-mac-x64.dmg
-            --apple-id ${{ secrets.APPLE_ID }}
-            --password ${{ secrets.APPLEIDPASS }}
+            --keychain-profile ${{ secrets.APPLEIDPASS }}
             --progress
             --wait
             --verbose

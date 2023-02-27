@@ -1,0 +1,136 @@
+name: Sign, notarize and staple OSX releases
+
+on:
+  push:
+    branches:
+      - rm-electron
+
+jobs:
+  build:
+    name: Build & upload release [${{ matrix.os }}]
+    runs-on: ${{ matrix.os }}
+    env:
+      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
+      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
+      IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      KEYCHAIN_PSW: blipbloup
+
+    strategy:
+      matrix:
+        os: [macOS-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: gabin-mac-x64
+          path: ./artifacts/
+          
+      - name: Display structure of downloaded files
+        run: ls -R
+
+
+      # - name: prepare codesign [decode]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+
+      # - name: prepare codesign [security]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     security create-keychain -p $KEYCHAIN_PSW build.keychain
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p $KEYCHAIN_PSW build.keychain
+      #     security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
+      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
+
+      # - name: codesign binary
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     if [ -f ./dist/gabin-mac-x64 ]; then
+      #       echo "codesign : gabin-mac-x64"
+      #       /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
+      #     fi
+      #     if [ -f ./dist/gabin-mac-arm64 ]; then
+      #       echo "codesign : gabin-mac-arm64"
+      #       /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-arm64
+      #     fi
+
+      # - name: build macOS [APP]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     pnpm run mac:app-pre
+      #     pnpm run mac:app-x64
+      #     pnpm run mac:app-post
+
+      # - name: codesign app
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     if [ -d ./dist/Gabin-mac-x64.app ]; then
+      #       echo "codesign : Gabin-mac-x64.app"
+      #       /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
+      #     fi
+      #     if [ -d ./dist/Gabin-mac-arm64.app ]; then
+      #       echo "codesign : Gabin-mac-arm64.app"
+      #       /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.app
+      #     fi
+
+      # - name: build macOS [DMG]
+      #   if: matrix.os == 'macOS-latest'
+      #   run: pnpm run mac:dmg-x64
+
+      # - name: codesign dmg
+      #   if: matrix.os == 'macOS-latest'
+      #   run: |
+      #     if [ -f ./dist/Gabin-mac-x64.dmg ]; then
+      #       echo "codesign : Gabin-mac-x64.dmg"
+      #       /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
+      #     fi
+      #     if [ -f ./dist/Gabin-mac-arm64.dmg ]; then
+      #       echo "codesign : Gabin-mac-arm64.dmg"
+      #       /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
+      #     fi
+
+      # - name: check mac x64 file
+      #   id: check_mac_x64_file
+      #   uses: andstor/file-existence-action@v2
+      #   with:
+      #     files: "./dist/Gabin-mac-x64.dmg"
+
+      # - name: check mac arm64 file
+      #   id: check_mac_arm64_file
+      #   uses: andstor/file-existence-action@v2
+      #   with:
+      #     files: "./dist/Gabin-mac-arm64.dmg"
+
+      # - name: notarize x64 dmg
+      #   if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+      #   # with:
+      #   #   primary-bundle-id: studio.oneclick.gabin
+      #   run: |
+      #     xcrun notarytool submit ./dist/Gabin-mac-x64.dmg
+      #       --keychain-profile ${{ secrets.APPLEIDPASS }}
+      #       --progress
+      #       --wait
+      #       --verbose
+
+      # - name: staple x64 dmg
+      #   if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+      #   run: |
+      #     xcrun stapler staple ./dist/Gabin-mac-x64.dmg
+
+      # - name: upload releases
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     token: ${{ secrets.GH_TOKEN }}
+      #     name: ${{ steps.package-json.outputs.version }}
+      #     tag: v${{ steps.package-json.outputs.version }}
+      #     commit: ${{ github.sha }}
+      #     allowUpdates: true
+      #     artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
+      #     draft: true
