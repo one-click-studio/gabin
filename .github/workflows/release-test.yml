@@ -144,6 +144,34 @@ jobs:
             /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
           fi
 
+      - name: check mac x64 file
+        id: check_mac_x64_file
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "./dist/Gabin-mac-x64.dmg"
+
+      - name: check mac arm64 file
+        id: check_mac_arm64_file
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "./dist/Gabin-mac-arm64.dmg"
+
+      - name: notarize x64 dmg
+        uses: devbotsxyz/xcode-notarize@v1
+        if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+        with:
+          product-path: "./dist/Gabin-mac-x64.dmg"
+          appstore-connect-username: ${{ secrets.APPLE_ID }}
+          appstore-connect-password: ${{ secrets.APPLEIDPASS }}
+
+      - name: notarize arm64 dmg
+        uses: devbotsxyz/xcode-notarize@v1
+        if: steps.check_mac_arm64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+        with:
+          product-path: "./dist/Gabin-mac-arm64.dmg"
+          appstore-connect-username: ${{ secrets.APPLE_ID }}
+          appstore-connect-password: ${{ secrets.APPLEIDPASS }}
+
       - name: upload releases
         uses: ncipollo/release-action@v1
         with:
