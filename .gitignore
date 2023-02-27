@@ -4,3 +4,4 @@ out
 build
 database.json
 *.log*
+.env
