@@ -22,6 +22,7 @@
     "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
+    "mac:all": "pnpm mac:pkg-pre && pnpm mac:pkg && pnpm mac:app-pre && pnpm mac:app && pnpm mac:app-post && pnpm mac:dmg",
     "mac:pkg-pre": "pnpm clean:dist && pnpm build",
     "mac:pkg": "pnpm mac:pkg-arm64 && pnpm mac:pkg-x64",
     "mac:pkg-x64": "pkg . -t macos-x64 && shx mv ./dist/gabin ./dist/gabin-mac-x64",
