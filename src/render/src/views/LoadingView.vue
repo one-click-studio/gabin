@@ -9,7 +9,8 @@ import { fetchProfiles } from '@src/components//setup/FetchProfile.vue';
 const router = useRouter()
 
 fetchProfiles(() => {
-    router.push(store.redirect.path)
+    const route = store.redirect.path? store.redirect.path : '/home'
+    router.push(route)
 })
 
 
