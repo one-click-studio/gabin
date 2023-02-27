@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { io } from "socket.io-client"
+import { io, Manager } from "socket.io-client"
 
 import { store } from '@src/store/store'
 
@@ -158,8 +158,17 @@ router.afterEach((to, from) => {
     }
 })
 
-const address = import.meta.env.DEV ? 'http://localhost:1510' : window.location.origin
-const socket = io(address)
+const url = window.location
+const baseUrl = url.pathname.split('/')[1]
+const address = `${url.protocol}//${url.host}/${baseUrl}`
+
+const ioPath = (baseUrl? `/${baseUrl}`: '') + '/socket.io'
+const manager = new Manager(address, {
+    path: ioPath
+})
+
+const socket = manager.socket("/")
+
 store.socket = socket
 
 socket.on("connect", () => {
