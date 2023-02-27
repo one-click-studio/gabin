@@ -158,13 +158,20 @@ jobs:
 
       - name: notarize x64 dmg
         if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
-        uses: BoundfoxStudios/action-xcode-notarize@v1
-        with:
-          product-path: ./dist/Gabin-mac-x64.dmg
-          appstore-connect-username: ${{ secrets.APPLE_ID }}
-          appstore-connect-password: ${{ secrets.APPLEIDPASS }}
-          primary-bundle-id: studio.oneclick.gabin
-          verbose: true
+        # with:
+        #   primary-bundle-id: studio.oneclick.gabin
+        run: |
+          xcrun notarytool submit ./dist/Gabin-mac-x64.dmg
+            --apple-id ${{ secrets.APPLE_ID }}
+            --password ${{ secrets.APPLEIDPASS }}
+            --progress
+            --wait
+            --verbose
+
+      - name: staple x64 dmg
+        if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+        run: |
+          xcrun stapler staple ./dist/Gabin-mac-x64.dmg
 
       - name: upload releases
         uses: ncipollo/release-action@v1
