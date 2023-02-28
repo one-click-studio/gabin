@@ -23,10 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v3          
+      - name: Download CLI
+        uses: Legion2/download-release-action@v2.1.0
+        with:
+          repository: one-click-studio/gabin
+          tag: 'v0.2.0'
+          file: Gabin-mac-x64.dmg
 
       - name: Display structure of downloaded files
-        run: ls -R
+        run: ls
 
       # - name: read package.json version
       #   uses: Saionaro/extract-package-version@v1.2.1
