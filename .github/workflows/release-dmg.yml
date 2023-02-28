@@ -125,16 +125,16 @@ jobs:
         run: |
           xcrun stapler staple ./Gabin-mac-x64.dmg
 
-      # - name: upload releases
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     token: ${{ secrets.GH_TOKEN }}
-      #     name: ${{ steps.package-json.outputs.version }}
-      #     tag: v${{ steps.package-json.outputs.version }}
-      #     commit: ${{ github.sha }}
-      #     allowUpdates: true
-      #     artifacts: "./Gabin-*.dmg"
-      #     prerelease: true
+      - name: upload releases
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          name: ${{ steps.package-json.outputs.version }}
+          tag: v${{ steps.package-json.outputs.version }}
+          commit: ${{ github.sha }}
+          allowUpdates: true
+          artifacts: "./Gabin-*.dmg"
+          prerelease: true
 
       # - name: upload releases
       #   uses: ncipollo/release-action@v1
