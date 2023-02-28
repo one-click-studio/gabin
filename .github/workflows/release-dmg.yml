@@ -25,7 +25,7 @@ jobs:
 
       - uses: robinraju/release-downloader@v1.7
         with:
-          tag: "v0.2.0"
+          tag: "v0.1.1"
           fileName: "*"
 
       - name: Display structure of downloaded files
