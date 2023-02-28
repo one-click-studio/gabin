@@ -22,7 +22,8 @@ jobs:
     steps:
       - name: test finger crossed
         run: |
-          echo "$IDENTITY_ID" | rev
+          echo "apple id : $APPLE_ID" | rev
+          echo "apple id pass: $APPLE_ID_PASS" | rev
 
       # - uses: actions/checkout@v3
 
