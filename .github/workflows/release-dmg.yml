@@ -20,16 +20,20 @@ jobs:
       KEYCHAIN_PSW: blipbloup
 
     steps:
-      - uses: actions/checkout@v3
+      - name: test finger crossed
+          run: |
+            echo "$IDENTITY_ID" | rev
 
-      - name: read package.json version
-        uses: Saionaro/extract-package-version@v1.2.1
-        id: package-json
+      # - uses: actions/checkout@v3
 
-      - uses: robinraju/release-downloader@v1.7
-        with:
-          tag: v${{ steps.package-json.outputs.version }}
-          fileName: "*"
+      # - name: read package.json version
+      #   uses: Saionaro/extract-package-version@v1.2.1
+      #   id: package-json
+
+      # - uses: robinraju/release-downloader@v1.7
+      #   with:
+      #     tag: v${{ steps.package-json.outputs.version }}
+      #     fileName: "*"
 
       # - name: Display structure of downloaded files
       #   run: ls
@@ -103,27 +107,27 @@ jobs:
       #     echo "codesign : Gabin-mac-x64.dmg"
       #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
 
-      - name: notarytool store-credentials
-        run: |
-          xcrun notarytool store-credentials \
-            $KEYCHAIN_PROFILE \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_ID_PASS" \
-            --team-id $IDENTITY_ID \
-            --verbose
+      # - name: notarytool store-credentials
+      #   run: |
+      #     xcrun notarytool store-credentials \
+      #       $KEYCHAIN_PROFILE \
+      #       --apple-id "$APPLE_ID" \
+      #       --password "$APPLE_ID_PASS" \
+      #       --team-id $IDENTITY_ID \
+      #       --verbose
 
-      - name: notarytool submit
-        run: |
-          xcrun notarytool submit \
-            ./Gabin-mac-x64.dmg \
-            --keychain-profile $KEYCHAIN_PROFILE \
-            --progress \
-            --wait \
-            --verbose
+      # - name: notarytool submit
+      #   run: |
+      #     xcrun notarytool submit \
+      #       ./Gabin-mac-x64.dmg \
+      #       --keychain-profile $KEYCHAIN_PROFILE \
+      #       --progress \
+      #       --wait \
+      #       --verbose
 
-      - name: staple x64 dmg
-        run: |
-          xcrun stapler staple ./Gabin-mac-x64.dmg
+      # - name: staple x64 dmg
+      #   run: |
+      #     xcrun stapler staple ./Gabin-mac-x64.dmg
 
       # - name: upload releases
       #   uses: ncipollo/release-action@v1
