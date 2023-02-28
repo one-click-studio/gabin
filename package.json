@@ -15,6 +15,7 @@
     "clean": "pnpm clean:build && pnpm clean:dist",
     "clean:build": "shx rm -rf ./build",
     "clean:dist": "shx rm -rf ./dist",
+    "clean:resources": "shx rm -rf ./resources/*",
     "dev": "cross-env GABIN_CLIENT_PORT=5999 concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
     "dev:server": "npx nodemon",
     "dev:client": "cd ./src/render && pnpm dev",
