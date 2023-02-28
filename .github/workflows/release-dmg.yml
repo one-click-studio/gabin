@@ -1,4 +1,4 @@
-name: Create Release
+name: TESTS
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build & upload release
+    name: Notarize & straple release
     runs-on: macOS-latest
     env:
       MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
@@ -23,102 +23,111 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: read package.json version
-        uses: Saionaro/extract-package-version@v1.2.1
-        id: package-json
-
-      - uses: actions/setup-node@v3
-        name: Install Node.js
+      - uses: actions/download-artifact@v3
         with:
-          node-version: 18
+          name: Gabin-mac-x64.dmg
+          path: ./artifact/
+          
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: ./artifact/
 
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: 7
-          run_install: false
+      # - name: read package.json version
+      #   uses: Saionaro/extract-package-version@v1.2.1
+      #   id: package-json
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      # - uses: actions/setup-node@v3
+      #   name: Install Node.js
+      #   with:
+      #     node-version: 18
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      # - uses: pnpm/action-setup@v2
+      #   name: Install pnpm
+      #   id: pnpm-install
+      #   with:
+      #     version: 7
+      #     run_install: false
 
-      - name: Install dependencies
-        run: pnpm installAll
-
-      - name: build macOS [BIN]
-        run: |
-          pnpm run mac:pkg-pre
-          pnpm run mac:pkg-x64
-
-      - name: prepare codesign [decode]
-        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
-
-      - name: prepare codesign [security]
-        run: |
-          security create-keychain -p $KEYCHAIN_PSW build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-          security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-
-      - name: codesign binary
-        run: |
-          echo "codesign : gabin-mac-x64"
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
-
-      - name: build macOS [APP]
-        run: |
-          pnpm run mac:app-pre
-          pnpm run mac:app-x64
-          pnpm run mac:app-post
-
-      - name: codesign app
-        run: |
-          echo "codesign : Gabin-mac-x64.app"
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
-
-      - name: build macOS [DMG]
-        run: pnpm run mac:dmg-x64
-
-      - name: codesign dmg
-        run: |
-          echo "codesign : Gabin-mac-x64.dmg"
-          /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
-
-      # - name: notarize x64 dmg
-      #   if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
-      #   # with:
-      #   #   primary-bundle-id: studio.oneclick.gabin
+      # - name: Get pnpm store directory
+      #   id: pnpm-cache
+      #   shell: bash
       #   run: |
-      #     xcrun notarytool submit ./dist/Gabin-mac-x64.dmg
-      #       --keychain-profile ${{ secrets.APPLEIDPASS }}
-      #       --progress
-      #       --wait
-      #       --verbose
+      #     echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      # - name: staple x64 dmg
-      #   if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+      # - uses: actions/cache@v3
+      #   name: Setup pnpm cache
+      #   with:
+      #     path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+      #     key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pnpm-store-
+
+      # - name: Install dependencies
+      #   run: pnpm installAll
+
+      # - name: build macOS [BIN]
       #   run: |
-      #     xcrun stapler staple ./dist/Gabin-mac-x64.dmg
+      #     pnpm run mac:pkg-pre
+      #     pnpm run mac:pkg-x64
 
-      - name: upload releases
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-          name: ${{ steps.package-json.outputs.version }}
-          tag: v${{ steps.package-json.outputs.version }}
-          commit: ${{ github.sha }}
-          allowUpdates: true
-          artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
-          draft: true
+      # - name: prepare codesign [decode]
+      #   run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+
+      # - name: prepare codesign [security]
+      #   run: |
+      #     security create-keychain -p $KEYCHAIN_PSW build.keychain
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p $KEYCHAIN_PSW build.keychain
+      #     security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
+      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
+
+      # - name: codesign binary
+      #   run: |
+      #     echo "codesign : gabin-mac-x64"
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
+
+      # - name: build macOS [APP]
+      #   run: |
+      #     pnpm run mac:app-pre
+      #     pnpm run mac:app-x64
+      #     pnpm run mac:app-post
+
+      # - name: codesign app
+      #   run: |
+      #     echo "codesign : Gabin-mac-x64.app"
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
+
+      # - name: build macOS [DMG]
+      #   run: pnpm run mac:dmg-x64
+
+      # - name: codesign dmg
+      #   run: |
+      #     echo "codesign : Gabin-mac-x64.dmg"
+      #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
+
+      # # - name: notarize x64 dmg
+      # #   if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+      # #   # with:
+      # #   #   primary-bundle-id: studio.oneclick.gabin
+      # #   run: |
+      # #     xcrun notarytool submit ./dist/Gabin-mac-x64.dmg
+      # #       --keychain-profile ${{ secrets.APPLEIDPASS }}
+      # #       --progress
+      # #       --wait
+      # #       --verbose
+
+      # # - name: staple x64 dmg
+      # #   if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+      # #   run: |
+      # #     xcrun stapler staple ./dist/Gabin-mac-x64.dmg
+
+      # - name: upload releases
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     token: ${{ secrets.GH_TOKEN }}
+      #     name: ${{ steps.package-json.outputs.version }}
+      #     tag: v${{ steps.package-json.outputs.version }}
+      #     commit: ${{ github.sha }}
+      #     allowUpdates: true
+      #     artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
+      #     draft: true
