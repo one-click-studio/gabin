@@ -144,6 +144,17 @@ jobs:
             /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
           fi
 
+      - name: upload releases
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          name: ${{ steps.package-json.outputs.version }}
+          tag: v${{ steps.package-json.outputs.version }}
+          commit: ${{ github.sha }}
+          allowUpdates: true
+          artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
+          draft: true
+
       - name: check mac x64 file
         if: matrix.os == 'macOS-latest'
         id: check_mac_x64_file
@@ -206,5 +217,5 @@ jobs:
           tag: v${{ steps.package-json.outputs.version }}
           commit: ${{ github.sha }}
           allowUpdates: true
-          artifacts: "./dist/Gabin-*.dmg,./dist/gabin-*"
+          artifacts: "./dist/Gabin-*.dmg"
           draft: true
