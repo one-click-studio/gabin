@@ -58,7 +58,7 @@ let gabin: Gabin | undefined
 
 function openApp() {
   const port = process.env.GABIN_CLIENT_PORT || PORT
-  openUrl(`http://${HOST}:${port}`)
+  openUrl(`http://${HOST}:${port}${GABIN_BASE_URL}/`)
 }
 
 const initGabin = (io: Server) => {
@@ -188,7 +188,6 @@ function createTray(): Systray {
 
 async function main() {
 
-  console.log('\nbaseUrl', GABIN_BASE_URL)
   const serve = serveStatic(path.join(__dirname, '../render/dist'))
   const server = http.createServer((req, res) => {
     if (GABIN_BASE_URL !== '/') {
