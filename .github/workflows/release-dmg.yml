@@ -69,16 +69,16 @@ jobs:
       #     pnpm run mac:pkg-pre
       #     pnpm run mac:pkg-x64
 
-      # - name: prepare codesign [decode]
-      #   run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+      - name: prepare codesign [decode]
+        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
 
-      # - name: prepare codesign [security]
-      #   run: |
-      #     security create-keychain -p $KEYCHAIN_PSW build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-      #     security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
+      - name: prepare codesign [security]
+        run: |
+          security create-keychain -p $KEYCHAIN_PSW build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p $KEYCHAIN_PSW build.keychain
+          security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
 
       # - name: codesign binary
       #   run: |
