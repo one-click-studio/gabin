@@ -102,11 +102,11 @@ jobs:
         run: |
           if [ -f ./dist/gabin-mac-x64 ]; then
             echo "codesign : gabin-mac-x64"
-            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
           fi
           if [ -f ./dist/gabin-mac-arm64 ]; then
             echo "codesign : gabin-mac-arm64"
-            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/gabin-mac-arm64
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-arm64
           fi
 
       - name: build macOS [APP]
@@ -121,11 +121,11 @@ jobs:
         run: |
           if [ -d ./dist/Gabin-mac-x64.app ]; then
             echo "codesign : Gabin-mac-x64.app"
-            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
           fi
           if [ -d ./dist/Gabin-mac-arm64.app ]; then
             echo "codesign : Gabin-mac-arm64.app"
-            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.app
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.app
           fi
 
       - name: build macOS [DMG]
@@ -137,11 +137,11 @@ jobs:
         run: |
           if [ -f ./dist/Gabin-mac-x64.dmg ]; then
             echo "codesign : Gabin-mac-x64.dmg"
-            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
           fi
           if [ -f ./dist/Gabin-mac-arm64.dmg ]; then
             echo "codesign : Gabin-mac-arm64.dmg"
-            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
+            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
           fi
 
       - name: check mac x64 file
