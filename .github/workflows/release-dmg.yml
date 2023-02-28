@@ -16,6 +16,7 @@ jobs:
       IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
       CSC_LINK: ${{ secrets.CSC_LINK }}
       CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      KEYCHAIN_PROFILE: studio.oneclick.gabin
       KEYCHAIN_PSW: blipbloup
 
     steps:
@@ -105,18 +106,19 @@ jobs:
       - name: notarytool store-credentials
         run: |
           xcrun notarytool store-credentials \
-            --apple-id "${{ secrets.APPLE_ID }}" \
-            --password "${{ secrets.APPLEIDPASS }}" \
-            --team-id ${{ secrets.IDENTITY_ID }} \
-            gabin \
+            $KEYCHAIN_PROFILE \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASS" \
+            --team-id $IDENTITY_ID \
             --verbose
 
       - name: notarytool submit
         run: |
-          xcrun notarytool submit ./Gabin-mac-x64.dmg
-            --keychain-profile ${{ secrets.APPLEIDPASS }}
-            --progress
-            --wait
+          xcrun notarytool submit \
+            ./Gabin-mac-x64.dmg \
+            --keychain-profile $KEYCHAIN_PROFILE \
+            --progress \
+            --wait \
             --verbose
 
       - name: staple x64 dmg
