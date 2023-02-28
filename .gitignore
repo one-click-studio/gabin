@@ -5,3 +5,5 @@ build
 database.json
 *.log*
 .env
+test.sh
+certificate.p12

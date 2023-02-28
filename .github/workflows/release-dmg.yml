@@ -20,13 +20,12 @@ jobs:
       KEYCHAIN_PSW: blipbloup
 
     steps:
-      - name: the gha hack ♥️
-        run: |
-          echo "$CSC_LINK" | rev
-          echo "$CSC_KEY_PASSWORD" | rev
+      - name: prepare codesign [decode]
+        run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
 
-      # - name: prepare codesign [decode]
-      #   run: bash -c 'base64 --decode <<< "$CSC_LINK" > certificate.p12'
+      - name: shasum
+        run: |
+          shasum certificate.p12
 
       # - name: prepare codesign [security]
       #   run: |
