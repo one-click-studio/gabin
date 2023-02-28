@@ -10,8 +10,6 @@ jobs:
     name: Notarize & straple release
     runs-on: macOS-latest
     env:
-      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
-      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
@@ -104,9 +102,13 @@ jobs:
       #     echo "codesign : Gabin-mac-x64.dmg"
       #     /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
 
-      - name: notarize x64 dmg
-        # with:
-        #   primary-bundle-id: studio.oneclick.gabin
+      - name: notarytool store-credentials
+        run: |
+          xcrun notarytool store-credentials $APPLE_ID_PASS
+            --apple-id $APPLE_ID
+            --verbose
+
+      - name: notarytool submit
         run: |
           xcrun notarytool submit ./Gabin-mac-x64.dmg
             --keychain-profile ${{ secrets.APPLEIDPASS }}
