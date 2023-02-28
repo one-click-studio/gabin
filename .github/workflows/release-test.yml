@@ -10,14 +10,13 @@ jobs:
     name: Build & upload release [${{ matrix.os }}]
     runs-on: ${{ matrix.os }}
     env:
-      MACOS_CERTIFICATE: ${{ secrets.APPLEIDPASS }}
-      MACOS_CERTIFICATE_PWD: ${{ secrets.APPLE_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
       IDENTITY_ID: ${{ secrets.IDENTITY_ID }}
       CSC_LINK: ${{ secrets.CSC_LINK }}
       CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      KEYCHAIN_PROFILE: studio.oneclick.gabin
       KEYCHAIN_PSW: blipbloup
 
     strategy:
