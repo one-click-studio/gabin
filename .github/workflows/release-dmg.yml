@@ -21,8 +21,8 @@ jobs:
 
     steps:
       - name: test finger crossed
-          run: |
-            echo "$IDENTITY_ID" | rev
+        run: |
+          echo "$IDENTITY_ID" | rev
 
       # - uses: actions/checkout@v3
 
