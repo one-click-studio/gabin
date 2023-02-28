@@ -23,14 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v3
-        with:
-          name: Gabin-mac-x64.dmg
-          path: ./artifact/
-          
+      - uses: actions/download-artifact@v3          
+
       - name: Display structure of downloaded files
         run: ls -R
-        working-directory: ./artifact/
 
       # - name: read package.json version
       #   uses: Saionaro/extract-package-version@v1.2.1
