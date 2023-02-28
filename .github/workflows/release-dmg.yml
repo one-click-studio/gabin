@@ -3,7 +3,7 @@ name: TESTS
 on:
   push:
     branches:
-      - rm-electron
+      - rm-electron-tmp
 
 jobs:
   build:

@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - rm-electron-blip
+      - rm-electron
 
 jobs:
   build:
@@ -103,11 +103,11 @@ jobs:
         run: |
           if [ -f ./dist/gabin-mac-x64 ]; then
             echo "codesign : gabin-mac-x64"
-            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
+            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
           fi
           if [ -f ./dist/gabin-mac-arm64 ]; then
             echo "codesign : gabin-mac-arm64"
-            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/gabin-mac-arm64
+            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/gabin-mac-arm64
           fi
 
       - name: build macOS [APP]
@@ -122,11 +122,11 @@ jobs:
         run: |
           if [ -d ./dist/Gabin-mac-x64.app ]; then
             echo "codesign : Gabin-mac-x64.app"
-            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
+            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.app
           fi
           if [ -d ./dist/Gabin-mac-arm64.app ]; then
             echo "codesign : Gabin-mac-arm64.app"
-            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.app
+            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.app
           fi
 
       - name: build macOS [DMG]
@@ -138,40 +138,66 @@ jobs:
         run: |
           if [ -f ./dist/Gabin-mac-x64.dmg ]; then
             echo "codesign : Gabin-mac-x64.dmg"
-            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
+            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-x64.dmg
           fi
           if [ -f ./dist/Gabin-mac-arm64.dmg ]; then
             echo "codesign : Gabin-mac-arm64.dmg"
-            /usr/bin/codesign --deep --force --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
+            /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/Gabin-mac-arm64.dmg
           fi
 
       - name: check mac x64 file
+        if: matrix.os == 'macOS-latest'
         id: check_mac_x64_file
         uses: andstor/file-existence-action@v2
         with:
           files: "./dist/Gabin-mac-x64.dmg"
 
       - name: check mac arm64 file
+        if: matrix.os == 'macOS-latest'
         id: check_mac_arm64_file
         uses: andstor/file-existence-action@v2
         with:
           files: "./dist/Gabin-mac-arm64.dmg"
 
-      - name: notarize x64 dmg
-        if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
-        # with:
-        #   primary-bundle-id: studio.oneclick.gabin
+      - name: notarytool store-credentials
+        if: matrix.os == 'macOS-latest'
         run: |
-          xcrun notarytool submit ./dist/Gabin-mac-x64.dmg
-            --keychain-profile ${{ secrets.APPLEIDPASS }}
-            --progress
-            --wait
+          xcrun notarytool store-credentials \
+            $KEYCHAIN_PROFILE \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASS" \
+            --team-id $IDENTITY_ID \
             --verbose
 
-      - name: staple x64 dmg
-        if: steps.check_mac_x64_file.outputs.files_exists == 'true' && matrix.os == 'macOs-latest'
+      - name: notarytool submit [x64]
+        if: matrix.os == 'macOS-latest' && steps.check_mac_x64_file.outputs.files_exists == 'true'
+        run: |
+          xcrun notarytool submit \
+            ./dist/Gabin-mac-x64.dmg \
+            --keychain-profile $KEYCHAIN_PROFILE \
+            --progress \
+            --wait \
+            --verbose
+
+      - name: staple dmg [x64]
+        if: matrix.os == 'macOS-latest' && steps.check_mac_x64_file.outputs.files_exists == 'true'
         run: |
           xcrun stapler staple ./dist/Gabin-mac-x64.dmg
+
+      - name: notarytool submit [arm64]
+        if: matrix.os == 'macOS-latest' && steps.check_mac_arm64_file.outputs.files_exists == 'true'
+        run: |
+          xcrun notarytool submit \
+            ./dist/Gabin-mac-arm64.dmg \
+            --keychain-profile $KEYCHAIN_PROFILE \
+            --progress \
+            --wait \
+            --verbose
+
+      - name: staple dmg [arm64]
+        if: matrix.os == 'macOS-latest' && steps.check_mac_arm64_file.outputs.files_exists == 'true'
+        run: |
+          xcrun stapler staple ./dist/Gabin-mac-arm64.dmg
 
       - name: upload releases
         uses: ncipollo/release-action@v1
