@@ -31,7 +31,6 @@ jobs:
         with:
           tag: v${{ steps.package-json.outputs.version }}
           fileName: "*"
-          token: $GH_TOKEN
 
       # - name: Display structure of downloaded files
       #   run: ls
