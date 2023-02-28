@@ -104,8 +104,8 @@ jobs:
 
       - name: notarytool store-credentials
         run: |
-          xcrun notarytool store-credentials ${{ secrets.APPLEIDPASS }}
-            --apple-id ${{ secrets.APPLE_ID }}
+          xcrun notarytool store-credentials "${{ secrets.APPLEIDPASS }}"
+            --apple-id "${{ secrets.APPLE_ID }}"
             --team-id ${{ secrets.IDENTITY_ID }}
             --verbose
 
