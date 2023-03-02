@@ -54,7 +54,6 @@
     "nodemon": "^2.0.20",
     "pkg": "github:vercel/pkg",
     "playwright": "^1.29.2",
-    "prebuild-install": "^7.1.1",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
