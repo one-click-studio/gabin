@@ -67,7 +67,7 @@ jobs:
         
       - name: Run pkg
         run: |
-          npx pkg . -t macos-arm64,macos-x64,linux-arm64,linux-x64,win-arm64,win-x64
+          npx pkg . -t macos-arm64,macos-x64,linux-arm64,linux-x64,win-arm64,win-x64 --compress GZip
           ls dist
 
           mkdir ./mac-dist
@@ -142,7 +142,6 @@ jobs:
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./mac-dist/arm64/Gabin.app -v
 
       - name: "Notarize app bundle"
-        if: matrix.os == 'macos-latest'
         env:
           MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_ID }}
           MACOS_NOTARIZATION_PWD: ${{ secrets.APPLEIDPASS }}
@@ -166,7 +165,6 @@ jobs:
           zip -r "./mac-dist/gabin-mac-x64.zip" "./mac-dist/x64/Gabin.app"
           zip -r "./mac-dist/gabin-mac-arm64.zip" "./mac-dist/arm64/Gabin.app"
           
-
       - name: Upload executables to asset
         id: upload-release-asset
         uses: softprops/action-gh-release@v1
