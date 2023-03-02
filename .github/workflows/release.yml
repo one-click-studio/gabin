@@ -100,7 +100,7 @@ jobs:
 
   sign-mac-executables:
     runs-on: macos-latest
-    needs: build-executables
+    needs: build
     steps:
       - uses: actions/checkout@v3
       - name: read package.json version
