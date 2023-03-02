@@ -173,8 +173,8 @@ jobs:
 
       - name: "Create zip archives"
         run: |
-          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "gabin-mac-x64.zip"
-          ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "gabin-mac-arm64.zip"
+          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "./mac-dist/gabin-mac-x64.zip"
+          ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "./mac-dist/gabin-mac-arm64.zip"
           
       - name: Upload executables to asset
         id: upload-release-asset
