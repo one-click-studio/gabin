@@ -15,7 +15,7 @@
     "dev:server": "npx nodemon",
     "dev:client": "cd ./src/render && pnpm dev",
     "build": "shx rm -rf ./build && concurrently \"pnpm run build:client\" \"pnpm run build:server\"",
-    "build:server": "pnpm clean:build && tsc && shx cp -R ./src/resources ./build/resources",
+    "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "cd ./src/render && pnpm build && cd ../.. && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js"
   },
