@@ -219,3 +219,17 @@ jobs:
           allowUpdates: true
           artifacts: "./dist/Gabin-*.dmg"
           draft: true
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: ${{ steps.package-json.outputs.version }}
+          path: mac-dist
+          retention-days: 1
+  sign-mac-executables:
+    runs-on: macos-latest
+    needs: build-executables
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: ${{ jobs.build.steps.package-json.outputs.version }}
+          path: mac-dist

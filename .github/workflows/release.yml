@@ -62,10 +62,60 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-build-${{ env.cache-name }}-
           
-      - name: build
+      - name: Build
         run: pnpm build
         
-      - name: run pkg
+      - name: Run pkg
         run: |
-          npx pkg . -t macos-arm64
+          npx pkg . -t macos-arm64,macos-x64,linux-arm64,linux-x64,win-arm64,win-x64
           ls dist
+
+          mkdir ./mac-dist
+          mv ./dist/gabin-macos-arm64 ./mac-dist/
+          mv ./dist/gabin-macos-x64 ./mac-dist/
+
+      - name: Upload executables to asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          tag_name: ${{ steps.package-json.outputs.version }}
+          files: |
+             ./dist/gabin-win-arm64.exe
+             ./dist/gabin-win-x64.exe
+             ./dist/gabin-linux-arm64
+             ./dist/gabin-linux-x64
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: ${{ steps.package-json.outputs.version }}
+          path: mac-dist
+          retention-days: 1
+
+  sign-mac-executables:
+    runs-on: macos-latest
+    needs: build-executables
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: ${{ jobs.build.steps.package-json.outputs.version }}
+          path: mac-dist
+
+      - name: Sign macOS executables
+        run: |
+          codesign --force -s - mac-dist/gabin-macos-arm64 -v
+          codesign --force -s - mac-dist/gabin-macos-x64 -v
+
+      - name: Upload executables to asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          tag_name: ${{ jobs.build.steps.package-json.outputs.version }}
+          files: |
+             ./dist/gabin-macos-x64
+              ./dist/gabin-macos-arm64

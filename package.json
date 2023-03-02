@@ -50,18 +50,6 @@
     ],
     "outputPath": "dist"
   },
-  "embler": {
-    "realName": "Gabin",
-    "appId": "com.oneclickstudio.gabin",
-    "mac": {
-      "binary": "dist/gabin",
-      "icon": "./src/resources/icons/icon.png",
-      "formats": [
-        "app"
-      ],
-      "category": "public.app-category.video"
-    }
-  },
   "dependencies": {
     "audify": "^1.8.1",
     "deep-eql": "^4.1.3",
