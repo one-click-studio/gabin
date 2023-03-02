@@ -113,9 +113,12 @@ jobs:
 
           echo "Attach staple"
           xcrun stapler staple "./dist/Gabin-mac-x64.app"
+          # zip .app
+          zip -r "./dist/Gabin-mac-x64.zip" "./dist/Gabin-mac-x64.app"
+          
         
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v3
         with:
           name: "Gabin-mac-x64"
-          path: "./dist/Gabin-mac-x64.app"
+          path: "./dist/Gabin-mac-x64.zip"
