@@ -54,17 +54,13 @@ jobs:
       - name: Install npm dependencies
         run: pnpm installAll
 
-      # - name: Cache pkg modules
-      #   id: cache-pkg
-      #   uses: actions/cache@v3
-      #   env:
-      #     cache-name: cache-pkg
-      #   with:
-      #     # pkg cache files are stored in `~/.pkg-cache`
-      #     path: ~/.pkg-cache
-      #     key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-build-${{ env.cache-name }}-
+      - uses: actions/cache@v3
+        name: Cache pkg modules
+        with:
+          path: ~/.pkg-cache
+          key: ${{ runner.os }}-pkg-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pkg-
           
       - name: Build
         run: pnpm build
