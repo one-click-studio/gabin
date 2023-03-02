@@ -1,7 +1,6 @@
 import path from "path"
 import fs from "fs"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
-import VAD from "webrtcvad"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../../main/utils/logger'
 
@@ -116,7 +115,6 @@ export class AudioActivity {
     private _bufferLength: number = 0
  
     private _sileroVad: SileroVad[] | undefined
-    private _webrtcVad: VAD[] | undefined
     private _rtAudio: RtAudio | undefined
 
     private _deviceName: string
@@ -164,11 +162,10 @@ export class AudioActivity {
         return true
     }
 
-    public async start() {        
+    public async start() {
         if (!this._device) return
 
         this._sileroVad = []
-        this._webrtcVad = []
 
         this._sampleRate = this.getSampleRate(this._device.data)
 
@@ -176,10 +173,11 @@ export class AudioActivity {
             const sileroVad = new SileroVad()
             await sileroVad.load()
             this._sileroVad[i] = sileroVad
-            this._webrtcVad[i] = new VAD(this._sampleRate, 3)
         }
 
         this._rtAudio = new RtAudio(this._apiId)
+
+        console.log(this._device.data)
 
         this._rtAudio.openStream(
             null,
@@ -258,22 +256,16 @@ export class AudioActivity {
     }
 
     private async processChannel(buffer: number[], channel: number) {
-        if (!this._webrtcVad || !this._sileroVad) return
-        // if (!this._webrtcVad) return
+        if (!this._sileroVad) return
 
         if (buffer.length !== this._bufferLength){
             buffer = buffer.slice(0, this._bufferLength)
         }
 
         let isSpeaking = false
-        const wrv = this._webrtcVad[channel].process(Buffer.from(buffer))
-
-        if (wrv) {
-            // isSpeaking = true
-            const vadLastProbability = await this._sileroVad[channel].process(buffer)
-            if (vadLastProbability > this._speechThreshold) {
-                isSpeaking = true
-            }
+        const vadLastProbability = await this._sileroVad[channel].process(buffer)
+        if (vadLastProbability > this._speechThreshold) {
+            isSpeaking = true
         }
 
         if (isSpeaking) {
@@ -320,7 +312,7 @@ export class AudioActivity {
     private findDevice(apiId: RtAudioApi, apiName: string, deviceName: string): Device | undefined {
         const rtAudio = new RtAudio(apiId)
         const devices = rtAudio.getDevices()
-        const deviceId = devices.findIndex(d => d.name === deviceName)
+        const deviceId = devices.findIndex(d => d.inputChannels > 0 && d.name === deviceName)
         if (deviceId !== -1) {
             return { id: deviceId, data: devices[deviceId], apiId, apiName }
         }

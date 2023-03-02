@@ -25,7 +25,6 @@ specifiers:
   systray: ^1.0.5
   ts-node: ^10.9.1
   typescript: ^4.9.5
-  webrtcvad: ^1.0.1
 
 dependencies:
   audify: 1.8.1
@@ -39,7 +38,6 @@ dependencies:
   simple-json-db: 2.0.0
   socket.io: 4.6.0
   systray: 1.0.5
-  webrtcvad: 1.0.1
 
 devDependencies:
   '@types/deep-eql': 4.0.0
@@ -1155,10 +1153,6 @@ packages:
     dependencies:
       semver: 7.3.8
 
-  /node-addon-api/1.7.2:
-    resolution: {integrity: sha512-ibPK3iA+vaY1eEjESkQkM0BbCqFOaZMiXRTtdB0u7b4djtY6JnsjvPdUHVMg6xQt3B8fpTTWHI9A+ADjM9frzg==}
-    dev: false
-
   /node-addon-api/5.1.0:
     resolution: {integrity: sha512-eh0GgfEkpnoWDq+VY8OyvYhFEzBk6jIYbRKdIlyTiAXIVJ8PyBaKb0rp7oDtoddbdoHWhq8wwr+XZ81F1rpNdA==}
     dev: false
@@ -1852,14 +1846,6 @@ packages:
   /webidl-conversions/3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
     dev: true
-
-  /webrtcvad/1.0.1:
-    resolution: {integrity: sha512-oLfReCmGMpRducFWKP+o0GpKZLPj0u6qkln3P7wGaEzyjxtBiFuzvK28pmKF5SSihEkC1RGKO7Pi9C4VfY1q4Q==}
-    requiresBuild: true
-    dependencies:
-      bindings: 1.5.0
-      node-addon-api: 1.7.2
-    dev: false
 
   /whatwg-url/5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}

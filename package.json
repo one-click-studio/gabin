@@ -42,8 +42,7 @@
     "serve-static": "^1.15.0",
     "simple-json-db": "^2.0.0",
     "socket.io": "^4.6.0",
-    "systray": "^1.0.5",
-    "webrtcvad": "^1.0.1"
+    "systray": "^1.0.5"
   },
   "devDependencies": {
     "@types/deep-eql": "^4.0.0",
