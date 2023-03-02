@@ -16,7 +16,6 @@ specifiers:
   onnxruntime-node: ^1.13.1
   pkg: github:vercel/pkg
   playwright: ^1.29.2
-  prebuild-install: ^7.1.1
   rxjs: ^7.8.0
   serve-static: ^1.15.0
   shx: ^0.3.4
@@ -49,7 +48,6 @@ devDependencies:
   nodemon: 2.0.20
   pkg: github.com/vercel/pkg/e3ac4902e9cb023f0ac2a596e21ff9166d2e268c
   playwright: 1.30.0
-  prebuild-install: 7.1.1
   shx: 0.3.4
   ts-node: 10.9.1_4bewfcp2iebiwuold25d6rgcsy
   typescript: 4.9.5
