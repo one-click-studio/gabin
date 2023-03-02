@@ -3,7 +3,7 @@ name: TESTS
 on:
   push:
     branches:
-      - rm-electron2
+      - rm-electron2_stop
 
 jobs:
   release:
@@ -91,8 +91,7 @@ jobs:
           security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
-
-          # We finally codesign our app bundle, specifying the Hardened runtime option          
+    
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./dist/Gabin-mac-x64.app -v
 
       - name: "Notarize app bundle"
@@ -113,7 +112,7 @@ jobs:
 
           echo "Attach staple"
           xcrun stapler staple "./dist/Gabin-mac-x64.app"
-          # zip .app
+
           zip -r "./dist/Gabin-mac-x64.zip" "./dist/Gabin-mac-x64.app"
           
         

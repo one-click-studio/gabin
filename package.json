@@ -39,7 +39,6 @@
     "win:pkg": "pnpm clean:dist && pnpm build && pkg . -t host && shx mv ./dist/gabin.exe ./dist/gabin-win.exe"
   },
   "pkg": {
-    "scripts": "build/main/*.js",
     "assets": [
       "build/render/**/*",
       "build/resources/**/*",

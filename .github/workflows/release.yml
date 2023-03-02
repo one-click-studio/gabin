@@ -4,27 +4,24 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-
-env:
-  USE_HARD_LINKS: false
-  # DEBUG: electron-builder
+      - rm-electron2
 
 jobs:
-  release:
-    name: build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [windows-latest, macOS-latest]
-
+  qemu:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Install ldid
+        uses: MOZGIII/install-ldid-action@v1
         with:
-          node-version: 17
+          tag: v2.1.5-procursus2
+
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 18
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
@@ -47,34 +44,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Get pnpm file path
-        shell: bash
-        run: |
-          PNPM_VERSION=$(pnpm -v)
-          echo "PNPM_FILE=\"/c/users/runneradmin/setup-pnpm/node_modules/.pnpm/pnpm@$PNPM_VERSION/node_modules/pnpm/bin/pnpm.cjs\"" >> $GITHUB_ENV
-
-      #TODO - Remove this once https://github.com/electron-userland/electron-builder/issues/6933#issuecomment-1213438889 is resolved
-      - name: Tweak pnpm.cjs
-        if: matrix.os == 'windows-latest'
-        run: sed -i 's/\/usr\/bin\/env node/node/g' ${{env.PNPM_FILE}}
-        shell: bash
-
       - name: Install dependencies
-        run: pnpm install
-
-      - name: build macOS
-        if: matrix.os == 'macOS-latest'
-        run: pnpm release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASS: ${{ secrets.APPLEIDPASS }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-
-      - name: build windows
-        if: matrix.os == 'windows-latest'
-        run: pnpm release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          # todo: add windows signing
+        run: pnpm installAll
+      
+      - name: install pkg
+        run: |
+          npx pkg . --target macos-x64,macos-arm64,linux-x64,linux-arm64,win-x64,win-arm64
+          ls dist
