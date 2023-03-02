@@ -48,7 +48,15 @@
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
       "node_modules/.pnpm/systray@1.0.5/node_modules/systray/traybin/tray_darwin_release"
     ],
-    "outputPath": "dist"
+    "outputPath": "dist",
+    "targets": [
+      "node18-linux-arm64",
+      "node18-macos-arm64",
+      "node18-win-arm64",
+      "node18-linux-x64",
+      "node18-macos-x64",
+      "node18-win-x64"
+    ]
   },
   "embler": {
     "realName": "Gabin",
@@ -77,14 +85,12 @@
     "webrtcvad": "^1.0.1"
   },
   "devDependencies": {
-    "@electron/osx-sign": "^1.0.4",
     "@types/deep-eql": "^4.0.0",
     "@types/finalhandler": "^1.2.0",
     "@types/node": "^18.13.0",
     "@types/serve-static": "^1.15.0",
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.3",
-    "embler": "^1.0.0",
     "nodemon": "^2.0.20",
     "pkg": "github:vercel/pkg",
     "playwright": "^1.29.2",

@@ -46,8 +46,20 @@ jobs:
 
       - name: Install dependencies
         run: pnpm installAll
-      
-      - name: install pkg
+
+      - name: Cache pkg modules
+        id: cache-pkg
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-pkg
+        with:
+          # pkg cache files are stored in `~/.pkg-cache`
+          path: ~/.pkg-cache
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+          
+      - name: run pkg
         run: |
-          npx pkg . --target macos-x64,macos-arm64,linux-x64,linux-arm64,win-x64,win-arm64
+          npx pkg . --compress GZip
           ls dist
