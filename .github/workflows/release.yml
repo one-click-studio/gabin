@@ -108,6 +108,14 @@ jobs:
           name: ${{ steps.package-json.outputs.version }}
           path: mac-dist
 
+      
+      - name: Sign macOS executables
+        run: |
+          chmod +x mac-dist/gabin-macos-x64
+          chmod +x mac-dist/gabin-macos-arm64
+          /usr/bin/codesign --force -s - mac-dist/gabin-macos-x64 -v
+          /usr/bin/codesign --force -s - mac-dist/gabin-macos-arm64 -v
+
       - name: Build .app for x64 and arm64
         run: |
           mkdir -p mac-dist/x64/Gabin.app/Contents/MacOS
@@ -138,8 +146,8 @@ jobs:
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
     
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./mac-dist/x64/Gabin.app -v
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./mac-dist/arm64/Gabin.app -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/x64/Gabin.app -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/arm64/Gabin.app -v
 
       - name: "Notarize app bundle"
         env:
@@ -155,15 +163,18 @@ jobs:
           ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "notarization_arm64.zip"
 
           echo "Notarize app"
-          xcrun notarytool submit "notarization_x64.zip" --keychain-profile "notarytool-profile" --wait
-          xcrun notarytool submit "notarization_arm64.zip" --keychain-profile "notarytool-profile" --wait
+          xcrun notarytool submit "notarization_x64.zip" --keychain-profile "notarytool-profile" --wait &
+          xcrun notarytool submit "notarization_arm64.zip" --keychain-profile "notarytool-profile" --wait &
+          wait
 
           echo "Attach staple"
           xcrun stapler staple "./mac-dist/x64/Gabin.app"
           xcrun stapler staple "./mac-dist/arm64/Gabin.app"
 
-          zip -r "./mac-dist/gabin-mac-x64.zip" "./mac-dist/x64/Gabin.app"
-          zip -r "./mac-dist/gabin-mac-arm64.zip" "./mac-dist/arm64/Gabin.app"
+      - name: "Create zip archives"
+        run: |
+          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "gabin-mac-x64.zip"
+          ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "gabin-mac-arm64.zip"
           
       - name: Upload executables to asset
         id: upload-release-asset
