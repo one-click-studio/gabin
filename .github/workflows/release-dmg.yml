@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build macOS
-    runs-on: macOS-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -71,6 +71,7 @@ jobs:
           pnpm run mac:app-post
 
       - name: Codesign app bundle
+        if: matrix.os == 'macOS-latest'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           MACOS_CERTIFICATE: ${{ secrets.CSC_LINK }}
@@ -89,45 +90,27 @@ jobs:
           # We finally codesign our app bundle, specifying the Hardened runtime option          
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./dist/Gabin-mac-x64.app -v
 
-        - name: "Notarize app bundle"
-          env:
-            MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_ID }}
-            MACOS_NOTARIZATION_PWD: ${{ secrets.APPLEIDPASS }}
-            MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          run: |
-            echo "Create keychain profile"
-            xcrun notarytool store-credentials "notarytool-profile" --apple-id "$MACOS_NOTARIZATION_APPLE_ID" --team-id "$MACOS_NOTARIZATION_TEAM_ID" --password "$MACOS_NOTARIZATION_PWD"
+      - name: "Notarize app bundle"
+        if: matrix.os == 'macOS-latest'
+        env:
+          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_ID }}
+          MACOS_NOTARIZATION_PWD: ${{ secrets.APPLEIDPASS }}
+          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "Create keychain profile"
+          xcrun notarytool store-credentials "notarytool-profile" --apple-id "$MACOS_NOTARIZATION_APPLE_ID" --team-id "$MACOS_NOTARIZATION_TEAM_ID" --password "$MACOS_NOTARIZATION_PWD"
 
-            echo "Creating temp notarization archive"
-            ditto -c -k --keepParent "./dist/Gabin-mac-x64.app" "notarization.zip"
+          echo "Creating temp notarization archive"
+          ditto -c -k --keepParent "./dist/Gabin-mac-x64.app" "notarization.zip"
 
-            echo "Notarize app"
-            xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
+          echo "Notarize app"
+          xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
 
-            echo "Attach staple"
-            xcrun stapler staple "./dist/Gabin-mac-x64.app"
+          echo "Attach staple"
+          xcrun stapler staple "./dist/Gabin-mac-x64.app"
         
-        - name: "Upload artifacts"
-          uses: actions/upload-artifact@v3
-          with:
-            name: "Gabin-mac-x64"
-            path: "./dist/Gabin-mac-x64.app"
-
-          
-
-
-
-
-      # - name: prepare codesign [security]
-      #   run: |
-      #     security create-keychain -p $KEYCHAIN_PSW build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain -p $KEYCHAIN_PSW build.keychain
-      #     security import certificate.p12 -k build.keychain -P $CSC_KEY_PASSWORD -T /usr/bin/codesign
-      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PSW build.keychain
-
-      # - name: codesign binary
-      #   run: |
-      #     echo "codesign : gabin-mac-x64"
-      #     /usr/bin/codesign --deep --force --options=runtime --verbose --sign $IDENTITY_ID ./dist/gabin-mac-x64
-
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: "Gabin-mac-x64"
+          path: "./dist/Gabin-mac-x64.app"
