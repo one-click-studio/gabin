@@ -63,13 +63,13 @@ jobs:
         run: pnpm installAll
 
       - name: build macOS [PKG]
-        if: matrix.os == macos-latest
+        if: matrix.os == 'macos-latest'
         run: |
           pnpm run mac:pkg-pre
           pnpm run mac:pkg-x64
 
       - name: build macOS [BIN]
-        if: matrix.os == macos-latest
+        if: matrix.os == 'macos-latest'
         run: |
           pnpm run mac:app-pre
           pnpm run mac:app-x64
