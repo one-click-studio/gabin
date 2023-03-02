@@ -51,7 +51,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Install dependencies
+      - name: Install npm dependencies
         run: pnpm installAll
 
       # - name: Cache pkg modules
@@ -82,7 +82,7 @@ jobs:
         id: upload-release-asset
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           draft: true
           tag_name: ${{ steps.package-json.outputs.version }}
@@ -112,19 +112,73 @@ jobs:
           name: ${{ steps.package-json.outputs.version }}
           path: mac-dist
 
-      - name: Sign macOS executables
+      - name: Build .app for x64 and arm64
         run: |
-          codesign --force -s - mac-dist/gabin-macos-arm64 -v
-          codesign --force -s - mac-dist/gabin-macos-x64 -v
+          mkdir -p mac-dist/x64/Gabin.app/Contents/MacOS
+          mkdir -p mac-dist/x64/Gabin.app/Contents/Resources
+          mv mac-dist/gabin-macos-x64 mac-dist/x64/Gabin.app/Contents/MacOS/Gabin
+          mv src/resources/Info.plist mac-dist/x64/Gabin.app/Contents/Info.plist
+          mv src/resources/icons/app.icns mac-dist/x64/Gabin.app/Contents/Resources/app.icns
+
+          mkdir -p mac-dist/arm64/Gabin.app/Contents/MacOS
+          mkdir -p mac-dist/arm64/Gabin.app/Contents/Resources
+          mv mac-dist/gabin-macos-arm64 mac-dist/arm64/Gabin.app/Contents/MacOS/Gabin
+          mv src/resources/Info.plist mac-dist/arm64/Gabin.app/Contents/Info.plist
+          mv src/resources/icons/app.icns mac-dist/arm64/Gabin.app/Contents/Resources/app.icns
+
+      - name: Codesign app bundles
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          MACOS_CERTIFICATE: ${{ secrets.CSC_LINK }}
+          MACOS_CERTIFICATE_NAME: ${{ secrets.CSC_NAME }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.CSC_KEY_PASSWORD }}
+          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PSW }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+
+          security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain 
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+    
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./mac-dist/x64/Gabin.app -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./mac-dist/arm64/Gabin.app -v
+
+      - name: "Notarize app bundle"
+        if: matrix.os == 'macos-latest'
+        env:
+          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_ID }}
+          MACOS_NOTARIZATION_PWD: ${{ secrets.APPLEIDPASS }}
+          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "Create keychain profile"
+          xcrun notarytool store-credentials "notarytool-profile" --apple-id "$MACOS_NOTARIZATION_APPLE_ID" --team-id "$MACOS_NOTARIZATION_TEAM_ID" --password "$MACOS_NOTARIZATION_PWD"
+
+          echo "Creating temp notarization archive"
+          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "notarization_x64.zip"
+          ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "notarization_arm64.zip"
+
+          echo "Notarize app"
+          xcrun notarytool submit "notarization_x64.zip" --keychain-profile "notarytool-profile" --wait
+          xcrun notarytool submit "notarization_arm64.zip" --keychain-profile "notarytool-profile" --wait
+
+          echo "Attach staple"
+          xcrun stapler staple "./mac-dist/x64/Gabin.app"
+          xcrun stapler staple "./mac-dist/arm64/Gabin.app"
+
+          zip -r "./mac-dist/gabin-mac-x64.zip" "./mac-dist/x64/Gabin.app"
+          zip -r "./mac-dist/gabin-mac-arm64.zip" "./mac-dist/arm64/Gabin.app"
+          
 
       - name: Upload executables to asset
         id: upload-release-asset
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           draft: true
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
-             ./dist/gabin-macos-x64
-              ./dist/gabin-macos-arm64
+              ./mac-dist/gabin-mac-x64.zip
+              ./mac-dist/gabin-mac-arm64.zip

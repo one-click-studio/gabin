@@ -3,9 +3,9 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleDisplayName</key>
-    <string>Gabin-mac-arm64</string>
+    <string>Gabin</string>
     <key>CFBundleExecutable</key>
-    <string>Gabin-mac-arm64</string>
+    <string>Gabin</string>
     <key>CFBundleIconFile</key>
     <string>app.icns</string>
     <key>CFBundleIdentifier</key>
