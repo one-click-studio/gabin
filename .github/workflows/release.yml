@@ -87,10 +87,6 @@ jobs:
           ( cd ./node_modules/audify && npx prebuild-install --platform=win32 --arch=x64 )
           npx pkg . -t win-x64 --compress GZip -o ./dist/gabin-win-x64.exe
 
-          rm -Rf ./node_modules/audify/build/Release/*
-          ( cd ./node_modules/audify && npx prebuild-install --platform=win32 --arch=ia32 )
-          npx pkg . -t win-x86 --compress GZip -o ./dist/gabin-win-x86.exe
-
           mkdir ./mac-dist
           mv ./dist/gabin-macos-arm64 ./mac-dist/
           mv ./dist/gabin-macos-x64 ./mac-dist/
