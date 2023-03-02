@@ -7,3 +7,4 @@ database.json
 .env
 test.sh
 certificate.p12
+.DS_Store
