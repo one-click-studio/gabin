@@ -6,9 +6,14 @@ on:
       - rm-electron2
 
 jobs:
-  build:
-    name: Build macOS
-    runs-on: macos-latest
+  release:
+    name: build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest]
+
     steps:
       - uses: actions/checkout@v3
 
@@ -58,20 +63,20 @@ jobs:
         run: pnpm installAll
 
       - name: build macOS [PKG]
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == macos-latest
         run: |
           pnpm run mac:pkg-pre
           pnpm run mac:pkg-x64
 
       - name: build macOS [BIN]
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == macos-latest
         run: |
           pnpm run mac:app-pre
           pnpm run mac:app-x64
           pnpm run mac:app-post
 
       - name: Codesign app bundle
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == 'macos-latest'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           MACOS_CERTIFICATE: ${{ secrets.CSC_LINK }}
@@ -91,7 +96,7 @@ jobs:
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./entitlements.plist ./dist/Gabin-mac-x64.app -v
 
       - name: "Notarize app bundle"
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == 'macos-latest'
         env:
           MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_ID }}
           MACOS_NOTARIZATION_PWD: ${{ secrets.APPLEIDPASS }}
