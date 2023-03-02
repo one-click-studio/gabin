@@ -10,6 +10,11 @@ jobs:
   qemu:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+      - name: read package.json version
+        uses: Saionaro/extract-package-version@v1.2.1
+        id: package-json
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Install ldid
@@ -20,7 +25,6 @@ jobs:
         run: |
           sudo apt-get install libasound2-dev pulseaudio
 
-      - uses: actions/checkout@v3
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
@@ -98,9 +102,14 @@ jobs:
     runs-on: macos-latest
     needs: build-executables
     steps:
+      - uses: actions/checkout@v3
+      - name: read package.json version
+        uses: Saionaro/extract-package-version@v1.2.1
+        id: package-json
+
       - uses: actions/download-artifact@master
         with:
-          name: ${{ jobs.build.steps.package-json.outputs.version }}
+          name: ${{ steps.package-json.outputs.version }}
           path: mac-dist
 
       - name: Sign macOS executables
@@ -115,7 +124,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           draft: true
-          tag_name: ${{ jobs.build.steps.package-json.outputs.version }}
+          tag_name: ${{ steps.package-json.outputs.version }}
           files: |
              ./dist/gabin-macos-x64
               ./dist/gabin-macos-arm64
