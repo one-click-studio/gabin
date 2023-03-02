@@ -64,14 +64,14 @@ jobs:
           
       - name: Build
         run: pnpm build
-        
+
       - name: Run pkg
         run: |
-          pnpm i node-pre-gyp
-          ./node_modules/.bin/node-pre-gyp rebuild --directory=./node_modules/webrtcvad --target_platform=darwin --target_arch=x64 --target_libc=unknown
-          ./node_modules/.bin/node-pre-gyp rebuild --directory=./node_modules/webrtcvad --target_platform=darwin --target_arch=arm64 --target_libc=unknown
-          npx pkg . -t macos-arm64,macos-x64 --compress GZip
-          ls dist
+          ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=x64 )
+          npx pkg . -t macos-x64 --compress GZip
+
+          ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=arm64 )
+          npx pkg . -t macos-arm64 --compress GZip
 
           mkdir ./mac-dist
           mv ./dist/gabin-macos-arm64 ./mac-dist/
