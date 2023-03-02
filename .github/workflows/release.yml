@@ -62,6 +62,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
           
+      - name: build
+        run: pnpm build
+        
       - name: run pkg
         run: |
           npx pkg . --compress GZip
