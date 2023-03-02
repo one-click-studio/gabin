@@ -117,14 +117,14 @@ jobs:
           mkdir -p mac-dist/x64/Gabin.app/Contents/MacOS
           mkdir -p mac-dist/x64/Gabin.app/Contents/Resources
           mv mac-dist/gabin-macos-x64 mac-dist/x64/Gabin.app/Contents/MacOS/Gabin
-          mv src/resources/Info.plist mac-dist/x64/Gabin.app/Contents/Info.plist
-          mv src/resources/icons/app.icns mac-dist/x64/Gabin.app/Contents/Resources/app.icns
+          cp src/resources/Info.plist mac-dist/x64/Gabin.app/Contents/Info.plist
+          cp src/resources/icons/app.icns mac-dist/x64/Gabin.app/Contents/Resources/app.icns
 
           mkdir -p mac-dist/arm64/Gabin.app/Contents/MacOS
           mkdir -p mac-dist/arm64/Gabin.app/Contents/Resources
           mv mac-dist/gabin-macos-arm64 mac-dist/arm64/Gabin.app/Contents/MacOS/Gabin
-          mv src/resources/Info.plist mac-dist/arm64/Gabin.app/Contents/Info.plist
-          mv src/resources/icons/app.icns mac-dist/arm64/Gabin.app/Contents/Resources/app.icns
+          cp src/resources/Info.plist mac-dist/arm64/Gabin.app/Contents/Info.plist
+          cp src/resources/icons/app.icns mac-dist/arm64/Gabin.app/Contents/Resources/app.icns
 
       - name: Codesign app bundles
         env:
