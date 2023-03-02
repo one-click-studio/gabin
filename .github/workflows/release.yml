@@ -69,11 +69,11 @@ jobs:
         run: |
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=x64 )
-          npx pkg . -t macos-x64 --compress GZip -o gabin-macos-x64
+          npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
 
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=arm64 )
-          npx pkg . -t macos-arm64 --compress GZip -o gabin-macos-arm64
+          npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
 
           mkdir ./mac-dist
           mv ./dist/gabin-macos-arm64 ./mac-dist/
