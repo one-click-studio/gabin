@@ -577,13 +577,13 @@ class Container {
         return []
     }
 
-    private getRandomShot(shots: ObsAssetId['source'][]): ObsAssetId['source'] {
+    private getRandomShot(shots: ObsAssetId['source'][]): ObsAssetId['source']|undefined {
         const index = Math.floor(Math.random() * shots.length)
 
         return shots[index]
     }
 
-    private pickShot(shots: AutocamSource[]): ObsAssetId['source'] | null {
+    private pickShot(shots: AutocamSource[]): ObsAssetId['source'] | undefined {
         const totalWeight = shots.reduce((res, shot) => res + shot.weight, 0)
         const rand = Math.random() * totalWeight
         let sum = 0
@@ -592,7 +592,7 @@ class Container {
             if (rand <= sum) return shot.source
         }
 
-        return null
+        return undefined
     }
 
     private getUnallowedShots(): ObsAssetId['source'][] {
@@ -639,7 +639,7 @@ class Container {
         return (this.durations.max + this.durations.min) / 2
     }
 
-    private getIllustrationShot(micId?: MicId): ObsAssetId['source'] {
+    private getIllustrationShot(micId?: MicId): ObsAssetId['source']|undefined {
         if (micId) {
             return this.getFocusShot(micId)
         }
@@ -660,12 +660,17 @@ class Container {
             return
         }
 
-        this.lock = true
         this.clearTimeouts()
         const duration = this.getIllustrationDuration()
 
         shotId = shotId? shotId : this.getIllustrationShot(micId)
 
+        if (!shotId) {
+            this.logger.error('problem with getIllustrationShot : no shot can be found')
+            return
+        }
+
+        this.lock = true
         this.shoot(shotId)
 
         this.timeouts.push(setTimeout(() => {
@@ -683,7 +688,7 @@ class Container {
 
     // FOCUS MODE
 
-    private getFocusShot(micId: MicId): ObsAssetId['source'] {
+    private getFocusShot(micId: MicId): ObsAssetId['source'] | undefined {
         const shots = this.getShotsForMic(micId)
 
         const unallowedShots = this.getUnallowedShots()
@@ -713,10 +718,16 @@ class Container {
         const forced = shotId? true : false
         const duration = forced? this.getIllustrationDuration() : this.durations.min
 
-        this.lock = true
         this.clearTimeouts()
 
         shotId = shotId? shotId : this.getFocusShot(micId)
+        if (!shotId) {
+            this.logger.error('problem with getFocusShot : no shot can be found')
+            return
+        }
+
+        this.lock = true
+
         this.shoot(shotId)
 
         this.timeouts.push(setTimeout(() => {
