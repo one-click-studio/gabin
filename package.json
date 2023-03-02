@@ -48,10 +48,7 @@
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
       "node_modules/.pnpm/systray@1.0.5/node_modules/systray/traybin/tray_darwin_release"
     ],
-    "outputPath": "dist",
-    "targets": [
-      "node18-macos-arm64"
-    ]
+    "outputPath": "dist"
   },
   "embler": {
     "realName": "Gabin",

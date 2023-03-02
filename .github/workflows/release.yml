@@ -67,5 +67,5 @@ jobs:
         
       - name: run pkg
         run: |
-          npx pkg . --compress GZip
+          npx pkg . -t macos-arm64
           ls dist
