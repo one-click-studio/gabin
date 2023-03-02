@@ -18,7 +18,7 @@ jobs:
           tag: v2.1.5-procursus2
       - name: Install dependencies
         run: |
-          sudo apt-get install libasound2-dev
+          sudo apt-get install libasound2-dev pulseaudio
 
       - uses: actions/checkout@v3
       - name: Use Node.js
@@ -50,17 +50,17 @@ jobs:
       - name: Install dependencies
         run: pnpm installAll
 
-      - name: Cache pkg modules
-        id: cache-pkg
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-pkg
-        with:
-          # pkg cache files are stored in `~/.pkg-cache`
-          path: ~/.pkg-cache
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
+      # - name: Cache pkg modules
+      #   id: cache-pkg
+      #   uses: actions/cache@v3
+      #   env:
+      #     cache-name: cache-pkg
+      #   with:
+      #     # pkg cache files are stored in `~/.pkg-cache`
+      #     path: ~/.pkg-cache
+      #     key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-build-${{ env.cache-name }}-
           
       - name: build
         run: pnpm build
