@@ -6,7 +6,7 @@ import db from '../../main/utils/db'
 import type { Logger } from '../../main/utils/logger'
 import { getLogger } from '../../main/utils/logger'
 
-import { AudioActivity } from '../../main/modules/audioActivity'
+import { AudioActivity, getDevices } from '../../main/modules/audioActivity'
 import type { RtAudioApi } from 'audify'
 
 import type {
@@ -111,7 +111,7 @@ export class AutocamClient extends Client {
         }
 
         if (!devicesData.length) {
-            // this.logger.warn({ devices: getAllDevices().filter(d => d.maxInputChannels > 0) }, 'available devices list')
+            this.logger.debug({ devices: getDevices().filter(d => d.data.inputChannels > 0) }, 'available devices list')
             return
         }
 
@@ -120,7 +120,6 @@ export class AutocamClient extends Client {
             const recorder = new AudioActivity({
                 deviceName: devicesData[i].name,
                 apiId: devicesData[i].api as RtAudioApi,
-                sampleRate: 48000,
                 channels: devicesData[i].channels.map(c => c.channelId),
                 framesPerBuffer: 960,
                 onAudio: (speaking, channelId) => {
