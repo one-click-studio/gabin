@@ -21,7 +21,7 @@
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2023 undefined</string>
     <key>LSUIElement</key>
-    <false/>
+    <true/>
     <key>NSRequiresAquaSystemAppearance</key>
     <false/>
     <key>LSApplicationCategoryType</key>
