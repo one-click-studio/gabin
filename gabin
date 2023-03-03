@@ -1,0 +1,4 @@
+#!/bin/zsh
+cd "$(dirname "$(realpath -- "$0")")"
+NODE_VERSION=18 $HOME/.nvm/nvm-exec pnpm build;
+NODE_VERSION=18 $HOME/.nvm/nvm-exec node build/main/index.js $@
