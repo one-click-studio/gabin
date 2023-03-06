@@ -27,7 +27,7 @@
       "node_modules/.pnpm/webrtcvad@*/node_modules/webrtcvad/build/Release/*",
       "node_modules/.pnpm/audify@*/node_modules/audify/build/Release/*",
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
-      "node_modules/.pnpm/systray2@*/node_modules/systray/traybin/*"
+      "node_modules/systray2/traybin/*"
     ],
     "outputPath": "dist"
   },
