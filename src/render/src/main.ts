@@ -160,7 +160,11 @@ router.afterEach((to, from) => {
 
 const url = window.location
 const baseUrl = url.pathname.split('/')[1]
-const address = `${url.protocol}//${url.host}/${baseUrl}`
+
+let address = `${url.protocol}//${url.host}/${baseUrl}`
+if (import.meta.env.DEV) {
+    address = `${url.protocol}//${url.hostname}:1510/${baseUrl}`
+}
 
 const ioPath = (baseUrl? `/${baseUrl}`: '') + '/socket.io'
 const manager = new Manager(address, {
