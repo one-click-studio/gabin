@@ -4,7 +4,7 @@ import http from "http"
 import serveStatic from 'serve-static'
 import finaleHandler from 'finalhandler'
 import fs from 'fs'
-import Systray from 'systray'
+import Systray from 'systray2'
 
 import { Server } from "socket.io"
 
@@ -156,6 +156,7 @@ function createTray(): Systray {
   const systray = new Systray({
     menu: {
       icon: icon.toString('base64'),
+      isTemplateIcon: process.platform === 'darwin',
       title: "",
       tooltip: "Gabin",
       items: [{
