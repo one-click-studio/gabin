@@ -14,16 +14,17 @@ specifiers:
   nodemon: ^2.0.20
   obs-websocket-js: ^5.0.2
   onnxruntime-node: ^1.13.1
-  pkg: github:vercel/pkg
+  pkg: ^5.8.1
   playwright: ^1.29.2
   rxjs: ^7.8.0
   serve-static: ^1.15.0
   shx: ^0.3.4
   simple-json-db: ^2.0.0
   socket.io: ^4.6.0
-  systray2: ^2.1.4
+  systray2: github:one-click-studio/node-systray
   ts-node: ^10.9.1
   typescript: ^4.9.5
+  yarn: ^1.22.19
 
 dependencies:
   audify: 1.8.1
@@ -36,7 +37,7 @@ dependencies:
   serve-static: 1.15.0
   simple-json-db: 2.0.0
   socket.io: 4.6.0
-  systray2: 2.1.4
+  systray2: github.com/one-click-studio/node-systray/5cbccb3c8d949ad7bbc1d0e6867b95140fbd9fd6
 
 devDependencies:
   '@types/deep-eql': 4.0.0
@@ -46,11 +47,12 @@ devDependencies:
   concurrently: 7.6.0
   cross-env: 7.0.3
   nodemon: 2.0.20
-  pkg: github.com/vercel/pkg/f19285db72f4592110f49335923d9199da49a137
+  pkg: 5.8.1
   playwright: 1.30.0
   shx: 0.3.4
   ts-node: 10.9.1_4bewfcp2iebiwuold25d6rgcsy
   typescript: 4.9.5
+  yarn: 1.22.19
 
 packages:
 
@@ -815,7 +817,7 @@ packages:
     engines: {node: 6.* || 8.* || >= 10.*}
 
   /github-from-package/0.0.0:
-    resolution: {integrity: sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=}
+    resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
 
   /glob-parent/5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -1281,6 +1283,34 @@ packages:
       - supports-color
     dev: true
 
+  /pkg/5.8.1:
+    resolution: {integrity: sha512-CjBWtFStCfIiT4Bde9QpJy0KeH19jCfwZRJqHFDFXfhUklCx8JoFmMj3wgnEYIwGmZVNkhsStPHEOnrtrQhEXA==}
+    hasBin: true
+    peerDependencies:
+      node-notifier: '>=9.0.1'
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      '@babel/generator': 7.18.2
+      '@babel/parser': 7.18.4
+      '@babel/types': 7.19.0
+      chalk: 4.1.2
+      fs-extra: 9.1.0
+      globby: 11.1.0
+      into-stream: 6.0.0
+      is-core-module: 2.9.0
+      minimist: 1.2.8
+      multistream: 4.1.0
+      pkg-fetch: 3.4.2
+      prebuild-install: 7.1.1
+      resolve: 1.22.1
+      stream-meter: 1.0.4
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: true
+
   /playwright-core/1.30.0:
     resolution: {integrity: sha512-7AnRmTCf+GVYhHbLJsGUtskWTE33SwMZkybJ0v6rqR1boxq2x36U7p1vDRV7HO2IwTZgmycracLxPEJI49wu4g==}
     engines: {node: '>=14'}
@@ -1654,16 +1684,6 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /systray2/2.1.4:
-    resolution: {integrity: sha512-ncviZ7m2fecb2tAAx7pl4nlbnwvSyL4GIKnRUvfiJXTsHysh3chSlxVxNk7Yj8jlfF2TsBn2CjLwCfhJQkR7/w==}
-    engines: {node: '>=4.0.0'}
-    dependencies:
-      debug: 4.3.4
-      fs-extra: 10.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /tar-fs/2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}
     dependencies:
@@ -1913,39 +1933,28 @@ packages:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
+  /yarn/1.22.19:
+    resolution: {integrity: sha512-/0V5q0WbslqnwP91tirOvldvYISzaqhClxzyUKXYxs07yUILIs5jx/k6CFe8bvKSkds5w+eiOqta39Wk3WxdcQ==}
+    engines: {node: '>=4.0.0'}
+    hasBin: true
+    requiresBuild: true
+    dev: true
+
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
     dev: true
 
-  github.com/vercel/pkg/f19285db72f4592110f49335923d9199da49a137:
-    resolution: {tarball: https://codeload.github.com/vercel/pkg/tar.gz/f19285db72f4592110f49335923d9199da49a137}
-    name: pkg
-    version: 5.8.0
-    hasBin: true
+  github.com/one-click-studio/node-systray/5cbccb3c8d949ad7bbc1d0e6867b95140fbd9fd6:
+    resolution: {tarball: https://codeload.github.com/one-click-studio/node-systray/tar.gz/5cbccb3c8d949ad7bbc1d0e6867b95140fbd9fd6}
+    name: systray2
+    version: 2.1.4
+    engines: {node: '>=4.0.0'}
     prepare: true
     requiresBuild: true
-    peerDependencies:
-      node-notifier: '>=9.0.1'
-    peerDependenciesMeta:
-      node-notifier:
-        optional: true
     dependencies:
-      '@babel/generator': 7.18.2
-      '@babel/parser': 7.18.4
-      '@babel/types': 7.19.0
-      chalk: 4.1.2
-      fs-extra: 9.1.0
-      globby: 11.1.0
-      into-stream: 6.0.0
-      is-core-module: 2.9.0
-      minimist: 1.2.8
-      multistream: 4.1.0
-      pkg-fetch: 3.4.2
-      prebuild-install: 7.1.1
-      resolve: 1.22.1
-      stream-meter: 1.0.4
+      debug: 4.3.4
+      fs-extra: 10.1.0
     transitivePeerDependencies:
-      - encoding
       - supports-color
-    dev: true
+    dev: false

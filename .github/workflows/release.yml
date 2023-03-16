@@ -52,7 +52,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install npm dependencies
-        run: pnpm installAll
+        run: pnpm install
 
       - uses: actions/cache@v3
         name: Cache pkg modules
@@ -69,37 +69,23 @@ jobs:
         run: |
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=x64 )
-          rm -rf ./node_modules/systray2/traybin/tray_*
-          curl -L https://github.com/one-click-studio/systray-portable/releases/download/latest/tray-darwin-amd64 -o ./node_modules/systray2/traybin/tray_darwin_release
-          chmod +x ./node_modules/systray2/traybin/tray_darwin_release
           npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
 
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=arm64 )
-          rm -rf ./node_modules/systray2/traybin/tray_*
-          curl -L https://github.com/one-click-studio/systray-portable/releases/download/latest/tray-darwin-arm64 -o ./node_modules/systray2/traybin/tray_darwin_release
-          chmod +x ./node_modules/systray2/traybin/tray_darwin_release
           npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
 
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=linux --arch=x64 )
-          rm -rf ./node_modules/systray2/traybin/tray_*
-          curl -L https://github.com/one-click-studio/systray-portable/releases/download/latest/tray-linux-amd64 -o ./node_modules/systray2/traybin/tray_linux_release
-          chmod +x ./node_modules/systray2/traybin/tray_linux_release
           npx pkg . -t linux-x64 --compress GZip -o ./dist/gabin-linux-x64
 
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=linux --arch=arm64 )
-          rm -rf ./node_modules/systray2/traybin/tray_*
-          curl -L https://github.com/one-click-studio/systray-portable/releases/download/latest/tray-linux-arm64 -o ./node_modules/systray2/traybin/tray_linux_release
-          chmod +x ./node_modules/systray2/traybin/tray_linux_release
           npx pkg . -t linux-arm64 --compress GZip -o ./dist/gabin-linux-arm64
 
           rm -Rf ./node_modules/audify/build/Release/*
           ( cd ./node_modules/audify && npx prebuild-install --platform=win32 --arch=x64 )
-          rm -rf ./node_modules/systray2/traybin/tray_*
-          curl -L https://github.com/one-click-studio/systray-portable/releases/download/latest/tray-windows-amd64.exe -o ./node_modules/systray2/traybin/tray_windows_release.exe
-          chmod +x ./node_modules/systray2/traybin/tray_windows_release.exe
+
           npx pkg . -t win-x64 --compress GZip -o ./dist/gabin-win-x64.exe
 
           mkdir ./mac-dist

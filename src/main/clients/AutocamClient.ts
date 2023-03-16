@@ -328,7 +328,7 @@ export class AutocamClient extends Client {
                     }
 
                     if (!this.micIsAvailable(micId)) {
-                        this.logger.debug('mic is not available')
+                        this.logger.debug('mic is not available', micId)
                         return
                     }
 
