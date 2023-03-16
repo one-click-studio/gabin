@@ -37,7 +37,7 @@ const changeProfile = async (id: number) => {
     store.profiles.setCurrent(id)
 
     if (store.profiles.getCurrent()?.settings.autocam.length) {
-        await socketEmitter(store.socket, 'setDefaultProfile', { id })
+        await socketEmitter(store.socket, 'setDefaultProfile', id)
     }
 
     router.push('/home')
