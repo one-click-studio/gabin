@@ -15,6 +15,8 @@ interface Device {
     apiName: string
 }
 
+type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined}>
+
 class SileroVad {
     private loaded = false;
     private session: any;
@@ -67,7 +69,7 @@ class SileroVad {
         this._h = result.hn
         this._c = result.cn
     
-        return 1-result.output.data[0]
+        return result.output.data[0]
     }
 }
 
@@ -110,7 +112,7 @@ export class AudioActivity {
     private _speakingThreshold = 3
     private _silenceThreshold = 10
 
-    private _speechThreshold = 0.9
+    private _speechThreshold = 0.05
  
     private _bufferLength: number = 0
  
@@ -177,8 +179,6 @@ export class AudioActivity {
 
         this._rtAudio = new RtAudio(this._apiId)
 
-        // console.log(this._device.data)
-
         this._rtAudio.openStream(
             null,
             {
@@ -186,7 +186,7 @@ export class AudioActivity {
                 nChannels: this._device.data.inputChannels,
                 firstChannel: 0
             },
-            RtAudioFormat.RTAUDIO_SINT16,
+            RtAudioFormat.RTAUDIO_SINT8,
             this._sampleRate,
             this._framesPerBuffer,
             "MyStream",
@@ -234,11 +234,22 @@ export class AudioActivity {
         }
     }
 
+    private getVolume(pcm: number[]): number {
+        let sum = 0
+        for (let i = 0; i < pcm.length; i++) {
+            sum += pcm[i] * pcm[i]
+        }
+        const rms = Math.sqrt(sum / pcm.length)
+        const volume = rms / 128
+
+        return volume
+    }
+
     private async process(pcm: Buffer) {
         if (!this._device) return
-        const buffers = splitBuffer(pcm, 2, this._device.data.inputChannels)
+        const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
     
-        // STEREO (COPY LEFT (0) TO RIGHT (1)
+        // STEREO (COPY LEFT (0) TO RIGHT (1))
         // buffers[1] = JSON.parse(JSON.stringify(buffers[0]))
         // MUTE LEFT (0) OR RIGHT (1)
         // buffers[0].fill(0)
@@ -247,16 +258,70 @@ export class AudioActivity {
             await this.load()
         }
 
+        const processed: ProcessedChannel = new Map()
+
         for (let i = 0; i < buffers.length; i++) {
             if (!this._bufferLength) this.setBufferSize(buffers[i].length)
             if (this._channels.indexOf(i) === -1) continue
 
-            this.processChannel(buffers[i], i)
+            const volume = Math.round(this.getVolume(buffers[i])*100)/100
+            const speaking = await this.processChannel(buffers[i], i)
+
+            processed.set(i, {volume, speaking})
         }
+
+        if (this.tooManySpeakers(processed)){
+            const channelId = this.chooseSpeaker(processed)
+
+            for (let i = 0; i < this._channels.length; i++) {
+                const channel = processed.get(i)
+                if (!channel || i === channelId) continue
+                if (channel.speaking !== true && !this._speaking[i]) continue
+
+                const speaking = this._speaking[i]? false : undefined
+                processed.set(i, {speaking, volume: channel.volume})
+            }
+        }
+
+        for (let i = 0; i < this._channels.length; i++) {
+            const channel = processed.get(i)
+            if (!channel || channel.speaking === undefined) continue
+
+            this._speaking[i] = channel.speaking
+            this._onAudio(this._speaking[i], i)
+        }
+
+    }
+    
+    private tooManySpeakers(processed: ProcessedChannel): boolean {
+        let speaking = 0
+        for (let i = 0; i < this._channels.length; i++) {
+            const channel = processed.get(this._channels[i])
+            if (channel?.speaking || (channel?.speaking === undefined && this._speaking[i])) {
+                speaking++
+            }
+        }
+
+        return (speaking > 1)
     }
 
-    private async processChannel(buffer: number[], channel: number) {
-        if (!this._sileroVad) return
+    private chooseSpeaker(processed: ProcessedChannel): number {
+        let maxVolume = 0
+        let maxChannel = 0
+        for (let i = 0; i < this._channels.length; i++) {
+            const channel = this._channels[i]
+            const volume = processed.get(channel)?.volume
+            if (volume && volume > maxVolume) {
+                maxVolume = volume
+                maxChannel = channel
+            }
+        }
+
+        return maxChannel
+    }
+
+    private async processChannel(buffer: number[], channel: number): Promise<boolean|undefined> {
+        if (!this._sileroVad) return false
 
         if (buffer.length !== this._bufferLength){
             buffer = buffer.slice(0, this._bufferLength)
@@ -277,12 +342,12 @@ export class AudioActivity {
         }
 
         if (!this._speaking[channel] && this._consecutiveSpeech[channel] > this._speakingThreshold) {
-            this._speaking[channel] = true
-            this._onAudio(this._speaking[channel], channel)
+            return true
         } else if (this._speaking[channel] && this._consecutiveSilence[channel] > this._silenceThreshold) {
-            this._speaking[channel] = false
-            this._onAudio(this._speaking[channel], channel)
+            return false
         }
+
+        return undefined
     }
 
     private getDevice() {
