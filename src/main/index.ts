@@ -58,7 +58,7 @@ let gabin: Gabin | undefined
 
 function openApp() {
   const port = process.env.GABIN_CLIENT_PORT || PORT
-  openUrl(`http://${HOST}:${port}${GABIN_BASE_URL}/`)
+  openUrl(`http://${HOST}:${port}${GABIN_BASE_URL}`)
 }
 
 const initGabin = (io: Server) => {
