@@ -177,7 +177,7 @@ export class AudioActivity {
 
         this._rtAudio = new RtAudio(this._apiId)
 
-        console.log(this._device.data)
+        // console.log(this._device.data)
 
         this._rtAudio.openStream(
             null,
