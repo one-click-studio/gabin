@@ -9,14 +9,14 @@
   "main": "./src/main/index.ts",
   "bin": "./build/main/index.js",
   "scripts": {
-    "postinstall": "pnpm i -C ./src/render",
+    "postinstall": "pnpm -C ./src/render install",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "dev": "cross-env GABIN_CLIENT_PORT=5999 concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
     "dev:server": "npx nodemon",
-    "dev:client": "pnpm dev -C ./src/render",
+    "dev:client": "pnpm -C ./src/render dev",
     "build": "shx rm -rf ./build && concurrently \"pnpm run build:client\" \"pnpm run build:server\"",
     "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
-    "build:client": "pnpm build -C ./src/render && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
+    "build:client": "pnpm -C ./src/render build && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js"
   },
   "pkg": {
@@ -42,7 +42,7 @@
     "serve-static": "^1.15.0",
     "simple-json-db": "^2.0.0",
     "socket.io": "^4.6.0",
-    "systray2": "^2.1.4"
+    "systray2": "github:one-click-studio/node-systray"
   },
   "devDependencies": {
     "@types/deep-eql": "^4.0.0",
