@@ -64,8 +64,8 @@ const init = () => {
     socketHandler(store.socket, 'handleAutocam', (ac: boolean) => {
         autocam.value = ac
     })
-    socketHandler(store.socket, 'handleAvailableMics', (am: AvailableMicsMap) => {
-        availableMics.value = am
+    socketHandler(store.socket, 'handleAvailableMics', (am: any) => {
+        availableMics.value = new Map(Object.entries(am))
     })
 
     onAlphaNumPress((key) => {

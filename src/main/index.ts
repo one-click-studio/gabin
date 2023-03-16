@@ -73,7 +73,7 @@ const initGabin = (io: Server) => {
     io.emit('handleTimeline', micId)
   })
   gabin.availableMics$.subscribe((availableMics) => {
-    io.emit('handleAvailableMics', availableMics)
+    io.emit('handleAvailableMics', Object.fromEntries(availableMics))
   })
   gabin.connections$.subscribe((c) => {
     io.emit('handleObsConnected', c.obs)
@@ -101,7 +101,6 @@ function handler(io: Server) {
 
     // OBS
     client.on('connectObs', (c: Connection, callback) => {
-      console.log(callback)
       callback(profileSetup.connectObs(c))
     })
     client.on('disconnectObs', (_data, callback) => callback(profileSetup.disconnectObs()))
