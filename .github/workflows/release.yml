@@ -88,30 +88,30 @@ jobs:
 
           npx pkg . -t win-x64 --compress GZip -o ./dist/gabin-win-x64.exe
 
-          mkdir ./mac-dist
-          mv ./dist/gabin-macos-arm64 ./mac-dist/
-          mv ./dist/gabin-macos-x64 ./mac-dist/
+          # mkdir ./mac-dist
+          # mv ./dist/gabin-macos-arm64 ./mac-dist/
+          # mv ./dist/gabin-macos-x64 ./mac-dist/
 
           mkdir ./win-dist
           mv ./dist/gabin-win-x64.exe ./win-dist/
 
-      - name: Upload executables to asset
-        id: upload-release-asset
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          draft: true
-          tag_name: ${{ steps.package-json.outputs.version }}
-          files: |
-             ./dist/*
+      # - name: Upload executables to asset
+      #   id: upload-release-asset
+      #   uses: softprops/action-gh-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   with:
+      #     draft: true
+      #     tag_name: ${{ steps.package-json.outputs.version }}
+      #     files: |
+      #        ./dist/*
 
-      - name: upload mac artifacts
-        uses: actions/upload-artifact@master
-        with:
-          name: ${{ steps.package-json.outputs.version }}
-          path: mac-dist
-          retention-days: 1
+      # - name: upload mac artifacts
+      #   uses: actions/upload-artifact@master
+      #   with:
+      #     name: ${{ steps.package-json.outputs.version }}
+      #     path: mac-dist
+      #     retention-days: 1
       - name: upload win artifacts
         uses: actions/upload-artifact@master
         with:
