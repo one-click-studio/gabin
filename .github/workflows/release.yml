@@ -138,8 +138,29 @@ jobs:
         with:
           node-version: 18
 
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install npm exe-edit
-        run: npm i -g exe-edit
+        run: pnpm i -D exe-edit
 
       - name: mkdir dist
         run: mkdir ./dist
@@ -157,7 +178,7 @@ jobs:
         run: npx exe-edit ./win-dist/gabin-win-x64.exe ./dist/gabin-win-x64-gui.exe --gui
 
       - name: edit exe file
-        run: npx exe-edit ./win-dist/gabin-win-x64.exe ./dist/gabin-win-x64.exe --icon ./src/resources/icons/icon-64.ico --gui
+        run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
 
       - name: ls dist
         run: ls ./dist
