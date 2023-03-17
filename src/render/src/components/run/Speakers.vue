@@ -12,7 +12,7 @@ const props = defineProps<Props>()
 </script>
 
 <template>
-    <div class="flex items-center content-evenly">
+    <div class="flex items-center content-evenly flex-wrap justify-center">
         <template v-for="mic in props.mics">
             <div class="flex flex-col items-center p-2">
                 <UserIcon
