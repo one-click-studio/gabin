@@ -183,7 +183,6 @@ jobs:
           files: |
               ./dist/gabin-win-x64.exe
 
-
   sign-mac-executables:
     runs-on: macos-latest
     needs: build-executables
