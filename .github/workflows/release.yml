@@ -106,12 +106,14 @@ jobs:
           files: |
              ./dist/*
 
-      - uses: actions/upload-artifact@master
+      - name: upload mac artifacts
+        uses: actions/upload-artifact@master
         with:
           name: ${{ steps.package-json.outputs.version }}
           path: mac-dist
           retention-days: 1
-      - uses: actions/upload-artifact@master
+      - name: upload win artifacts
+        uses: actions/upload-artifact@master
         with:
           name: ${{ steps.package-json.outputs.version }}
           path: win-dist
@@ -137,7 +139,7 @@ jobs:
           node-version: 18
 
       - name: Install npm exe-edit
-        run: npm i -D exe-edit
+        run: npm i -g exe-edit
 
       - name: edit exe file
         run: npx exe-edit ./win-dist/gabin-win-x64.exe ./dist/gabin-win-x64.exe --icon ./src/resources/icons/icon-64.ico --gui
