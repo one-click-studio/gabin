@@ -1,6 +1,6 @@
 {
   "name": "gabin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packageManager": "pnpm@7.27.0",
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "OneClickStudio",
