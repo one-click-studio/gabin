@@ -1,5 +1,6 @@
 import path from "path"
 import fs from "fs"
+import os from "os"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../../main/utils/logger'
@@ -16,6 +17,19 @@ interface Device {
 }
 
 type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined}>
+
+const AudioApiByPlateform = {
+    LINUX_ALSA: ['linux'],
+    LINUX_OSS: ['linux'],
+    LINUX_PULSE: ['linux'],
+    MACOSX_CORE: ['darwin'],
+    RTAUDIO_DUMMY: [],
+    UNIX_JACK: ['darwin', 'linux'],
+    UNSPECIFIED: ['win32', 'darwin', 'linux'],
+    WINDOWS_ASIO: ['win32'],
+    WINDOWS_DS: ['win32'],
+    WINDOWS_WASAPI: ['win32']
+}
 
 class SileroVad {
     private loaded = false;
@@ -360,8 +374,13 @@ export class AudioActivity {
             }
         }
 
+
+        const plateform = os.platform()
         // @ts-ignore
         for (let i in RtAudioApi) {
+            // @ts-ignore
+            if (AudioApiByPlateform[i].indexOf(plateform) === -1) continue
+
             // @ts-ignore
             const api: unknown = RtAudioApi[i]
 
@@ -388,9 +407,13 @@ export class AudioActivity {
 
 export const getDevices = (): Device[] => {
     const devices: Device[] = []
+    const plateform = os.platform()
+    console.log(plateform)
 
     // @ts-ignore
     for (let i in RtAudioApi) {
+        // @ts-ignore
+        if (AudioApiByPlateform[i].indexOf(plateform) === -1) continue
         // @ts-ignore
         const api: RtAudioApi = RtAudioApi[i]
 
