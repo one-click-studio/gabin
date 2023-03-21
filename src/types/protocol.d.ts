@@ -21,6 +21,7 @@ export type SpeakingMic = {
     name: string
     speaking: boolean
     volume: number
+    device: string
 }
 
 export type ObsAssetId = {

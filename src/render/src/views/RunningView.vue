@@ -61,6 +61,7 @@ const init = () => {
         for (const i in device.mics){
             if (!device.mics[i]) continue
             speakingMics.value.push({
+                device: device.name,
                 name: device.micsName[i],
                 speaking: false,
                 volume: 0
