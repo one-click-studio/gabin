@@ -167,10 +167,8 @@ jobs:
         run: mkdir ./dist
 
       - name: edit exe file
+        run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64-debug.exe --icon .\src\resources\icons\icon-64.ico
         run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
-
-      - name: ls dist
-        run: ls ./dist
 
       - name: Upload executables to asset
         id: upload-release-asset
@@ -182,6 +180,7 @@ jobs:
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
               ./dist/gabin-win-x64.exe
+              ./dist/gabin-win-x64-debug.exe
 
   sign-mac-executables:
     runs-on: macos-latest
