@@ -12,7 +12,14 @@ import { Gabin } from './modules/gabin'
 import { ProfileSetup } from './modules/setup'
 import db from './utils/db'
 import { openUrl } from './utils/utils'
-import { Profile, Connection, ObsSource, MicId } from '../types/protocol'
+import { 
+  Profile,
+  Connection,
+  ObsSource,
+  MicId,
+  Thresholds,
+  AudioDevice
+} from '../types/protocol'
 const PackageJson = require('../../package.json')
 
 dotenv.config()
@@ -72,6 +79,10 @@ const initGabin = (io: Server) => {
   gabin.timeline$.subscribe((micId) => {
     io.emit('handleTimeline', micId)
   })
+  gabin.speakingMics$.subscribe((sm) => {
+    io.emit('handleSpeakingMics', sm)
+  })
+
   gabin.availableMics$.subscribe((availableMics) => {
     io.emit('handleAvailableMics', Object.fromEntries(availableMics))
   })
@@ -123,6 +134,15 @@ function handler(io: Server) {
     client.on('deleteProfile', (id: Profile['id'], callback) => {
       profileSetup.deleteProfile(id)
       gabin = undefined
+      callback()
+    })
+
+    // MICS
+    client.on('setThresholds', (p: {id: Profile['id'], deviceName: AudioDevice['name'], thresholds: Thresholds}, callback) => {
+      profileSetup.setThresholds(p.id, p.deviceName, p.thresholds)
+      if (gabin && gabin.autocam) {
+        gabin.autocam.setThresholds(p.deviceName, p.thresholds)
+      }
       callback()
     })
 

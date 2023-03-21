@@ -18,6 +18,7 @@ import type {
     ObsAssetId,
     MicId,
     AudioDeviceSettings,
+    SpeakingMic,
 } from '../../types/protocol'
 
 interface Connections {
@@ -41,6 +42,7 @@ export class Gabin {
     availableMics$: BehaviorSubject<AvailableMicsMap>
     triggeredShot$: BehaviorSubject<ObsAssetId['source']>
     timeline$: BehaviorSubject<MicId>
+    speakingMics$: BehaviorSubject<Map<string, BehaviorSubject<SpeakingMic>>>
 
     private logger: Logger
     private subscriptions: Subscription[] = []
@@ -56,7 +58,8 @@ export class Gabin {
         this.triggeredShot$ = new BehaviorSubject({ id: -1, name: '' })
         this.availableMics$ = new BehaviorSubject<AvailableMicsMap>(new Map())
         this.timeline$ = new BehaviorSubject('')
-
+        this.speakingMics$ = new BehaviorSubject<Map<string, BehaviorSubject<SpeakingMic>>>(new Map())
+        
         this.connections$ = new BehaviorSubject<Connections>({
             obs: false,
             streamdeck: false
@@ -152,6 +155,9 @@ export class Gabin {
         }))
         this.autocam.timeline$.subscribe(micId => {
             this.timeline$.next(micId)
+        })
+        this.autocam.speakingMics$.subscribe(sm => {
+            this.speakingMics$.next(sm)
         })
         // STREAMDECK EVT
         this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {

@@ -4,6 +4,7 @@ import os from "os"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../../main/utils/logger'
+import { Thresholds } from "@src/types/protocol"
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
 
@@ -25,7 +26,7 @@ const AudioApiByPlateform = {
     MACOSX_CORE: ['darwin'],
     RTAUDIO_DUMMY: [],
     UNIX_JACK: ['darwin', 'linux'],
-    UNSPECIFIED: ['win32', 'darwin', 'linux'],
+    UNSPECIFIED: [],
     WINDOWS_ASIO: ['win32'],
     WINDOWS_DS: ['win32'],
     WINDOWS_WASAPI: ['win32']
@@ -126,7 +127,7 @@ export class AudioActivity {
     private _speakingThreshold = 3
     private _silenceThreshold = 10
 
-    private _speechThreshold = 0.05
+    private _vadThreshold = 0.05
  
     private _bufferLength: number = 0
  
@@ -142,7 +143,7 @@ export class AudioActivity {
     private _isOpen: boolean
 
     private _channels: number[]
-    private _onAudio: (speaking: boolean, channel: number) => void
+    private _onAudio: (speaking: boolean, channel: number, volume: number) => void
 
     constructor(options: {
         deviceName: string
@@ -150,7 +151,12 @@ export class AudioActivity {
         channels: number[]
         framesPerBuffer: number
         sampleRate?: number
-        onAudio: (speaking: boolean, channel: number) => void
+        onAudio: (speaking: boolean, channel: number, volume:  number) => void,
+        thresholds?: {
+            speaking?: number,
+            silence?: number,
+            vad?: number
+        }
     }) {
 
         this._deviceName = options.deviceName
@@ -160,12 +166,58 @@ export class AudioActivity {
         if (options.sampleRate) this._sampleRate = options.sampleRate
         this._onAudio = options.onAudio
 
+        if (options?.thresholds?.speaking) this.setSpeakingThreshold(options.thresholds.speaking)
+        if (options?.thresholds?.silence) this.setSilenceThreshold(options.thresholds.silence)
+        if (options?.thresholds?.vad) this.setvadThreshold(options.thresholds.vad)
+
         this._speaking = Array(options.channels.length).fill(false)
         this._consecutiveSilence = Array(options.channels.length).fill(0)
         this._consecutiveSpeech = Array(options.channels.length).fill(0)
         this._isOpen = false
 
         this.getDevice()
+    }
+
+    public getName(): string {
+        return this._deviceName
+    }
+
+    public setThresholds(thresholds: Thresholds) {
+        this.setSpeakingThreshold(thresholds.speaking)
+        this.setSilenceThreshold(thresholds.silence)
+        this.setvadThreshold(thresholds.vad)
+    }
+
+    public getThresholds(): Thresholds {
+        return {
+            speaking: this.getSpeakingThreshold(),
+            silence: this.getSilenceThreshold(),
+            vad: this.getvadThreshold()   
+        }
+    }
+
+    public getSpeakingThreshold(): number {
+        return this._speakingThreshold
+    }
+
+    public setSpeakingThreshold(value: number) {
+        this._speakingThreshold = value
+    }
+
+    public getSilenceThreshold(): number {
+        return this._silenceThreshold
+    }
+
+    public setSilenceThreshold(value: number) {
+        this._silenceThreshold = value
+    }
+
+    public getvadThreshold(): number {
+        return this._vadThreshold
+    }
+
+    public setvadThreshold(value: number) {
+        this._vadThreshold = value
     }
 
     public isReady(): boolean {
@@ -299,10 +351,10 @@ export class AudioActivity {
 
         for (let i = 0; i < this._channels.length; i++) {
             const channel = processed.get(i)
-            if (!channel || channel.speaking === undefined) continue
+            if (!channel) continue
 
-            this._speaking[i] = channel.speaking
-            this._onAudio(this._speaking[i], i)
+            if (channel.speaking !== undefined) this._speaking[i] = channel.speaking
+            this._onAudio(this._speaking[i], i, channel.volume)
         }
 
     }
@@ -343,7 +395,7 @@ export class AudioActivity {
 
         let isSpeaking = false
         const vadLastProbability = await this._sileroVad[channel].process(buffer)
-        if (vadLastProbability > this._speechThreshold) {
+        if (vadLastProbability > this._vadThreshold) {
             isSpeaking = true
         }
 
@@ -408,7 +460,6 @@ export class AudioActivity {
 export const getDevices = (): Device[] => {
     const devices: Device[] = []
     const plateform = os.platform()
-    console.log(plateform)
 
     // @ts-ignore
     for (let i in RtAudioApi) {

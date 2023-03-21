@@ -37,10 +37,19 @@ socketHandler(store.socket, 'handleNewShot', (shoot) => {
     msg.value.main = `${shoot.shotId.name}`
 })
 
-socketHandler(store.socket, 'handleTimeline', (data) => {
-    for (const i in  speakingMics.value){
-        speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
-    }
+// socketHandler(store.socket, 'handleTimeline', (data) => {
+//     for (const i in  speakingMics.value){
+//         speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
+//     }
+// })
+
+socketHandler(store.socket, 'handleSpeakingMics', (data) => {
+    console.log(data)
+    // for (const i in  speakingMics.value){
+    //     if (speakingMics.value[i].name === data)
+    //     speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
+    //     speakingMics.value[i].volume = speakingMics.value[i].name === data? true : false
+    // }
 })
 
 const init = () => {
