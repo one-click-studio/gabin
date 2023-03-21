@@ -5,6 +5,7 @@ import serveStatic from 'serve-static'
 import finaleHandler from 'finalhandler'
 import fs from 'fs'
 import Systray from 'systray2'
+import { auditTime } from 'rxjs/operators'
 
 import { Server } from "socket.io"
 
@@ -79,8 +80,8 @@ const initGabin = (io: Server) => {
   gabin.timeline$.subscribe((micId) => {
     io.emit('handleTimeline', micId)
   })
-  gabin.speakingMics$.subscribe((sm) => {
-    io.emit('handleSpeakingMics', sm)
+  gabin.volumeMics$.pipe(auditTime(100)).subscribe((vm) => {
+    io.emit('handleVolumeMics', Object.fromEntries(vm))
   })
 
   gabin.availableMics$.subscribe((availableMics) => {

@@ -20,7 +20,6 @@ import type {
     AutocamSettings,
     Shoot,
     Thresholds,
-    SpeakingMic,
 } from '../../types/protocol'
 
 type ContainerMap = Map<ObsAssetId['scene'], Container>
@@ -51,7 +50,7 @@ export class AutocamClient extends Client {
     shoot$ = new Subject<Shoot>()
     forcedShot$ = new Subject<ObsAssetId['source']>()
     timeline$: BehaviorSubject<MicId>
-    speakingMics$: BehaviorSubject<Map<string, BehaviorSubject<SpeakingMic>>>
+    volumeMics$: BehaviorSubject<Map<string, number>>
     private currentShots$: BehaviorSubject<CurrentShotsMap>
 
     private enable = false
@@ -59,7 +58,8 @@ export class AutocamClient extends Client {
     private containerMap: ContainerMap = new Map()
     private availableMics: AvailableMicsMap = new Map()
     private recorders: AudioActivity[] = []
-    private micsSpeaking: Map<string, BehaviorSubject<SpeakingMic>>
+    private micsSpeaking: Map<string, BehaviorSubject<boolean>>
+    private micsVolume: Map<string, number>
     private subscriptions: Subscriptions = { timeline: null, forcedShot: null }
 
     private audioDevices: AudioDeviceSettings[] = []
@@ -71,18 +71,20 @@ export class AutocamClient extends Client {
         super('autocam')
 
         this.micsSpeaking = new Map()
+        this.micsVolume = new Map()
         this.autocamMapping = []
 
         this.currentShots$ = new BehaviorSubject(new Map())
         this.timeline$ = new BehaviorSubject('')
-        this.speakingMics$ = new BehaviorSubject(this.micsSpeaking)
+        this.volumeMics$ = new BehaviorSubject(this.micsVolume)
     }
 
     init() {
         const audioDevices = db.getSpecificAndDefault(['settings', 'mics'], true)
         this.audioDevices = audioDevices.defaultValue
         this.micsSpeaking = this.getMicsMap(this.audioDevices)
-        this.speakingMics$.next(this.micsSpeaking)
+        this.micsVolume = this.getMicsVolumeMap(this.audioDevices)
+        this.volumeMics$.next(this.micsVolume)
 
         const autocamMapping = db.getSpecificAndDefault(['settings', 'autocam'], true)
         this.autocamMapping = autocamMapping.defaultValue
@@ -91,7 +93,8 @@ export class AutocamClient extends Client {
             audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
                 this.audioDevices = aDevices
                 this.micsSpeaking = this.getMicsMap(this.audioDevices)
-                this.speakingMics$.next(this.micsSpeaking)
+                this.micsVolume = this.getMicsVolumeMap(this.audioDevices)
+                this.volumeMics$.next(this.micsVolume)
             })
         )
             
@@ -158,12 +161,20 @@ export class AutocamClient extends Client {
 
     // HELPERS
 
-    private getMicsMap(devices: AudioDeviceSettings[]): Map<string, BehaviorSubject<SpeakingMic>> {
+    private getMicsMap(devices: AudioDeviceSettings[]): Map<string, BehaviorSubject<boolean>> {
         const micIds = devices.reduce((p, d) => p.concat(d.micsName.filter((_m,i) => d.mics[i])), <string[]>[])
-        return new Map(micIds.map((m) => [m, new BehaviorSubject(<SpeakingMic>{
-            speaking: false,
-            volume: 0
-        })]))
+        return new Map(micIds.map((m) => [m, new BehaviorSubject(<boolean>false)]))
+    }
+
+    private getMicsVolumeMap(devices: AudioDeviceSettings[]): Map<string, number> {
+        const micIds = devices.reduce((p, d) => p.concat(d.micsName.filter((_m,i) => d.mics[i])), <string[]>[])
+        return new Map(micIds.map((m) => [m, 0]))
+    }
+
+    private setMicVolume(micId: MicId, volume: number) {
+        if (!this.micsVolume.has(micId)) return
+        this.micsVolume.set(micId, volume)
+        this.volumeMics$.next(this.micsVolume)
     }
 
     private getDevicesData(): AudioRecord[] {
@@ -212,8 +223,8 @@ export class AutocamClient extends Client {
             channels.push({
                 ...mics[i],
                 onToggleSpeaking: (speaking, volume) => {
-                    this.micsSpeaking.get(mics[i].id)?.next({speaking, volume})
-                    this.speakingMics$.next(this.micsSpeaking)
+                    this.micsSpeaking.get(mics[i].id)?.next(speaking)
+                    this.setMicVolume(mics[i].id, volume)
                 }
             })
         }
@@ -328,9 +339,9 @@ export class AutocamClient extends Client {
 
     private setupMicRecorder() {
         this.micsSpeaking.forEach((speaking$, micId) => {
-            speaking$.subscribe((speakingMic: SpeakingMic) => {
+            speaking$.subscribe((speaking) => {
                 const currentMic = this.timeline$.getValue()
-                if (speakingMic.speaking) {
+                if (speaking) {
                     if (!this.enable) {
                         return
                     }

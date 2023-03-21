@@ -15,7 +15,7 @@ const INIT_MSG = 'Not showing any camera.'
 
 const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
-const speakingMics = ref([] as SpeakingMic[])
+const speakingMics = ref(<SpeakingMic[]>[])
 
 const togglePower = async () => {
     if (!loading.value){
@@ -37,19 +37,20 @@ socketHandler(store.socket, 'handleNewShot', (shoot) => {
     msg.value.main = `${shoot.shotId.name}`
 })
 
-// socketHandler(store.socket, 'handleTimeline', (data) => {
-//     for (const i in  speakingMics.value){
-//         speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
-//     }
-// })
+socketHandler(store.socket, 'handleTimeline', (data) => {
+    for (const i in  speakingMics.value){
+        speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
+    }
+})
 
-socketHandler(store.socket, 'handleSpeakingMics', (data) => {
-    console.log(data)
-    // for (const i in  speakingMics.value){
-    //     if (speakingMics.value[i].name === data)
-    //     speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
-    //     speakingMics.value[i].volume = speakingMics.value[i].name === data? true : false
-    // }
+socketHandler(store.socket, 'handleVolumeMics', (data) => {
+    let deviceName: keyof typeof data
+    for (deviceName in data) {
+        for (const i in speakingMics.value){
+            if (speakingMics.value[i].name !== deviceName) continue
+            speakingMics.value[i].volume = data[deviceName]
+        }
+    }
 })
 
 const init = () => {
@@ -62,6 +63,7 @@ const init = () => {
             speakingMics.value.push({
                 name: device.micsName[i],
                 speaking: false,
+                volume: 0
             })
         }
     })

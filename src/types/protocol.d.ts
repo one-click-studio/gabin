@@ -18,6 +18,7 @@ export type Thresholds = {
 }
 
 export type SpeakingMic = {
+    name: string
     speaking: boolean
     volume: number
 }
