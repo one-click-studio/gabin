@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - pre-release
 
 jobs:
   build-executables:
@@ -101,7 +102,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          draft: true
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
              ./dist/*
@@ -177,7 +179,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          draft: true
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
               ./dist/gabin-win-x64.exe
@@ -271,7 +274,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          draft: true
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
               ./mac-dist/gabin-mac-x64.zip
