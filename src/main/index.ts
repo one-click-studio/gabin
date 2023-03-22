@@ -9,6 +9,8 @@ import { auditTime } from 'rxjs/operators'
 
 import { Server } from "socket.io"
 
+import { getLogger } from './utils/logger'
+
 import { Gabin } from './modules/gabin'
 import { ProfileSetup } from './modules/setup'
 import db from './utils/db'
@@ -62,6 +64,7 @@ const GABIN_BASE_URL = process.env.GABIN_BASE_URL || '/'
 const HOST = process.env.GABIN_HOST || 'localhost'
 const PORT = process.env.GABIN_PORT || 1510
 
+const logger = getLogger('Gabin - main process 🤖')
 let gabin: Gabin | undefined
 
 function openApp() {
@@ -246,12 +249,19 @@ async function main() {
   // init db
   await db.connect()
 
-  // handler()
   handler(io)
 
   createTray()
 
   if (AUTO_OPEN) openApp()
 }
+
+process.on('unhandledRejection', (err: Error) => {
+  logger.error(err.stack)
+  process.exit(1)
+}).on('uncaughtException', (err: Error) => {
+  logger.error(err.stack)
+  process.exit(1)
+})
 
 main()
