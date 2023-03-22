@@ -47,7 +47,7 @@ export class Gabin {
     private subscriptions: Subscription[] = []
 
     constructor() {
-        this.logger = getLogger('Gabin0 🤖')
+        this.logger = getLogger('Gabin 🤖')
 
         this.isOn = false
         this.isReady = false
