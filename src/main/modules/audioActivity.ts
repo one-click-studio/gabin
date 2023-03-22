@@ -274,21 +274,23 @@ export class AudioActivity {
             const channelId = this.chooseSpeaker(processed)
 
             for (let i = 0; i < this._channels.length; i++) {
-                const channel = processed.get(i)
-                if (!channel || i === channelId) continue
-                if (channel.speaking !== true && !this._speaking[i]) continue
+                const cId = this.longIndex(i)
+                const channel = processed.get(cId)
+                if (!channel || cId === channelId) continue
+                if (channel.speaking !== true && !this._speaking[cId]) continue
 
-                const speaking = this._speaking[i]? false : undefined
+                const speaking = this._speaking[cId]? false : undefined
                 processed.set(i, {speaking, volume: channel.volume})
             }
         }
 
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = processed.get(i)
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
             if (!channel || channel.speaking === undefined) continue
 
-            this._speaking[i] = channel.speaking
-            this._onAudio(this._speaking[i], i)
+            this._speaking[cId] = channel.speaking
+            this._onAudio(this._speaking[cId], cId)
         }
 
     }
@@ -320,6 +322,20 @@ export class AudioActivity {
         return maxChannel
     }
 
+    // channels : [1, 2, 4]
+    // inputChannels :  6
+    // buffers : [null, buf, buf, null, buf, null]
+
+    // index 1 -> 0
+    private shortIndex(index: number): number {
+        return this._channels.indexOf(index)
+    }
+
+    // index 0 -> 1
+    private longIndex(index: number): number {
+        return this._channels[index]
+    }
+
     private async processChannel(buffer: number[], channel: number): Promise<boolean|undefined> {
         if (!this._sileroVad) return false
 
@@ -328,7 +344,9 @@ export class AudioActivity {
         }
 
         let isSpeaking = false
-        const vadLastProbability = await this._sileroVad[channel].process(buffer)
+
+        const channelIndex = this.shortIndex(channel)
+        const vadLastProbability = await this._sileroVad[channelIndex].process(buffer)
         if (vadLastProbability > this._speechThreshold) {
             isSpeaking = true
         }
