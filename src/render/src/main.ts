@@ -182,7 +182,7 @@ socket.on("connect", () => {
 })
 
 socket.on("disconnect", (reason) => {
-    store.redirect.path = router.currentRoute.value.path
+    if (router.currentRoute.value.path !== '/disconnect') store.redirect.path = router.currentRoute.value.path
     router.push('/disconnect')
     if (reason === "io server disconnect") {
         socket.connect()

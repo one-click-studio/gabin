@@ -10,6 +10,7 @@ import type {
     Connection,
     AudioDevice,
     Profile,
+    Thresholds,  
 } from '../../types/protocol'
 
 export class ProfileSetup {
@@ -147,6 +148,7 @@ export class ProfileSetup {
 
         this.profiles.edit(profiles)
     }
+
     setStartMinimized(id: Profile['id'], minimized: Profile['startminimized']) {
         const profiles: Profile[] = this.profiles.defaultValue
 
@@ -155,6 +157,24 @@ export class ProfileSetup {
 
         if (index > -1) {
             profiles[index].startminimized = minimized
+        }
+
+        this.profiles.edit(profiles)
+    }
+
+    setThresholds(id: Profile['id'], deviceName: AudioDevice['name'], thresholds: Thresholds) {
+        const profiles: Profile[] = this.profiles.defaultValue
+
+        const ids = profiles.map(p => p.id)
+        const index = ids.indexOf(id)
+
+        if (index > -1) {
+            for (const i in profiles[index].settings.mics) {
+                if (profiles[index].settings.mics[i].name === deviceName) {
+                    profiles[index].settings.mics[i].thresholds = thresholds
+                    break
+                }
+            }
         }
 
         this.profiles.edit(profiles)

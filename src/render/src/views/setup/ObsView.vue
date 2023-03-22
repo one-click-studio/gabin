@@ -47,7 +47,8 @@ const resetObsConnection = () => {
 }
 
 const updateNextBtn = () => {
-    store.layout.footer.next.disable = !obsConnectionOk.value
+    store.layout.footer.next.disable = false
+    // store.layout.footer.next.disable = !obsConnectionOk.value
 }
 
 onEnterPress(() => {

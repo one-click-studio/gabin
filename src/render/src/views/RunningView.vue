@@ -15,7 +15,7 @@ const INIT_MSG = 'Not showing any camera.'
 
 const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
-const speakingMics = ref([] as SpeakingMic[])
+const speakingMics = ref(<SpeakingMic[]>[])
 
 const togglePower = async () => {
     if (!loading.value){
@@ -43,6 +43,16 @@ socketHandler(store.socket, 'handleTimeline', (data) => {
     }
 })
 
+socketHandler(store.socket, 'handleVolumeMics', (data) => {
+    let deviceName: keyof typeof data
+    for (deviceName in data) {
+        for (const i in speakingMics.value){
+            if (speakingMics.value[i].name !== deviceName) continue
+            speakingMics.value[i].volume = data[deviceName]
+        }
+    }
+})
+
 const init = () => {
     store.isFirstRun = false
     const profile = store.profiles.getCurrent()
@@ -51,8 +61,10 @@ const init = () => {
         for (const i in device.mics){
             if (!device.mics[i]) continue
             speakingMics.value.push({
+                device: device.name,
                 name: device.micsName[i],
                 speaking: false,
+                volume: 0
             })
         }
     })

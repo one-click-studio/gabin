@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-interface Props {
-    label: string
-    value?: string
-    unit?: string
-    center?: boolean
-    error?: boolean
-    warning?: boolean
-}
 
 interface Emits {
     (e: 'update', value: string): void
 }
 
 const isFocused = ref(false)
-const props = defineProps<Props>()
+const props = defineProps<{
+    label: string
+    value?: string
+    unit?: string
+    center?: boolean
+    error?: boolean
+    warning?: boolean
+}>()
 const $emit = defineEmits<Emits>()
 
 const hasValue = (): boolean => {

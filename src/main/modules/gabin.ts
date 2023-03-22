@@ -41,6 +41,7 @@ export class Gabin {
     availableMics$: BehaviorSubject<AvailableMicsMap>
     triggeredShot$: BehaviorSubject<ObsAssetId['source']>
     timeline$: BehaviorSubject<MicId>
+    volumeMics$: BehaviorSubject<Map<string, number>>
 
     private logger: Logger
     private subscriptions: Subscription[] = []
@@ -56,7 +57,8 @@ export class Gabin {
         this.triggeredShot$ = new BehaviorSubject({ id: -1, name: '' })
         this.availableMics$ = new BehaviorSubject<AvailableMicsMap>(new Map())
         this.timeline$ = new BehaviorSubject('')
-
+        this.volumeMics$ = new BehaviorSubject<Map<string, number>>(new Map())
+        
         this.connections$ = new BehaviorSubject<Connections>({
             obs: false,
             streamdeck: false
@@ -152,6 +154,9 @@ export class Gabin {
         }))
         this.autocam.timeline$.subscribe(micId => {
             this.timeline$.next(micId)
+        })
+        this.autocam.volumeMics$.subscribe(vm => {
+            this.volumeMics$.next(vm)
         })
         // STREAMDECK EVT
         this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {

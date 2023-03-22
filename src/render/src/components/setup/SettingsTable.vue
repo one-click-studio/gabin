@@ -22,15 +22,13 @@ import type {
     ObsAssetId
 } from '../../../../types/protocol'
 
-interface Props {
-    editable: boolean
-}
-
 interface Emits {
     (e: 'update', value: AutocamSettings[]): void
 }
 
-defineProps<Props>()
+defineProps<{
+    editable: boolean
+}>()
 const $emit = defineEmits<Emits>()
 const acSettings = ref<AutocamSettings[]>(store.profiles.settings().autocam)
 

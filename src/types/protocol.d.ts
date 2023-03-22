@@ -11,6 +11,19 @@ export type Durations = {
     max: number
 }
 
+export type Thresholds = {
+    speaking: number
+    silence: number
+    vad: number
+}
+
+export type SpeakingMic = {
+    name: string
+    speaking: boolean
+    volume: number
+    device: string
+}
+
 export type ObsAssetId = {
     scene: ObsSceneId
     source: ObsSource
@@ -55,6 +68,7 @@ export interface AudioDevice {
     nChannels: number
     api: unknown
     apiName: string
+    thresholds?: Thresholds
 }
 
 export interface Shoot {
@@ -66,6 +80,7 @@ export interface Shoot {
 export interface SpeakingMic {
     name: string
     speaking: boolean
+    volume?: number
 }
 
 export type AvailableMicsMap = Map<MicId, boolean>

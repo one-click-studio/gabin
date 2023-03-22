@@ -32,6 +32,11 @@ const addDevice = () => {
         micsName: [],
         sampleRate: 0,
         nChannels: 0,
+        thresholds: {
+            speaking: 3,
+            silence: 10,
+            vad: 0.05
+        }
     })
     duplicate.value.push([])
 
