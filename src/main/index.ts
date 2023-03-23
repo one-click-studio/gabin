@@ -13,12 +13,14 @@ import { getLogger } from './utils/logger'
 
 import { Gabin } from './modules/gabin'
 import { ProfileSetup } from './modules/setup'
+
 import db from './utils/db'
 import { openUrl } from './utils/utils'
 import { 
   Profile,
   Connection,
-  ObsSource,
+  ConnectionsConfig,
+  Asset,
   MicId,
   Thresholds,
   AudioDevice
@@ -103,12 +105,16 @@ function handler(io: Server) {
     // client.on('event', data => { console.log(data) })
     // io.emit('responseEvent', data)
 
-    profileSetup.obs.reachable$.subscribe((reachable, ) => {
+    profileSetup.obs.reachable$.subscribe((reachable) => {
       io.emit('handleObsConnected', reachable)
     })
 
     profileSetup.obs.scenes$.subscribe((scenes) => {
       io.emit('handleObsScenes', scenes)
+    })
+
+    profileSetup.osc.reachable$.subscribe((reachable) => {
+      io.emit('handleOscConnected', reachable)
     })
 
     // ELECTRON
@@ -119,6 +125,11 @@ function handler(io: Server) {
       callback(profileSetup.connectObs(c))
     })
     client.on('disconnectObs', (_data, callback) => callback(profileSetup.disconnectObs()))
+
+    // OSC
+    client.on('connectOsc', (c: ConnectionsConfig['osc'], callback) => callback(profileSetup.connectOsc(c)))
+    client.on('disconnectOsc', (_data, callback) => callback(profileSetup.disconnectOsc()))
+    client.on('sendOsc', (path: string, callback) => callback(profileSetup.sendOsc(path)))
 
     // AUDIO
     client.on('getAudioDevices', (_data, callback) => callback(profileSetup.getAllAudioDevices()))
@@ -134,7 +145,6 @@ function handler(io: Server) {
     client.on('setProfileIcon', (p: {id: Profile['id'], icon: Profile['icon']}, callback) => callback(profileSetup.setIcon(p.id, p.icon)))
     client.on('setProfileName', (p: {id: Profile['id'], name: Profile['name']}, callback) => callback(profileSetup.setName(p.id, p.name)))
     client.on('setAutostart', (p: {id: Profile['id'], autostart: Profile['autostart']}, callback) => callback(profileSetup.setAutostart(p.id, p.autostart)))
-    client.on('setStartMinimized', (p: {id: Profile['id'], minimized: Profile['startminimized']}, callback) => callback(profileSetup.setStartMinimized(p.id, p.minimized)))
     client.on('deleteProfile', (id: Profile['id'], callback) => {
       profileSetup.deleteProfile(id)
       gabin = undefined
@@ -151,7 +161,7 @@ function handler(io: Server) {
     })
 
     // SHOTS
-    client.on('triggerShot', (s: ObsSource, callback) => callback(gabin?.triggeredShot$.next(s)))
+    client.on('triggerShot', (s: Asset['source'], callback) => callback(gabin?.triggeredShot$.next(s)))
     client.on('toggleAvailableMic', (m: MicId, callback) => callback(gabin?.toggleAvailableMic(m)))
     client.on('toggleAutocam', (a: boolean, callback) => callback(gabin?.autocam$.next(a)))
 

@@ -24,19 +24,37 @@ export type SpeakingMic = {
     device: string
 }
 
-export type ObsAssetId = {
-    scene: ObsSceneId
-    source: ObsSource
+
+export type AssetId = number
+export type AssetName = string
+
+export type AssetScene = {
+    id: AssetId
+    name: AssetName
+    containers: AssetContainer[]
 }
 
-export type ObsSource = {
-    id: number,
-    name: string
+export type AssetContainer = {
+    id: AssetId
+    name: AssetName
+    sources: AssetSource[]
 }
 
-export type ObsScene = {
-    id: ObsAssetId['scene']
-    sources: ObsAssetId['source'][]
+export type AssetSource = {
+    id: AssetId
+    name: AssetName
+}
+
+export type Asset = {
+    id: AssetId
+    name: AssetName
+    scene: AssetScene
+    container: AssetContainer
+    source: AssetSource
+}
+
+export interface OscSource extends AssetSource {
+    path: string
 }
 
 export type ResponseObsScene = {
@@ -57,7 +75,7 @@ export type ResponseObsItem = {
 }
 
 export interface AutocamSource {
-    source: ObsAssetId['source']
+    source: AssetSource
     weight: number
 }
 
@@ -72,8 +90,8 @@ export interface AudioDevice {
 }
 
 export interface Shoot {
-    containerId: ObsAssetId['scene']
-    shotId: ObsAssetId['source']
+    container: AssetContainer
+    shot: AssetSource
     mode: 'focus' | 'illustration'
 }
 
@@ -105,6 +123,10 @@ export type ConnectionType = 'obs' | 'tcp'
 export interface ConnectionsConfig {
     tcp: Connection
     obs?: Connection
+    osc?: {
+        server: Connection
+        client: Connection
+    }
 }
 export interface Connection {
     ip: string
@@ -122,11 +144,10 @@ export interface Profile {
     settings: ProfileSettings
     connections: ConnectionsConfig
     autostart?: boolean
-    startminimized?: boolean
 }
 export interface ProfileSettings {
     mics: AudioDeviceSettings[]
-    containers: VideoDeviceSettings[]
+    containers: AssetScene[]
     autocam: AutocamSettings[]
 }
 
@@ -135,17 +156,47 @@ export interface AudioDeviceSettings extends AudioDevice {
     mics: boolean[]
     micsName: string[]
 }
-export interface VideoDeviceSettings {
-    scene: ObsAssetId['scene']
-    source: ObsAssetId['source']
-    cams: ObsAssetId['source'][]
-}
-export interface AutocamSettings {
-    scene: ObsAssetId['scene']
-    source: ObsAssetId['source']
+
+// VideoDeviceSettings == AssetScene
+// export type AssetScene = {
+//     id: AssetId
+//     name: AssetName
+//     containers: AssetContainer[]
+// }
+// export type AssetContainer = {
+//     id: AssetId
+//     name: AssetName
+//     sources: AssetSource[]
+// }
+// export type AssetSource = {
+//     id: AssetId
+//     name: AssetName
+// }
+// export interface AutocamSource {
+//     source: AssetSource
+//     weight: number
+// }
+// export interface OscScene extends AssetScene {
+// export interface VideoDeviceSettings {
+//     scene: AssetScene
+//     source: AssetSource
+//     cams: AssetSource[]
+// }
+
+export interface AutocamContainer extends AssetContainer {
     mics: AutocamMic[]
     durations: Durations
 }
+
+export interface AutocamSettings extends AssetScene {
+    containers: AutocamContainer[]
+}
+// export interface AutocamSettings {
+//     scene: AssetScene
+//     source: AssetSource
+//     mics: AutocamMic[]
+//     durations: Durations
+// }
 export interface AutocamMic {
     id: string
     cams: AutocamSource[]

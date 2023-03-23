@@ -10,7 +10,7 @@ import type {
     Profile,
     ProfileSettings,
     NavBtn,
-    ObsScene,
+    Asset,
     AudioDevice,
     ConnectionsConfig,
     Toast
@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS = (): ProfileSettings => {
 
 const DEFAULT_CONNECTIONS = (): ConnectionsConfig => {
     return {
-        tcp: { ip:'127.0.0.1:6481' },
+        tcp: { ip:'127.0.0.1:6481' }
     }
 }
 
@@ -34,6 +34,7 @@ const generateId = (): number => {
     return Date.now()
 }
 
+// @ts-ignore
 export const store = reactive({
     socket: <Socket|undefined>undefined,
     keyPress$: new Subject<string>(),
@@ -167,10 +168,11 @@ export const store = reactive({
         }
     },
     assets: {
-        scenes: <ObsScene[]>[],
+        scenes: <Asset['scene'][]>[],
         audios: <AudioDevice[]>[],
     },
     connections: {
+        osc: false,
         obs: false,
         companion: false,
     },

@@ -1,5 +1,6 @@
 import { ObsServer } from '../../main/servers/ObsServer'
-import { Connections } from '../../main/servers/Connections';
+import { OscServer } from '../../main/servers/OscServer'
+import { Connections } from '../../main/servers/Connections'
 
 import { getDevices } from '../../main/modules/audioActivity'
 
@@ -8,6 +9,7 @@ import type { SpecificAndDefault } from '../../main/utils/db'
 
 import type {
     Connection,
+    ConnectionsConfig,
     AudioDevice,
     Profile,
     Thresholds,  
@@ -16,12 +18,14 @@ import type {
 export class ProfileSetup {
 
     obs: ObsServer
+    osc: OscServer
     connections: Connections
 
     private profiles: SpecificAndDefault
 
     constructor() {
         this.obs = new ObsServer(false)
+        this.osc = new OscServer(false)
         this.connections = new Connections()
 
         this.profiles = db.getSpecificAndDefault(['profiles'], false)
@@ -41,6 +45,23 @@ export class ProfileSetup {
         if (this.obs.isReachable) {
             this.obs.clean()
         }
+    }
+
+    connectOsc(connections: ConnectionsConfig['osc']) {
+        if (!this.osc.isReachable) {
+            this.osc.listen(connections)
+        }
+    }
+    
+    disconnectOsc() {
+        if (this.osc.isReachable) {
+            this.osc.clean()
+        }
+    }
+
+    sendOsc(path: string) {
+        if (!this.osc.isReachable) return
+        this.osc.send(path)
     }
 
     getAllAudioDevices(): AudioDevice[] {
@@ -144,19 +165,6 @@ export class ProfileSetup {
 
         if (index > -1) {
             profiles[index].autostart = autostart
-        }
-
-        this.profiles.edit(profiles)
-    }
-
-    setStartMinimized(id: Profile['id'], minimized: Profile['startminimized']) {
-        const profiles: Profile[] = this.profiles.defaultValue
-
-        const ids = profiles.map(p => p.id)
-        const index = ids.indexOf(id)
-
-        if (index > -1) {
-            profiles[index].startminimized = minimized
         }
 
         this.profiles.edit(profiles)

@@ -59,13 +59,6 @@ const toggleAutostart = async () => {
     await socketEmitter(store.socket, 'setAutostart', { id: current.id, autostart: current.autostart })
 }
 
-const toggleStartMinimized = async () => {
-    if (!current) return
-
-    current.startminimized = !current.startminimized
-    await socketEmitter(store.socket, 'setStartMinimized', { id: current.id, minimized: current.startminimized })
-}
-
 const prepareHomeView = () => {
     settings.value = store.profiles.settings()
 
@@ -143,14 +136,6 @@ prepareHomeView()
                             label="Autostart"
                             :value="current?.autostart || false"
                             @update="toggleAutostart"
-                        />
-                    </div>
-
-                    <div class="w-full mx-4 my-2 text-sm">
-                        <ToggleUi
-                            label="Start minimized"
-                            :value="current?.startminimized || false"
-                            @update="toggleStartMinimized"
                         />
                     </div>
 

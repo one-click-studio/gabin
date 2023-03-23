@@ -5,7 +5,7 @@ import { getOS, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
 import Background from '@src/layout/BackgroundLayout.vue'
 import Layout from '@src/layout/GlobalLayout.vue'
-import { ObsScene } from '../../types/protocol';
+import { Asset } from '../../types/protocol'
 
 
 socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
@@ -14,7 +14,13 @@ socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
     }
 })
 
-socketHandler(store.socket, 'handleObsScenes', (scenes: ObsScene[]) => {
+socketHandler(store.socket, 'handleOscConnected', (reachable: boolean) => {
+    if (store.connections.osc !== reachable) {
+        store.connections.osc = reachable
+    }
+})
+
+socketHandler(store.socket, 'handleObsScenes', (scenes: Asset['scene'][]) => {
     store.assets.scenes = scenes
 })
 

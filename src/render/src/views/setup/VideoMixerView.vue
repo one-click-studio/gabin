@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
+import { store } from '@src/store/store'
 
 import Gabin from '@src/components/basics/GabinFace.vue'
 import ArrowRightIcon from '@src/components/icons/ArrowRightIcon.vue'
@@ -9,6 +10,13 @@ import { onEnterPress } from '@src/components/utils/KeyPress.vue'
 const router = useRouter()
 
 const goNext = (route: string) => {
+    const connections = store.profiles.connections()
+
+    connections.obs = undefined
+    connections.osc = undefined
+    store.connections.obs = false
+    store.connections.osc = false
+
     router.push('/setup/'+route)
 }
 
@@ -39,6 +47,12 @@ onEnterPress(() => {
                     @click="goNext('obs')"
                 >
                     OBS <ArrowRightIcon />
+                </ButtonUi>
+                <ButtonUi
+                    class="w-full my-2"
+                    @click="goNext('osc')"
+                >
+                    OSC <ArrowRightIcon />
                 </ButtonUi>
                 <ButtonUi
                     class="w-full my-2"

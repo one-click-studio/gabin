@@ -21,9 +21,11 @@ import SetupProfileView from '@src/views/setup/ProfileView.vue'
 import SetupTcpView from '@src/views/setup/TcpView.vue'
 import SetupVisionMixerView from '@src/views/setup/VideoMixerView.vue'
 import SetupObsView from '@src/views/setup/ObsView.vue'
+import SetupOscView from '@src/views/setup/OscView.vue'
 import SetupAudioView from '@src/views/setup/AudioView.vue'
 import SetupContainerView from '@src/views/setup/ContainerView.vue'
-import SetupMappingView from '@src/views/setup/MappingView.vue'
+import SetupMappingObsView from '@src/views/setup/MappingObsView.vue'
+import SetupMappingOscView from '@src/views/setup/MappingOscView.vue'
 import SetupSettingsView from '@src/views/setup/SettingsView.vue'
 import SetupSummaryView from '@src/views/setup/SummaryView.vue'
 
@@ -79,8 +81,18 @@ const routes = [
                 meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/tcp' },
             },
             {
+                path: 'vm-choice',
+                component: SplashView,
+                meta: { redirect: true },
+            },
+            {
                 path: 'obs',
                 component: SetupObsView,
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
+            },
+            {
+                path: 'osc',
+                component: SetupOscView,
                 meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
             },
             {
@@ -95,7 +107,17 @@ const routes = [
             },
             {
                 path: 'mapping',
-                component: SetupMappingView,
+                component: SplashView,
+                meta: { redirect: true },
+            },
+            {
+                path: 'mapping-obs',
+                component: SetupMappingObsView,
+                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/container', next: '/setup/settings' },
+            },
+            {
+                path: 'mapping-osc',
+                component: SetupMappingOscView,
                 meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/container', next: '/setup/settings' },
             },
             {
@@ -117,17 +139,38 @@ const router = createRouter({
     routes,
 })
 
+const redirection = (to: string) => {
+    const connections = store.profiles.connections()
+    const redirect = { path: to }
+
+    switch (to) {
+        case '/setup/vm-choice':
+            redirect.path = connections.osc ? '/setup/osc' : '/setup/obs'
+            break
+        case '/setup/mapping':
+            redirect.path = connections.osc ? '/setup/mapping-osc' : '/setup/mapping-obs'
+            break
+    }
+
+    return redirect
+}
+
 router.beforeEach(async (to, from) => {
     if (!from.matched.length && (to.meta.type as number) > 0) {
         store.redirect.path = to.path
         return { path: '/loading' }
     }
+
     store.layout.header.iconEdit = false
     store.layout.header.dotMenu = false
     store.layout.footer.back.url = undefined
     store.layout.footer.next.url = undefined
     store.layout.footer.back.callback = undefined
     store.layout.footer.next.callback = undefined
+
+    if (to.meta.redirect) {
+        return redirection(to.path)
+    }
 
     return true
 })

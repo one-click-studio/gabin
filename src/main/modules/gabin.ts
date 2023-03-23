@@ -6,6 +6,7 @@ import { ObsClient } from '../clients/OBSClient'
 import { AutocamClient } from '../clients/AutocamClient'
 import { StreamdeckClient } from '../clients/StreamdeckClient'
 import { TcpServer } from '../servers/TcpServer'
+import { OscServer } from '../servers/OscServer'
 
 import db from '../utils/db'
 
@@ -15,7 +16,7 @@ import { getLogger } from '../utils/logger'
 import type {
     Shoot,
     AvailableMicsMap,
-    ObsAssetId,
+    Asset,
     MicId,
     AudioDeviceSettings,
 } from '../../types/protocol'
@@ -33,13 +34,14 @@ export class Gabin {
     streamdeck: StreamdeckClient | undefined
     autocam: AutocamClient | undefined
     tcpServer: TcpServer | undefined
+    oscServer: OscServer | undefined
 
     connections$: BehaviorSubject<Connections>
 
     shoot$: Subject<Shoot>
     autocam$: Subject<boolean>
     availableMics$: BehaviorSubject<AvailableMicsMap>
-    triggeredShot$: BehaviorSubject<ObsAssetId['source']>
+    triggeredShot$: BehaviorSubject<Asset['source']>
     timeline$: BehaviorSubject<MicId>
     volumeMics$: BehaviorSubject<Map<string, number>>
 
@@ -72,6 +74,7 @@ export class Gabin {
         this.autocam = new AutocamClient()
         this.streamdeck = new StreamdeckClient()
         this.tcpServer = new TcpServer([this.streamdeck])
+        this.oscServer = new OscServer()
 
         this.obs.reachable$.subscribe(r => {
             const c = this.connections$.getValue()
@@ -110,6 +113,7 @@ export class Gabin {
         this.autocam?.connect()
         this.streamdeck?.connect()
         this.tcpServer?.listen()
+        this.oscServer?.listen()
 
         this.streamdeck?.setAvailableMics(this.availableMics$.getValue())
         this.manageEvents()
@@ -124,6 +128,7 @@ export class Gabin {
         this.autocam?.clean()
         this.streamdeck?.clean()
         this.tcpServer?.clean()
+        this.oscServer?.clean()
 
         this.isOn = false
     }
@@ -162,9 +167,9 @@ export class Gabin {
         this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {
             this.autocam$.next(autoCam)
         }))
-        this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shotId) => {
-            if (shotId) {
-                this.triggeredShot$.next(shotId)
+        this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shot) => {
+            if (shot) {
+                this.triggeredShot$.next(shot)
             }
         }))
     }
@@ -177,11 +182,11 @@ export class Gabin {
         this.selfEvents()
 
         // OBS EVT
-        this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(sceneId => {
-            this.logger.debug(sceneId)
-            if (sceneId) {
+        this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(scene => {
+            this.logger.debug(scene)
+            if (scene) {
                 this.logger.info('has received a new scene from obs 🎬')
-                if (this.autocam?.isReachable) this.autocam.setCurrentScene(sceneId)
+                if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene.name)
             }
         }))
         // STREAMDECK EVT
@@ -190,10 +195,10 @@ export class Gabin {
         }))
 
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
-            this.logger.info('has made magic shot change ✨', `${shoot.containerId} | ${shoot.shotId.name} | ${shoot.mode} mode`)
+            this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
-            if (this.obs?.isReachable) this.obs.shoot(shoot.containerId, shoot.shotId.name)
-            if (this.streamdeck?.isReachable) this.streamdeck.setCurrentShot(shoot.shotId)
+            if (this.obs?.isReachable) this.obs.shoot(shoot.container, shoot.shot)
+            if (this.streamdeck?.isReachable) this.streamdeck.setCurrentShot(shoot.shot)
         }))
         this.subscriptions.push(this.autocam$.subscribe((autocam) => {
             this.logger.info('has to toggle autocam 🎚')
@@ -205,10 +210,10 @@ export class Gabin {
             this.autocam?.setAvailableMics(availableMics)
             this.streamdeck?.setAvailableMics(availableMics)
         }))
-        this.subscriptions.push(this.triggeredShot$.subscribe((shotId) => {
-            if (shotId.id < 0) return
+        this.subscriptions.push(this.triggeredShot$.subscribe((source) => {
+            if (source.id < 0) return
             this.logger.info('has been ordered to shot 😣')
-            this.autocam?.forcedShot$.next(shotId)
+            this.autocam?.forcedShot$.next(source)
         }))
     }
 

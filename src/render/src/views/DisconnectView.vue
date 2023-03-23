@@ -6,10 +6,10 @@ const router = useRouter()
 
 const interval = setInterval(() => {
     if (!store.socket?.connected) return
-    clearInterval(interval)
 
     const path = (store.redirect.path && store.redirect.path !== '/disconnect')? store.redirect.path : '/home'
     router.push(path)
+    clearInterval(interval)
 }, 1000)
 
 </script>

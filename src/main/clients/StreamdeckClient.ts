@@ -5,9 +5,8 @@ import { Client } from '../../main/clients/Client'
 import type {
     TcpClient,
     TcpRequest,
-    VideoDeviceSettings,
     AudioDeviceSettings,
-    ObsAssetId,
+    Asset,
     MicId,
     AvailableMicsMap
 } from '../../types/protocol'
@@ -19,7 +18,7 @@ type AutoCamParams = {
 }
 
 type TriggerShotParams = {
-    shot: ObsAssetId['source']
+    shot: Asset['source']['name']
 }
 
 type AvailableMicParams = {
@@ -30,6 +29,8 @@ type ConnectionParams = {
     socketId: string
 }
 
+type Shot = Asset['source']['name'] | undefined
+
 const TCP_CLIENT = 'gabin0.'
 
 export class StreamdeckClient extends Client {
@@ -37,7 +38,7 @@ export class StreamdeckClient extends Client {
     send$ = new Subject<TcpRequest>()
     autocam$: BehaviorSubject<boolean>
     toggleMicAvailability$: Subject<MicId>
-    triggeredShot$: BehaviorSubject<ObsAssetId['source'] | undefined>
+    triggeredShot$: BehaviorSubject<Asset['source']|undefined>
     sockets: string[] = []
 
     private emits = {
@@ -48,18 +49,18 @@ export class StreamdeckClient extends Client {
         currentShot: 'currentshot'
     }
 
-    private currentShot: ObsAssetId['source'] | undefined
+    private currentShot: Shot
     private availableMics: MicId[] = []
     private autocam = true
 
-    private videoContainers: VideoDeviceSettings[] = []
+    private videoContainers: Asset['scene'][] = []
     private audioDevices: AudioDeviceSettings[] = []
 
     constructor() {
         super('streamdeck')
 
         this.autocam$ = new BehaviorSubject(<boolean>true)
-        this.triggeredShot$ = new BehaviorSubject(<ObsAssetId['source'] | undefined>undefined)
+        this.triggeredShot$ = new BehaviorSubject(<Asset['source']|undefined>undefined)
         this.toggleMicAvailability$ = new Subject()
     }
 
@@ -71,11 +72,11 @@ export class StreamdeckClient extends Client {
         this.audioDevices = audioDevices.defaultValue
 
         this.autocam$ = new BehaviorSubject(<boolean>true)
-        this.triggeredShot$ = new BehaviorSubject(<ObsAssetId['source'] | undefined>undefined)
+        this.triggeredShot$ = new BehaviorSubject(<Asset['source']|undefined>undefined)
         this.toggleMicAvailability$ = new Subject()
 
         this.addSubscription(
-            videoContainers.configPart$.subscribe((containers: VideoDeviceSettings[]) => {
+            videoContainers.configPart$.subscribe((containers: Asset['scene'][]) => {
                 this.videoContainers = containers
                 this.sendPresets()
             })
@@ -155,12 +156,20 @@ export class StreamdeckClient extends Client {
     }
 
     private handleTriggerShot(params: TriggerShotParams) {
-        this.triggeredShot$.next(params.shot)
+        for (const scene of this.videoContainers) {
+            for (const container of scene.containers) {
+                for (const source of container.sources) {
+                    if (source.name === params.shot) {
+                        this.triggeredShot$.next(source)
+                        return
+                    }
+                }
+            }   
+        }
     }
 
     private handleAvailableMic(params: AvailableMicParams) {
         this.toggleMicAvailability$.next(params.mic)
-        // this.toggleAvailableMic(params.mic)
     }
 
     private sendPresets() {
@@ -173,8 +182,9 @@ export class StreamdeckClient extends Client {
         }
     }
 
-    private getAllShots(containers: VideoDeviceSettings[]): ObsAssetId['source'][] {
-        return containers.reduce((p, c) => p.concat(c.cams), <ObsAssetId['source'][]>[])
+    private getAllShots(scenes: Asset['scene'][]): Asset['source']['name'][] {
+        const containers = scenes.reduce((p, scene) => p.concat(scene.containers), <Asset['container'][]>[])
+        return containers.reduce((p, c) => p.concat(c.sources.map(s => s.name)), <Asset['source']['name'][]>[])
     }
 
     private getAllMics(devices: AudioDeviceSettings[]): string[] {
@@ -233,8 +243,8 @@ export class StreamdeckClient extends Client {
         this.sendAvailableMics()
     }
 
-    setCurrentShot(shotId: ObsAssetId['source']) {
-        this.currentShot = shotId
+    setCurrentShot(shot: Asset['source']) {
+        this.currentShot = shot.name
         this.sendCurrentShot()
     }
 

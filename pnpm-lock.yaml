@@ -14,6 +14,7 @@ specifiers:
   nodemon: ^2.0.20
   obs-websocket-js: ^5.0.2
   onnxruntime-node: ^1.13.1
+  osc-js: ^2.4.0
   pkg: ^5.8.1
   playwright: ^1.29.2
   rxjs: ^7.8.0
@@ -33,6 +34,7 @@ dependencies:
   finalhandler: 1.2.0
   obs-websocket-js: 5.0.2
   onnxruntime-node: 1.14.0
+  osc-js: 2.4.0
   rxjs: 7.8.0
   serve-static: 1.15.0
   simple-json-db: 2.0.0
@@ -1230,6 +1232,15 @@ packages:
     os: [win32, darwin, linux]
     dependencies:
       onnxruntime-common: 1.14.0
+    dev: false
+
+  /osc-js/2.4.0:
+    resolution: {integrity: sha512-9cvB8m6zt/iCsmeDdFJaD4mjC8preB1Gio+NVmjT0S3qxiejTfJ8vGudyTQciL9yqQHEuINNYS5Kb94+Ceqekg==}
+    dependencies:
+      ws: 8.12.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
     dev: false
 
   /p-is-promise/3.0.0:

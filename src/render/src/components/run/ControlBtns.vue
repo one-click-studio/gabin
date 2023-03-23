@@ -8,7 +8,7 @@ import ToggleUi from '@src/components/basics/ToggleUi.vue'
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
 import ButtonContainerUi from '@src/components/basics/ButtonContainerUi.vue'
 
-import { onAlphaNumPress, onSpacePress } from '@src/components/utils/KeyPress.vue'
+import { onSpacePress } from '@src/components/utils/KeyPress.vue'
 import { socketEmitter, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
 import PlayCircleIcon from '@src/components/icons/PlayCircleIcon.vue'
@@ -16,9 +16,7 @@ import PauseCircleIcon from '@src/components/icons/PauseCircleIcon.vue'
 import StopIcon from '@src/components/icons/StopIcon.vue'
 import CamIcon from '@src/components/icons/CamIcon.vue'
 
-import type { Shoot, AvailableMicsMap, ObsAssetId, ObsSource } from '../../../../types/protocol'
-
-const ALPHA_NUM = '0123456789abcdefghijklmnopqrstuvwxyz'
+import type { Shoot, AvailableMicsMap, Asset } from '../../../../types/protocol'
 
 const router = useRouter()
 
@@ -33,30 +31,33 @@ const getAvailableMics = (): AvailableMicsMap => {
     return micsMap
 }
 
-const getAllShots = (containerIds: string[]): ObsSource[][] => {
-    const shots_: ObsSource[][] = []
-    const containers = store.profiles.settings().containers
-    for (const cId of containerIds) {
-        for (const c of containers) {
-            if (c.source.name === cId) {
-                shots_.push(c.cams)
-                break
-            }
-        }
-    }
+const getAllScenes = (): Asset['scene'][] => {
+    return store.profiles.settings().containers
+}
 
-    return shots_
+const getAllContainers = (): Asset['container'][] => {
+    const scenes = getAllScenes()
+    const containers = scenes.reduce((p, scene) => p.concat(scene.containers), <Asset['container'][]>[])
+    const containersMap = new Map(containers.map((v)=>([v.id, v])))
+    return Object.values(containersMap)
+}
+
+const getAllSources = (): Asset['source'][] => {
+    const containers = getAllContainers()
+    const sources = containers.reduce((p, c) => p.concat(c.sources), <Asset['source'][]>[])
+    const sourcesMap = new Map(sources.map((v)=>([v.id, v])))
+    return Object.values(sourcesMap)
 }
 
 const autocam = ref(true)
-const currentContainers = ref(<ObsAssetId['scene'][]>[])
+
+const currentContainers = ref(getAllContainers())
+const shots = ref(getAllSources())
 const availableMics = ref(getAvailableMics())
-const shots = ref<ObsSource[][]>([])
-const currentShots = ref<ObsSource[]>([])
+
+const currentShots = ref<Asset['source']['name']>()
 
 const init = () => {
-    currentContainers.value = store.profiles.settings().containers.map(c => c.source.name).filter((c, i, a) => a.indexOf(c) === i)
-    shots.value = getAllShots(currentContainers.value)
 
     socketHandler(store.socket, 'handleNewShot', (shot: Shoot) => {
         setCurrentShot(shot)
@@ -68,23 +69,13 @@ const init = () => {
         availableMics.value = new Map(Object.entries(am))
     })
 
-    onAlphaNumPress((key) => {
-        const coords = shortcutToShot(key)
-        if (coords && coords.j < shots.value[coords.i].length) {
-            triggerShot(coords.i, coords.j)
-        }
-    })
     onSpacePress(() => {
         toggleAutocam()
     })
 }
 
 const setCurrentShot = (shot: Shoot) => {
-    for (const i in currentContainers.value) {
-        if (currentContainers.value[i] === shot.containerId) {
-            currentShots.value[i] = shot.shotId
-        }
-    }
+    currentShots.value = shot.shot.name
 }
 
 const toggleAutocam = () => {
@@ -95,40 +86,8 @@ const toggleMicAvailability = (mic: string) => {
     socketEmitter(store.socket, 'toggleAvailableMic', mic)
 }
 
-const triggerShot = (i: number, j: number) => {
-    socketEmitter(store.socket, 'triggerShot', klona(shots.value[i][j]))
-}
-
-const shotToShortcut = (i: number, j: number): string => {
-    let count = j
-    for (let k=0; k<i; k++) {
-        count += shots.value[k].length
-    }
-
-    return ALPHA_NUM[count]
-}
-
-const shortcutToShot = (key: string): {i: number, j: number}|undefined => {
-    const index = ALPHA_NUM.indexOf(key)
-    if (index < 0) {
-        return undefined
-    }
-
-    let i = 0
-    let count = 0
-    for (i; i<shots.value.length; i++) {
-        if (count + shots.value[i].length > index) {
-            break
-        }
-        count += shots.value[i].length
-    }
-
-    if (i >= shots.value.length) {
-        return undefined
-    }
-
-    const j = index - count
-    return { i, j }
+const triggerShot = (shot: Asset['source']) => {
+    socketEmitter(store.socket, 'triggerShot', klona(shot))
 }
 
 init()
@@ -183,32 +142,22 @@ init()
                 </ButtonUi>
             </ButtonContainerUi>
         </div>
-        <div class="flex-1 flex flex-col">
-            <div
-                v-for="(_v, i) in shots"
-                :key="i"
-                class="flex flex-col flex-1 w-full"
+        <div class="flex-1 flex items-stretch content-stretch flex-wrap w-full">
+            <ButtonContainerUi
+                v-for="(shot, i) in shots"
+                :key="'shot-'+shot"
+                :active="(shot.name === currentShots)"
+                :primary="true"
             >
-                <div class="flex-1 flex items-stretch content-stretch flex-wrap w-full">
-                    <ButtonContainerUi
-                        v-for="(shot, j) in shots[i]"
-                        :key="'shot-'+shot"
-                        :active="(shot?.name === currentShots[i]?.name)"
-                        :primary="true"
-                        :keycode="shotToShortcut(i, j)"
-                    >
-                        <ButtonUi
-                            class="flex flex-col items-center control-btn"
-                            :active="(shot?.name === currentShots[i]?.name)"
-                            @click="() => triggerShot(i, j)"
-                        >
-                            <CamIcon class="m-4" />
-                            <span class="text-content-2 text-sm">Container {{ i+1 }}</span>
-                            <span class="text-base">{{ shot.name }}</span>
-                        </ButtonUi>
-                    </ButtonContainerUi>
-                </div>
-            </div>
+                <ButtonUi
+                    class="flex flex-col items-center control-btn"
+                    :active="(shot.name === currentShots)"
+                    @click="() => triggerShot(shot)"
+                >
+                    <CamIcon class="m-4" />
+                    <span class="text-base">{{ shot.name }}</span>
+                </ButtonUi>
+            </ButtonContainerUi>
         </div>
     </div>
 </template>

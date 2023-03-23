@@ -14,11 +14,12 @@ import MinCircleIcon from '@src/components/icons/MinCircleIcon.vue'
 import InfoIcon from '@src/components/icons/InfoIcon.vue'
 
 import type {
-    Asset,
-    AutocamSettings,
-    AutocamContainer,
-    AutocamSource,
     AudioDeviceSettings,
+    VideoDeviceSettings,
+    AutocamSettings,
+    AutocamSource,
+    AutocamMic,
+    ObsAssetId
 } from '../../../../types/protocol'
 
 interface Emits {
@@ -38,56 +39,57 @@ watch(() => store.profiles.current, () => {
 const deepRawCopy = <T>(object: T): T => {
     return JSON.parse(JSON.stringify(toRaw(object)))
 }
-
-const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][], autocam?: AutocamSettings[]): AutocamSettings[] => {
+const defaultSettings = (mics: AudioDeviceSettings[], containers: VideoDeviceSettings[], autocam?: AutocamSettings[]): AutocamSettings[] => {
     const s: AutocamSettings[] = []
 
-    for (const i in scenes) {
-        const scene = scenes[i]
-        const autocamScene = autocam?.find((a) => a.id === scene.id)
+    const getContainer = (scene: ObsAssetId['scene'], source: ObsAssetId['source']): AutocamSettings | undefined => {
+        const container = autocam?.filter(c => c.scene === scene && c.source.name === source.name)
+        return (container?.length === 1? container[0] : undefined)
+    }
 
-        for (const j in scene.containers) {
-            const container = scene.containers[j]
-            const autocamContainer = autocamScene?.containers.find((a) => a.id === container.id)
+    const getMic = (c: AutocamSettings, micId: string): AutocamMic | undefined => {
+        const mic = c.mics.filter(m => m.id === micId)
+        return (mic?.length === 1? mic[0] : undefined)
+    }
 
-            const micsSettings: AutocamSource[] = []
-            for (const k in devices) {
-                const device = devices[k]
-                for (const l in device.micsName) {
-                    const mic = device.micsName[l]
-                    const autocamMic = autocamContainer?.mics.find((a) => a.id === mic)
-                }
-                
+    const getCam = (m: AutocamMic, camId: ObsAssetId['source']): AutocamSource | undefined => {
+        const source = m.cams.filter(c => c.source.name === camId.name)
+        return (source?.length === 1? source[0] : undefined)
+    }
+
+    const flatMics = mics.flatMap(d => d.micsName.filter((_m,i) => d.mics[i]))
+
+    for (const i in containers) {
+        const oldC = getContainer(containers[i].scene, containers[i].source)
+        const c: AutocamSettings = {
+            scene: containers[i].scene,
+            source: containers[i].source,
+            mics: [],
+            durations: {
+                min: oldC?.durations.min || 3,
+                max: oldC?.durations.max || 12,
+            },
         }
 
+        for (const j in flatMics) {
+            const oldMic = oldC? getMic(oldC, flatMics[j]) : undefined
+            if (!flatMics[j]) {
+                continue
+            }
 
-            const camsSettings: AutocamSource[] = []
-            for (const k in scene.containers) {
-                const container = scene.containers[k]
-                const autocamCam = autocamMic?.cams.find((a) => a.camId === container.id)
-
-                camsSettings.push({
-                    camId: container.id,
-                    weight: autocamCam?.weight || 0
+            const cams: AutocamSource[] = []
+            for (const k in containers[i].cams) {
+                const oldCam = oldMic? getCam(oldMic, containers[i].cams[k]) : undefined
+                cams.push({
+                    source: containers[i].cams[k],
+                    weight: oldCam? oldCam.weight : (j===k? 100 : 0),
                 })
             }
 
-            micsSettings.push({
-                micId: mic.id,
-                cams: camsSettings,
-                durations: autocamMic?.durations || {
-                    min: 0,
-                    max: 0
-                }
-            })
+            c.mics.push({ id: flatMics[j], cams })
         }
-
-        s.push({
-            sceneId: scene.id,
-            mics: micsSettings
-        })
+        s.push(c)
     }
-
 
     return s
 }
