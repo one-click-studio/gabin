@@ -17,6 +17,7 @@ import type {
     Asset,
     AutocamSettings,
     AutocamContainer,
+    AutocamMic,
     AutocamSource,
     AudioDeviceSettings,
 } from '../../../../types/protocol'
@@ -46,103 +47,107 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
         const scene = scenes[i]
         const autocamScene = autocam?.find((a) => a.id === scene.id)
 
+        const containersSettings: AutocamContainer[] = []
         for (const j in scene.containers) {
             const container = scene.containers[j]
             const autocamContainer = autocamScene?.containers.find((a) => a.id === container.id)
 
-            const micsSettings: AutocamSource[] = []
+            const micsSettings: AutocamMic[] = []
             for (const k in devices) {
                 const device = devices[k]
                 for (const l in device.micsName) {
                     const mic = device.micsName[l]
                     const autocamMic = autocamContainer?.mics.find((a) => a.id === mic)
+
+                    const camsSettings: AutocamSource[] = []
+                    for (const l in container.sources) {
+                        const source = container.sources[l]
+
+                        const autocamCam = autocamMic?.cams.find((a) => a.source.name === source.name)
+            
+                        camsSettings.push({
+                            source,
+                            weight: autocamCam?.weight || 0
+                        })
+                    }
+                    micsSettings.push({
+                        id: mic,
+                        cams: camsSettings
+                    })
                 }
-                
-        }
-
-
-            const camsSettings: AutocamSource[] = []
-            for (const k in scene.containers) {
-                const container = scene.containers[k]
-                const autocamCam = autocamMic?.cams.find((a) => a.camId === container.id)
-
-                camsSettings.push({
-                    camId: container.id,
-                    weight: autocamCam?.weight || 0
-                })
             }
-
-            micsSettings.push({
-                micId: mic.id,
-                cams: camsSettings,
-                durations: autocamMic?.durations || {
+            containersSettings.push({
+                id: container.id,
+                name: container.name,
+                sources: container.sources,
+                mics: micsSettings,
+                durations: autocamContainer?.durations || {
                     min: 0,
                     max: 0
                 }
             })
         }
-
         s.push({
-            sceneId: scene.id,
-            mics: micsSettings
+            id: scene.id,
+            name: scene.name,
+            containers: containersSettings
         })
     }
 
-
     return s
 }
-const updateWeightSettings = (i: number, j: number, k: number, v: number) => {
-    v = (v < 0 || !v)? 0 : v
-    v = v > 100? 100 : v
+// const updateWeightSettings = (i: number, j: number, k: number, v: number) => {
+//     v = (v < 0 || !v)? 0 : v
+//     v = v > 100? 100 : v
 
-    acSettings.value[i].mics[j].cams[k].weight = Math.round(v)
-    update()
-}
-const updateDurationsSettings = (i: number, key: 'min'|'max', v: number) => {
-    v = (v < 0 || !v)? 0 : v
+//     acSettings.value[i].mics[j].cams[k].weight = Math.round(v)
+//     update()
+// }
+// const updateDurationsSettings = (i: number, key: 'min'|'max', v: number) => {
+//     v = (v < 0 || !v)? 0 : v
 
-    acSettings.value[i].durations[key] = v
-    update()
-}
-const isLast = (array: unknown[], index: number): boolean => {
-    return (array.length - 1 === index)
-}
-const getCorrectPercent = (cams: AutocamSource[], index: number): number => {
-    let percent = 100
-    for (const i in cams) {
-        percent -= parseInt(i) !== index? cams[i].weight : 0
-    }
-    return percent || 1
-}
-const update = () => {
-    $emit('update', acSettings.value)
-}
-const filtredSettings = (): AutocamSettings[] => {
-    const acs: AutocamSettings[] = deepRawCopy(acSettings.value)
+//     acSettings.value[i].durations[key] = v
+//     update()
+// }
+// const isLast = (array: unknown[], index: number): boolean => {
+//     return (array.length - 1 === index)
+// }
+// const getCorrectPercent = (cams: AutocamSource[], index: number): number => {
+//     let percent = 100
+//     for (const i in cams) {
+//         percent -= parseInt(i) !== index? cams[i].weight : 0
+//     }
+//     return percent || 1
+// }
+// const update = () => {
+//     $emit('update', acSettings.value)
+// }
+// const filtredSettings = (): AutocamSettings[] => {
+//     const acs: AutocamSettings[] = deepRawCopy(acSettings.value)
 
-    acs.forEach(c =>
-        c.mics.forEach(m =>
-            m.cams = m.cams.filter(c => c.weight > 0),
-        ),
-    )
+//     acs.forEach(c =>
+//         c.mics.forEach(m =>
+//             m.cams = m.cams.filter(c => c.weight > 0),
+//         ),
+//     )
 
-    return acs
-}
-const getRowspan = (c: AutocamSettings): number => {
-    return c.mics.reduce((p, l) => p += l.cams.length, 0)
-}
-const resetAll = () => {
-    acSettings.value = defaultSettings(store.profiles.settings().mics, store.profiles.settings().containers)
-}
+//     return acs
+// }
+// const getRowspan = (c: AutocamSettings): number => {
+//     return c.mics.reduce((p, l) => p += l.cams.length, 0)
+// }
+// const resetAll = () => {
+//     acSettings.value = defaultSettings(store.profiles.settings().mics, store.profiles.settings().containers)
+// }
 
 const pSettings = store.profiles.settings()
 acSettings.value = defaultSettings(pSettings.mics, pSettings.containers, pSettings.autocam)
-update()
+// update()
 
 </script>
 
 <template>
-    <div
+    <!-- <div
         v-if="editable"
         class="w-full flex justify-end mb-4"
     >
@@ -325,7 +330,7 @@ update()
                 </template>
             </tbody>
         </table>
-    </div>
+    </div> -->
 </template>
 
 <style scoped>
