@@ -34,7 +34,7 @@ socketHandler(store.socket, 'handlePower', (power) => {
 
 socketHandler(store.socket, 'handleNewShot', (shoot) => {
     msg.value.default = 'I\'m now showing'
-    msg.value.main = `${shoot.shotId.name}`
+    msg.value.main = `${shoot.shot.name}`
 })
 
 socketHandler(store.socket, 'handleTimeline', (data) => {

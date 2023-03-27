@@ -38,15 +38,16 @@ const getAllScenes = (): Asset['scene'][] => {
 const getAllContainers = (): Asset['container'][] => {
     const scenes = getAllScenes()
     const containers = scenes.reduce((p, scene) => p.concat(scene.containers), <Asset['container'][]>[])
-    const containersMap = new Map(containers.map((v)=>([v.id, v])))
-    return Object.values(containersMap)
+    const containersMap = new Map(containers.map((v)=>([v.name, v])))
+
+    return Object.values(Object.fromEntries(containersMap))
 }
 
 const getAllSources = (): Asset['source'][] => {
     const containers = getAllContainers()
     const sources = containers.reduce((p, c) => p.concat(c.sources), <Asset['source'][]>[])
-    const sourcesMap = new Map(sources.map((v)=>([v.id, v])))
-    return Object.values(sourcesMap)
+    const sourcesMap = new Map(sources.map((v)=>([v.name, v])))
+    return Object.values(Object.fromEntries(sourcesMap))
 }
 
 const autocam = ref(true)

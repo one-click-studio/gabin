@@ -1,27 +1,30 @@
 <script lang="ts" setup>
 
-import { ref, watch, toRaw } from 'vue'
+import { ref, toRaw } from 'vue'
 
 import { store } from '@src/store/store'
 
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
 import InputUi from '@src/components/basics/InputUi.vue'
+import ModalUi from '@src/components/basics/ModalUi.vue'
 
+import InfoIcon from '@src/components/icons/InfoIcon.vue'
 import PlusIcon from '@src/components/icons/PlusIcon.vue'
 import BinIcon from '@src/components/icons/BinIcon.vue'
 import PlayIcon from '@src/components/icons/PlayIcon.vue'
+
+import Tuto from '@src/components/setup/OscTuto.vue'
 
 import { onEnterPress } from '@src/components/utils/KeyPress.vue'
 import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
 
 import type { 
-    OscScene,
-    OscSource
+    Asset
 } from '../../../../types/protocol'
 
-const scenes_ = ref<OscScene[]>([])
-const containers_ = ref<Map<OscScene['container'], OscScene['sources']>>(new Map())
-const sources_ = ref<Map<OscSource['id'], OscSource['path']>>(new Map())
+const scenes_ = ref<Asset['scene'][]>(store.profiles.settings().containers)
+const containers_ = ref<Map<Asset['container']['name'], Asset['container']>>(new Map())
+const tuto_ = ref<boolean>(store.profiles.editProfile? false : true)
 
 const connectOsc = () => {
     if (store.connections.osc || !store.profiles.editProfile) return
@@ -45,10 +48,16 @@ const connectOsc = () => {
 const nextIsInvalid = (): boolean => {
     if (!scenes_.value.length) return true
 
-    for (const scene of scenes_.value) {
-        if (!scene.id || !scene.container || !scene.sources.length) return true
-        for (const source of scene.sources) {
-            if (!source.path || !source.id) return true
+    for (const i in scenes_.value) {
+        const scene = scenes_.value[i]
+        if (!scene.id || !sceneNameIsValid(parseInt(i)) || !scene.containers.length || !scene.containers.reduce((p, c)=> p += c.sources.length, 0)) return true
+
+        for (const container of scene.containers) {
+            if (!container.id || !container.name || !container.sources.length) return true
+
+            for (const source of container.sources) {
+                if (!source.id || !source.options.path || !source.name) return true
+            }
         }
     }
 
@@ -79,49 +88,87 @@ store.layout.footer.next.callback = async () => {
     }
 }
 
-connectOsc()
-updateNextBtn()
-
 const addScene = () => {
-    let containersTmp: OscScene['container'][] = []
-    for (const scene of scenes_.value) {
-        if (scene.container && containersTmp.indexOf(scene.container) === -1) containersTmp.push(scene.container)
-    }
-
     scenes_.value.push({
-        id: 'Scene ' + (scenes_.value.length + 1),
-        container: 'Container ' + (containersTmp.length + 1),
+        id: -1,
+        name: 'Scene ' + (scenes_.value.length + 1),
+        containers: [],
+    })
+    updateNextBtn()
+}
+
+const removeScene = (i: number) => {
+    scenes_.value.splice(i, 1)
+    resetContainersMap()
+    updateNextBtn()
+}
+
+const addContainer = (i: number) => {
+    const scene = scenes_.value[i]
+    scene.containers.push({
+        id: -1,
+        name: 'Container ' + (containers_.value.size + 1),
         sources: [],
     })
-    updateNextBtn()
-}
-
-const removeScene = (index: number) => {
-    scenes_.value.splice(index, 1)
     resetContainersMap()
-    resetSourcesMap()
     updateNextBtn()
 }
 
-const addSource = (index: number) => {
-    scenes_.value[index].sources.push({
-        id: 'Source ' + (sources_.value.size + 1),
-        path: `/${scenes_.value[index].container}/Source ${sources_.value.size + 1}`.replace(/ /g, ''),
+const removeContainer = (i: number, j: number) => {
+    scenes_.value[i].containers.splice(j, 1)
+
+    resetContainersMap()
+    updateNextBtn()
+}
+
+const addSource = (i: number, j: number) => {
+    const constainer = scenes_.value[i].containers[j]
+    constainer.sources.push({
+        id: -1,
+        name: 'Source ' + (constainer.sources.length + 1),
+        options: {
+            path: `/${constainer.name}/Source ${constainer.sources.length + 1}`.replace(/ /g, ''),
+        },
     })
 
-    updateContainersMap(scenes_.value[index].container, scenes_.value[index].sources)
-    resetSourcesMap()
     updateNextBtn()
 }
 
-const removeSource = (scIndex: number, soIndex: number) => {
-    scenes_.value[scIndex].sources.splice(soIndex, 1)
-    resetSourcesMap()
+const removeSource = (i: number, j: number, k: number) => {
+    scenes_.value[i].containers[j].sources.splice(k, 1)
+
     updateNextBtn()
 }
 
-const testSource = (scIndex: number, soIndex: number) => {
-    const path = scenes_.value[scIndex].sources[soIndex].path
+const updateSceneName = (index: number, name: string) => {
+    scenes_.value[index].name = name
+    updateNextBtn()
+}
+
+const updateContainerName = (i: number, j: number, name: string) => {
+    const container = containers_.value.get(name)
+    if (container) {
+        scenes_.value[i].containers[j] = container
+    } else {
+        scenes_.value[i].containers[j].name = name
+    }
+
+    resetContainersMap()
+    updateNextBtn()
+}
+
+const updateSourceName = (i: number, j: number, k: number, name: string) => {
+    scenes_.value[i].containers[j].sources[k].name = name
+    updateNextBtn()
+}
+
+const updateSourcePath = (i: number, j: number, k: number, path: string) => {
+    scenes_.value[i].containers[j].sources[k].options.path = path
+    updateNextBtn()
+}
+
+const testSource = (i: number, j: number, k: number) => {
+    const path = scenes_.value[i].containers[j].sources[k].options.path
     if (!path) {
         store.toast.error('No path defined')
         return
@@ -130,92 +177,61 @@ const testSource = (scIndex: number, soIndex: number) => {
     socketEmitter(store.socket, 'sendOsc', toRaw(path))
 }
 
+const sceneNameIsValid = (index: number): boolean => {
+    const name = scenes_.value[index].name
+    if (!name) return false
 
-const updateSceneId = (index: number, id: string) => {
-    scenes_.value[index].id = id
-    updateNextBtn()
-}
-
-const updateSceneContainer = (index: number, container: string) => {
-    scenes_.value[index].container = container
-
-    const sourcesTmp = containers_.value.get(container)
-    if (sourcesTmp) scenes_.value[index].sources = sourcesTmp
-
-    resetContainersMap()
-    updateNextBtn()
-}
-
-const updateSourceId = (scIndex: number, soIndex: number, id: string) => {
-    scenes_.value[scIndex].sources[soIndex].id = id
-
-    const path = sources_.value.get(id)
-    if (path) scenes_.value[scIndex].sources[soIndex].path = path
-
-    updateContainersMap(scenes_.value[scIndex].container, scenes_.value[scIndex].sources)
-    resetSourcesMap()
-    updateNextBtn()
-}
-
-const updateSourcePath = (scIndex: number, soIndex: number, path: string) => {
-    const p = path.replace(/ /g, '')
-
-    const id = scenes_.value[scIndex].sources[soIndex].id
-    if (sources_.value.has(id)) updateSourcesMap(id, p)
-
-    scenes_.value[scIndex].sources[soIndex].path = p
-    updateContainersMap(scenes_.value[scIndex].container, scenes_.value[scIndex].sources)
-    updateNextBtn()
-}
-
-const resetSourcesMap = () => {
-    sources_.value = new Map()
-
-    for (const scene of scenes_.value) {
-        for (const source of scene.sources) {
-            sources_.value.set(source.id, source.path)
-        }
+    for (let i = 0; i < scenes_.value.length; i++) {
+        if (i === index) continue
+        if (scenes_.value[i].name === name) return false
     }
+
+    return true
 }
 
 const resetContainersMap = () => {
     containers_.value = new Map()
 
     for (const scene of scenes_.value) {
-        containers_.value.set(scene.container, scene.sources)
-    }
-}
-
-const updateSourcesMap = (id: string, path: string) => {
-    sources_.value.set(id, path)
-
-    for (const scene of scenes_.value) {
-        for (const source of scene.sources) {
-            if (source.id === id) source.path = path
+        for (const container of scene.containers) {
+            containers_.value.set(container.name, container)
         }
     }
-
-    updateNextBtn()
 }
 
-const updateContainersMap = (container: OscScene['container'], sources: OscScene['sources']) => {
-    containers_.value.set(container, sources)
-
-    for (const scene of scenes_.value) {
-        if (scene.container === container) scene.sources = JSON.parse(JSON.stringify(sources))
-    }
-
-    updateNextBtn()
-}
-
-// const availableSceneId = (scene: OscScene): boolean => {
-//     if (!scene.id) return false
-//     return scenes_.value.filter((s) => s.id === scene.id).length === 1
-// }
+connectOsc()
+updateNextBtn()
 
 </script>
 
 <template>
+    <Teleport to="#header-btn-slot">
+        <ButtonUi
+            class="i-first mx-1 h-12 whitespace-nowrap"
+            @click="() => tuto_ = true"
+        >
+            <InfoIcon />
+            Open tutorial
+        </ButtonUi>
+    </Teleport>
+
+    <ModalUi
+        :open="tuto_"
+        @close="tuto_ = false"
+    >
+        <div class="flex flex-col w-full">
+            <Tuto />
+            <div class="flex justify-end w-full">
+                <ButtonUi
+                    class="primary"
+                    @click="tuto_ = false"
+                >
+                    I got it !
+                </ButtonUi>
+            </div>
+        </div>
+    </ModalUi>
+
     <div class="flex flex-col w-full pb-10">
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">📺</span>
@@ -228,9 +244,19 @@ const updateContainersMap = (container: OscScene['container'], sources: OscScene
             <PlusIcon />
             Add a scene
         </ButtonUi>
+
+        <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-4 p-4">
+            <p class="flex-1">
+                Call <code>/scene/$NAME_OF_YOUR_SCENE</code> with OSC
+                on the <code>{{ store.profiles.connections().osc?.server.ip }}</code> port
+                to tell Gabin what the current scene is. You can test it now !
+            </p>
+            <p class="text-white font-bold text-right">Current scene :<br> {{ store.assets.scene? store.assets.scene : 'Undefined' }}</p>
+        </div>
+
         <div
-            v-for="(scene, scIndex) in scenes_"
-            :key="'scene-' + scIndex"
+            v-for="(_scene, i) in scenes_"
+            :key="'scene-' + i"
             class="bg-bg-2 flex flex-col w-full p-2 mt-4"
         >
             <div class="flex w-full justify-between items-center">
@@ -238,76 +264,105 @@ const updateContainersMap = (container: OscScene['container'], sources: OscScene
                     <InputUi
                         class="bg-bg-1 flex-1 mr-2"
                         label="Scene name"
-                        :value="scenes_[scIndex].id"
-                        :error="!scenes_[scIndex].id"
-                        @update="(v) => updateSceneId(scIndex, v)"
-                    />
-                    <InputUi
-                        class="bg-bg-1 flex-1 mr-2"
-                        label="Container name"
-                        :value="scenes_[scIndex].container"
-                        :error="!scenes_[scIndex].container"
-                        @update="(v) => updateSceneContainer(scIndex, v)"
+                        :value="scenes_[i].name"
+                        :error="!sceneNameIsValid(i)"
+                        @update="(value) => updateSceneName(i, value)"
                     />
                 </div>
                 <div class="flex justify-end items-center">
                     <ButtonUi
                         class="add-source-btn i-first primary"
-                        @click="() => addSource(scIndex)"
-                        :disabled="!scenes_[scIndex].id || !scenes_[scIndex].container"
+                        :disabled="!sceneNameIsValid(i)"
+                        @click="() => addContainer(i)"
                     >
                         <PlusIcon />
-                        Add a source
+                        Add a container
                     </ButtonUi>
                     <ButtonUi
                         class="i-round ml-2"
-                        @click="() => removeScene(scIndex)"
+                        @click="() => removeScene(i)"
                         title="Remove scene"
                     >
                         <BinIcon />
                     </ButtonUi>
                 </div>
             </div>
-
             <div
-                v-for="(source, soIndex) in scenes_[scIndex].sources"
-                :key="`source-${scIndex}-${soIndex}`"
-                class="flex w-full justify-between items-center mt-4"
+                v-for="(_container, j) in scenes_[i].containers"
+                :key="`scene-${i}-container-${j}`"
+                class="flex flex-col w-full"
             >
-                <div class="w-2/3 flex justify-end items-center">
-                    <div class="w-8" />
-                    <InputUi
-                        class="bg-bg-1 flex-1 mr-2"
-                        label="Source name"
-                        :value="scenes_[scIndex].sources[soIndex].id"
-                        @update="(v) => updateSourceId(scIndex, soIndex, v)"
-                    />
-                    <InputUi
-                        class="bg-bg-1 flex-1 mr-2"
-                        label="Source path"
-                        :value="scenes_[scIndex].sources[soIndex].path"
-                        @update="(v) => updateSourcePath(scIndex, soIndex, v)"
-                    />
+                <div class="flex w-full justify-between items-center mt-4">
+                    <div class="w-2/3 flex justify-end items-center">
+                        <div class="w-8" />
+                        <InputUi
+                            class="bg-bg-1 flex-1 mr-2"
+                            label="Container name"
+                            :value="scenes_[i].containers[j].name"
+                            :error="!scenes_[i].containers[j].name"
+                            @update="(value) => updateContainerName(i, j, value)"
+                        />
+                    </div>
+                    <div class="flex justify-end items-center">
+                        <ButtonUi
+                            class="add-source-btn i-first primary"
+                            @click="() => addSource(i, j)"
+                            :disabled="!scenes_[i].name || !scenes_[i].containers[j].name"
+                        >
+                            <PlusIcon />
+                            Add a source
+                        </ButtonUi>
+                        <ButtonUi
+                            class="i-round ml-2"
+                            @click="() => removeContainer(i, j)"
+                            title="Remove source"
+                        >
+                            <BinIcon />
+                        </ButtonUi>
+                    </div>
                 </div>
-                <div class="flex justify-end items-center">
-                    <ButtonUi
-                        class="i-round ml-2"
-                        @click="() => testSource(scIndex, soIndex)"
-                        title="Test path"
-                        :disabled="!scenes_[scIndex].sources[soIndex].path"
-                    >
-                        <PlayIcon />
-                    </ButtonUi>
-                    <ButtonUi
-                        class="i-round ml-2"
-                        @click="() => removeSource(scIndex, soIndex)"
-                        title="Remove source"
-                    >
-                        <BinIcon />
-                    </ButtonUi>
+                <div
+                    v-for="(_container, k) in scenes_[i].containers[j].sources"
+                    :key="`scene-${i}-container-${j}-source-${k}`"
+                    class="flex w-full justify-between items-center mt-4"
+                >
+                    <div class="w-2/3 flex justify-end items-center">
+                        <div class="w-8" />
+                        <div class="w-8" />
+                        <InputUi
+                            class="bg-bg-1 flex-1 mr-2"
+                            label="Source name"
+                            :value="scenes_[i].containers[j].sources[k].name"
+                            :error="!scenes_[i].containers[j].sources[k].name"
+                            @update="(value) => updateSourceName(i, j, k, value)"
+                        />
+                        <InputUi
+                            class="bg-bg-1 flex-1 mr-2"
+                            label="Source path"
+                            :value="scenes_[i].containers[j].sources[k].options.path"
+                            :error="!scenes_[i].containers[j].sources[k].options.path"
+                            @update="(value) => updateSourcePath(i, j, k, value)"
+                        />
+                    </div>
+                    <div class="flex justify-end items-center">
+                        <ButtonUi
+                            class="i-round ml-2"
+                            @click="() => testSource(i, j, k)"
+                            title="Test path"
+                            :disabled="!scenes_[i].containers[j].sources[k].options.path"
+                        >
+                            <PlayIcon />
+                        </ButtonUi>
+                        <ButtonUi
+                            class="i-round ml-2"
+                            @click="() => removeSource(i, j, k)"
+                            title="Remove source"
+                        >
+                            <BinIcon />
+                        </ButtonUi>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 </template>
@@ -315,5 +370,8 @@ const updateContainersMap = (container: OscScene['container'], sources: OscScene
 <style scoped>
 .add-scene-btn {
     justify-content: center !important;
+}
+code {
+    @apply bg-bg-1 text-content-1 text-sm p-1;
 }
 </style>

@@ -540,7 +540,6 @@ class Container {
             if (!this.focus) this.focus = true
             this.focusMode(params.micId, params.shotName)
         })
-
     }
 
     private parseContainer(container: AutocamContainer) {

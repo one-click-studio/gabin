@@ -6,10 +6,13 @@ import { store } from '@src/store/store'
 
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
 import SelectUi from '@src/components/basics/SelectUi.vue'
+import ModalUi from '@src/components/basics/ModalUi.vue'
 
+import InfoIcon from '@src/components/icons/InfoIcon.vue'
 import PlusIcon from '@src/components/icons/PlusIcon.vue'
 import BinIcon from '@src/components/icons/BinIcon.vue'
 
+import Tuto from '@src/components/setup/ObsTuto.vue'
 import SourcesTree from '@src/components/setup/SourcesTree.vue'
 
 import { onEnterPress } from '@src/components/utils/KeyPress.vue'
@@ -20,6 +23,7 @@ import type { Asset } from '../../../../types/protocol'
 const scenes_ = ref<Asset['scene'][]>(store.profiles.settings().containers)
 const filtered_ = ref<Asset['scene'][]>([])
 const containers_ = ref<Asset['container'][]>([])
+const tuto_ = ref<boolean>(store.profiles.editProfile? false : true)
 
 const connectObs = () => {
     if (store.connections.obs || !store.profiles.editProfile) return
@@ -196,6 +200,33 @@ updateNextBtn()
 
 <template>
     <div class="flex flex-col w-full pb-10">
+        <Teleport to="#header-btn-slot">
+            <ButtonUi
+                class="i-first mx-1 h-12 whitespace-nowrap"
+                @click="() => tuto_ = true"
+            >
+                <InfoIcon />
+                Open tutorial
+            </ButtonUi>
+        </Teleport>
+
+        <ModalUi
+            :open="tuto_"
+            @close="tuto_ = false"
+        >
+            <div class="flex flex-col w-full">
+                <Tuto />
+                <div class="flex justify-end w-full">
+                    <ButtonUi
+                        class="primary"
+                        @click="tuto_ = false"
+                    >
+                        I got it !
+                    </ButtonUi>
+                </div>
+            </div>
+        </ModalUi>
+
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">📺</span>
             <p>Tell Gabin which scenes you want him to manage.</p>

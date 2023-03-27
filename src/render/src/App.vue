@@ -24,6 +24,10 @@ socketHandler(store.socket, 'handleObsScenes', (scenes: Asset['scene'][]) => {
     store.assets.scenes = scenes
 })
 
+socketHandler(store.socket, 'handleMainScene', (scene: Asset['scene']['name']) => {
+    store.assets.scene = scene
+})
+
 socketHandler(store.socket, 'handleStreamdeckConnected', (reachable: boolean) => {
     if (store.connections.companion !== reachable) {
         store.connections.companion = reachable

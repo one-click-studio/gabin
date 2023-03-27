@@ -22,6 +22,8 @@ const obsConnectionOk = ref(store.connections.obs ? true : false)
 const obsConnectionLoading = ref(false)
 const obsConnectionError = ref(false)
 
+store.profiles.connections().type = 'obs'
+
 const update = (c: Connection) => {
     resetObsConnection()
     obsConnectionError.value = false
@@ -47,8 +49,7 @@ const resetObsConnection = () => {
 }
 
 const updateNextBtn = () => {
-    store.layout.footer.next.disable = false
-    // store.layout.footer.next.disable = !obsConnectionOk.value
+    store.layout.footer.next.disable = !obsConnectionOk.value
 }
 
 onEnterPress(() => {

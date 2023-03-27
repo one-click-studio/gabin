@@ -36,10 +36,6 @@ watch(() => store.profiles.current, () => {
     acSettings.value = store.profiles.settings().autocam
 })
 
-const deepRawCopy = <T>(object: T): T => {
-    return JSON.parse(JSON.stringify(toRaw(object)))
-}
-
 const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][], autocam?: AutocamSettings[]): AutocamSettings[] => {
     const s: AutocamSettings[] = []
 
@@ -60,14 +56,14 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
                     const autocamMic = autocamContainer?.mics.find((a) => a.id === mic)
 
                     const camsSettings: AutocamSource[] = []
-                    for (const l in container.sources) {
-                        const source = container.sources[l]
+                    for (const m in container.sources) {
+                        const source = container.sources[m]
 
                         const autocamCam = autocamMic?.cams.find((a) => a.source.name === source.name)
-            
+
                         camsSettings.push({
                             source,
-                            weight: autocamCam?.weight || 0
+                            weight: autocamCam?.weight || l===m? 100 : 0
                         })
                     }
                     micsSettings.push({
@@ -82,8 +78,8 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
                 sources: container.sources,
                 mics: micsSettings,
                 durations: autocamContainer?.durations || {
-                    min: 0,
-                    max: 0
+                    min: 3,
+                    max: 12
                 }
             })
         }
@@ -94,35 +90,44 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
         })
     }
 
-    console.log(s)
+    // console.log(s)
     return s
 }
 
-const getSceneRowspan = (scene: AutocamSettings): number => {
-    let rowspan = 0
-    for (const container of scene.containers) {
-        rowspan += getContainerRowspan(container)
-    }
-    return rowspan
+const reset = () => {
+    acSettings.value = defaultSettings(store.profiles.settings().mics, store.profiles.settings().containers)
 }
 
-const getContainerRowspan = (container: AutocamContainer): number => {
-    let rowspan = 0
-    for (const mic of container.mics) {
-        rowspan += getMicRowspan(mic)
-    }
-    return rowspan
-}
-const getMicRowspan = (mic: AutocamMic): number => {
-    return mic.cams.length
+const update = () => {
+    $emit('update', acSettings.value)
 }
 
-const isLast = (array: unknown[], index: number): boolean => {
-    return (array.length - 1 === index)
+const getRowspan = {
+    scene: (scene: AutocamSettings): number => {
+        let rowspan = 0
+        for (const container of scene.containers) {
+            rowspan += getRowspan.container(container)
+        }
+        return rowspan
+    },
+    container: (container: AutocamContainer): number => {
+        let rowspan = 0
+        for (const mic of container.mics) {
+            rowspan += getRowspan.mic(mic)
+        }
+        return rowspan
+    },
+    mic: (mic: AutocamMic): number => {
+        return mic.cams.length
+    }
 }
 
 const getTdClass = (o: {scene: AutocamSettings, container: AutocamContainer, mic?: AutocamMic, source?: AutocamSource}): string => {
     const { scene, container, mic, source } = o
+
+    const isLast = (array: unknown[], index: number): boolean => {
+        return (array.length - 1 === index)
+    }
 
     const state = {
         container: isLast(scene.containers, scene.containers.indexOf(container)),
@@ -136,12 +141,63 @@ const getTdClass = (o: {scene: AutocamSettings, container: AutocamContainer, mic
     return 'border-b'
 }
 
+const getCorrectPercent = (sources: AutocamSource[], index: number): number => {
+    let percent = 100
+    for (const i in sources) {
+        percent -= parseInt(i) !== index? sources[i].weight : 0
+    }
+    return (percent > 0? percent : 1)
+}
+
+const updateWeightSettings = (i: number, j: number, k: number, l: number, v: number) => {
+    v = (v < 0 || !v)? 0 : v
+    v = v > 100? 100 : v
+
+    acSettings.value[i].containers[j].mics[k].cams[l].weight = Math.round(v)
+    update()
+}
+
+const updateDurationsSettings = (i: number, j: number, key: 'min'|'max', v: number) => {
+    v = (v < 0 || !v)? 0 : v
+
+    acSettings.value[i].containers[j].durations[key] = v
+    update()
+}
+
+const filtredSettings = (): AutocamSettings[] => {
+    const acs: AutocamSettings[] = JSON.parse(JSON.stringify(toRaw(acSettings.value)))
+
+    acs.forEach(c =>
+        c.containers.forEach(c =>
+            c.mics.forEach(m =>
+                m.cams = m.cams.filter(c => c.weight > 0),
+            )
+        )
+    )
+
+    return acs
+}
+
 const pSettings = store.profiles.settings()
 acSettings.value = defaultSettings(pSettings.mics, pSettings.containers, pSettings.autocam)
+update()
 
 </script>
 
 <template>
+    <div
+        v-if="editable"
+        class="w-full flex justify-end mb-4"
+    >
+        <ButtonUi
+            class="i-first small"
+            @click="reset"
+        >
+            <ReturnIcon />
+            Reset All
+        </ButtonUi>
+    </div>
+
     <div>
         <table>
             <thead>
@@ -150,48 +206,132 @@ acSettings.value = defaultSettings(pSettings.mics, pSettings.containers, pSettin
                     <th>Container</th>
                     <th>Mic</th>
                     <th>Source</th>
-                    <th>Weight</th>
-                    <th>Min</th>
-                    <th>Max</th>
+                    <th v-if="editable" />
+                    <th>
+                        <TooltipUi value="Describes how often this camera will be shown (between 0 and 100%)">
+                            Probability
+                            <InfoIcon class="w-3 h-3 px-1" />
+                        </TooltipUi>
+                    </th>
+                    <th>
+                        <TooltipUi value="Minimum duration a camera is shown. 0s will allow ugly glitches.">
+                            Min
+                            <InfoIcon class="w-3 h-3 px-1" />
+                        </TooltipUi>
+                    </th>
+                    <th>
+                        <TooltipUi value="Maximum duration a camera is shown before changing to other available camera angles. Not useful if no other cameras are enabled for this mic.">
+                            Max
+                            <InfoIcon class="w-3 h-3 px-1" />
+                        </TooltipUi>
+                    </th>
                 </tr>
             </thead>
 
             <tbody>
-                <template v-for="(scene, i) in acSettings" :key="`scene-${i}`">
+                <template v-for="(scene, i) in (editable? acSettings : filtredSettings())" :key="`scene-${i}`">
                     <template v-for="(container, j) in scene.containers" :key="`scene-${i}-container-${j}`">
                         <template v-for="(mic, k) in container.mics" :key="`scene-${i}-container-${j}-mic-${k}`">
                             <template v-for="(source, l) in mic.cams" :key="`scene-${i}-container-${j}-mic-${k}-source-${l}`">
                                 <tr>
                                     <td
                                         v-if="l === 0 && k === 0 && j === 0"
-                                        :rowspan="getSceneRowspan(scene)"
+                                        :rowspan="getRowspan.scene(scene)"
                                         class="border-b-6"
                                     >{{ scene.name }}</td>
                                         
                                     <td
                                         v-if="l === 0 && k === 0"
-                                        :rowspan="getContainerRowspan(container)"
+                                        :rowspan="getRowspan.container(container)"
                                         :class="getTdClass({scene, container})"
                                     >{{ container.name }}</td>
                                     
                                     <td
                                         v-if="l === 0"
-                                        :rowspan="getMicRowspan(mic)"
+                                        :rowspan="getRowspan.mic(mic)"
                                         :class="getTdClass({scene, container, mic})"
                                     >{{ mic.id }}</td>
                                     
                                     <td
                                         :class="getTdClass({scene, container, mic, source})"
                                     >{{ source.source.name }}</td>
+
+                                    <td
+                                        v-if="editable"
+                                        :class="getTdClass({scene, container, mic, source})"
+                                    >
+                                        <ToggleUi
+                                            :value="(source.weight > 0)"
+                                            @update="(v) => updateWeightSettings(i, j, k, l, v? getCorrectPercent(mic.cams, k) : 0)"
+                                        />
+                                    </td>
                                     <td
                                         :class="getTdClass({scene, container, mic, source})"
-                                    >{{ source.weight }}</td>
+                                    >
+                                        <div
+                                            v-if="editable"
+                                            class="weight-cell"
+                                        >
+                                            <ButtonUi
+                                                class="i-round"
+                                                @click="() => updateWeightSettings(i, j, k, l, source.weight - 5)"
+                                            >
+                                                <MinCircleIcon />
+                                            </ButtonUi>
+                                            <InputUi
+                                                label=""
+                                                center
+                                                unit="%"
+                                                :value="source.weight + ''"
+                                                @update="(v) => updateWeightSettings(i, j, k, l, parseInt(v))"
+                                            />
+                                            <ButtonUi
+                                                class="i-round"
+                                                @click="() => updateWeightSettings(i, j, k, l, source.weight + 5)"
+                                            >
+                                                <PlusCircleIcon />
+                                            </ButtonUi>
+                                        </div>
+                                        <template v-else>
+                                            {{ source.weight }}%
+                                        </template>
+                                    </td>
                                     <td
-                                        :class="getTdClass({scene, container, mic, source})"
-                                    >{{ container.durations.min }}</td>
+                                        v-if="l === 0 && k === 0"
+                                        :rowspan="getRowspan.container(container)"
+                                        :class="getTdClass({scene, container})"
+                                    >
+                                        <template v-if="editable">
+                                            <InputUi
+                                                label=""
+                                                center
+                                                unit="s"
+                                                :value="container.durations.min + ''"
+                                                @update="(v) => updateDurationsSettings(i, j, 'min', parseFloat(v))"
+                                            />
+                                        </template>
+                                        <template v-else>
+                                            {{ container.durations.min }}s
+                                        </template>
+                                    </td>
                                     <td
-                                        :class="getTdClass({scene, container, mic, source})"
-                                    >{{ container.durations.max }}</td>
+                                        v-if="l === 0 && k === 0"
+                                        :rowspan="getRowspan.container(container)"
+                                        :class="getTdClass({scene, container})"
+                                    >
+                                        <template v-if="editable">
+                                            <InputUi
+                                                label=""
+                                                center
+                                                unit="s"
+                                                :value="container.durations.max + ''"
+                                                @update="(v) => updateDurationsSettings(i, j, 'max', parseFloat(v))"
+                                            />
+                                        </template>
+                                        <template v-else>
+                                            {{ container.durations.max }}s
+                                        </template>
+                                    </td>
                                 </tr>
                             </template>
                         </template>
@@ -206,4 +346,21 @@ acSettings.value = defaultSettings(pSettings.mics, pSettings.containers, pSettin
 td {
     @apply border-solid border-t-0 border-x-0
 }
+
+tr .weight-cell {
+    @apply flex items-center justify-center;
+}
+
+tr .weight-cell button.btn.i-round {
+    @apply opacity-0 transition-all;
+}
+tr:hover .weight-cell button.btn.i-round {
+    @apply opacity-100 bg-transparent;
+}
+
+table td .inputui-container {
+    @apply bg-transparent hover:bg-bg-1 px-0 h-10 w-20;
+}
+
+
 </style>

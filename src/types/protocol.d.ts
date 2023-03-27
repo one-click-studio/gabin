@@ -43,6 +43,7 @@ export type AssetContainer = {
 export type AssetSource = {
     id: AssetId
     name: AssetName
+    options?: any
 }
 
 export type Asset = {
@@ -121,6 +122,7 @@ export interface ServerConfig {
 /********** CONNECTIONS **********/
 export type ConnectionType = 'obs' | 'tcp'
 export interface ConnectionsConfig {
+    type?: 'obs' | 'osc'
     tcp: Connection
     obs?: Connection
     osc?: {

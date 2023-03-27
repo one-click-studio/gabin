@@ -26,6 +26,8 @@ const oscConnectionOk = ref(store.connections.osc ? true : false)
 const oscConnectionLoading = ref(false)
 const oscConnectionError = ref(false)
 
+store.profiles.connections().type = 'osc'
+
 const update = (c: Connection, type: 'client'|'server') => {
     if (!oscConnection.value) return
     resetOscConnection()

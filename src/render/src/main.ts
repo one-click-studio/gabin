@@ -98,12 +98,7 @@ const routes = [
             {
                 path: 'audio',
                 component: SetupAudioView,
-                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/obs', next: '/setup/container' },
-            },
-            {
-                path: 'container',
-                component: SetupContainerView,
-                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/mapping' },
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/mapping' },
             },
             {
                 path: 'mapping',
@@ -113,22 +108,22 @@ const routes = [
             {
                 path: 'mapping-obs',
                 component: SetupMappingObsView,
-                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/container', next: '/setup/settings' },
+                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
             },
             {
                 path: 'mapping-osc',
                 component: SetupMappingOscView,
-                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/container', next: '/setup/settings' },
+                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
             },
             {
                 path: 'settings',
                 component: SetupSettingsView,
-                meta: { type: 3, order: 8, header: true, footer: true, timeline: true, back: '/setup/mapping', next: '/setup/summary' },
+                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/mapping', next: '/setup/summary' },
             },
             {
                 path: 'summary',
                 component: SetupSummaryView,
-                meta: { type: 3, order: 9, header: true, footer: true, timeline: true, back: '/setup/settings', next: '/loading' },
+                meta: { type: 3, order: 8, header: true, footer: true, timeline: true, back: '/setup/settings', next: '/loading' },
             },
         ],
     },
@@ -145,10 +140,10 @@ const redirection = (to: string) => {
 
     switch (to) {
         case '/setup/vm-choice':
-            redirect.path = connections.osc ? '/setup/osc' : '/setup/obs'
+            redirect.path = connections.type === 'osc' ? '/setup/osc' : '/setup/obs'
             break
         case '/setup/mapping':
-            redirect.path = connections.osc ? '/setup/mapping-osc' : '/setup/mapping-obs'
+            redirect.path = connections.type === 'osc' ? '/setup/mapping-osc' : '/setup/mapping-obs'
             break
     }
 

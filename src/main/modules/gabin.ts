@@ -3,10 +3,10 @@ import { skip } from 'rxjs/operators'
 import type { Subscription } from 'rxjs'
 
 import { ObsClient } from '../clients/OBSClient'
+import { OscClient } from '../clients/OSCClient'
 import { AutocamClient } from '../clients/AutocamClient'
 import { StreamdeckClient } from '../clients/StreamdeckClient'
 import { TcpServer } from '../servers/TcpServer'
-import { OscServer } from '../servers/OscServer'
 
 import db from '../utils/db'
 
@@ -23,6 +23,7 @@ import type {
 
 interface Connections {
     obs: boolean
+    osc: boolean
     streamdeck: boolean
 }
 
@@ -31,10 +32,10 @@ export class Gabin {
     isReady: boolean
 
     obs: ObsClient | undefined
+    osc: OscClient | undefined
     streamdeck: StreamdeckClient | undefined
     autocam: AutocamClient | undefined
     tcpServer: TcpServer | undefined
-    oscServer: OscServer | undefined
 
     connections$: BehaviorSubject<Connections>
 
@@ -63,6 +64,7 @@ export class Gabin {
         
         this.connections$ = new BehaviorSubject<Connections>({
             obs: false,
+            osc: false,
             streamdeck: false
         })
 
@@ -70,25 +72,30 @@ export class Gabin {
     }
 
     private connect() {
-        this.obs = new ObsClient()
+        const connections = db.getSpecificAndDefault(['connections'], true)
+
+        if (connections.defaultValue.type === 'obs') {
+            this.obs = new ObsClient()
+        } else if (connections.defaultValue.type === 'osc') {
+            this.osc = new OscClient()
+        }
         this.autocam = new AutocamClient()
         this.streamdeck = new StreamdeckClient()
         this.tcpServer = new TcpServer([this.streamdeck])
-        this.oscServer = new OscServer()
 
-        this.obs.reachable$.subscribe(r => {
-            const c = this.connections$.getValue()
-            c.obs = r
-            this.connections$.next(c)
-        })
-
-        this.streamdeck.reachable$.subscribe(r => {
-            const c = this.connections$.getValue()
-            c.streamdeck = r
-            this.connections$.next(c)
-        })
+        if (this.obs) this.updateConnections(this.obs.reachable$, 'obs')
+        if (this.osc) this.updateConnections(this.osc.reachable$, 'osc')
+        this.updateConnections(this.streamdeck.reachable$, 'streamdeck')
 
         this.isReady = true
+    }
+
+    private updateConnections(observable: BehaviorSubject<boolean>, key: keyof Connections) {
+        observable.subscribe(r => {
+            const c = this.connections$.getValue()
+            c[key] = r
+            this.connections$.next(c)
+        })
     }
 
     async power(on: boolean) {
@@ -110,10 +117,10 @@ export class Gabin {
         this.initAvailableMics()
 
         this.obs?.connect()
+        this.osc?.connect()
         this.autocam?.connect()
         this.streamdeck?.connect()
         this.tcpServer?.listen()
-        this.oscServer?.listen()
 
         this.streamdeck?.setAvailableMics(this.availableMics$.getValue())
         this.manageEvents()
@@ -125,10 +132,10 @@ export class Gabin {
         this.cleanSubscriptions()
 
         this.obs?.clean()
+        this.osc?.clean()
         this.autocam?.clean()
         this.streamdeck?.clean()
         this.tcpServer?.clean()
-        this.oscServer?.clean()
 
         this.isOn = false
     }
@@ -149,7 +156,7 @@ export class Gabin {
     }
 
     private selfEvents() {
-        if (!this.autocam || !this.obs || !this.streamdeck) {
+        if (!this.autocam || !this.streamdeck) {
             return
         }
 
@@ -175,20 +182,22 @@ export class Gabin {
     }
 
     private manageEvents() {
-        if (!this.autocam || !this.obs || !this.streamdeck) {
+        if (!this.autocam || !this.streamdeck) {
             return
         }
 
         this.selfEvents()
 
         // OBS EVT
-        this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(scene => {
-            this.logger.debug(scene)
-            if (scene) {
-                this.logger.info('has received a new scene from obs 🎬')
-                if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene.name)
-            }
-        }))
+        if (this.obs) {
+            this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+        }
+
+        // OSC EVT
+        if (this.osc) {
+            this.subscriptions.push(this.osc.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+        }
+
         // STREAMDECK EVT
         this.subscriptions.push(this.streamdeck.toggleMicAvailability$.subscribe((micId) => {
             this.toggleAvailableMic(micId)
@@ -197,19 +206,23 @@ export class Gabin {
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
             this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
+            if (this.osc?.isReachable) this.osc.shoot(shoot.container, shoot.shot)
             if (this.obs?.isReachable) this.obs.shoot(shoot.container, shoot.shot)
             if (this.streamdeck?.isReachable) this.streamdeck.setCurrentShot(shoot.shot)
         }))
+
         this.subscriptions.push(this.autocam$.subscribe((autocam) => {
             this.logger.info('has to toggle autocam 🎚')
             this.autocam?.setEnabled(autocam)
             this.streamdeck?.setAutocam(autocam)
         }))
+
         this.subscriptions.push(this.availableMics$.subscribe((availableMics) => {
             this.logger.info('has new availability map 🗺', availableMics)
             this.autocam?.setAvailableMics(availableMics)
             this.streamdeck?.setAvailableMics(availableMics)
         }))
+
         this.subscriptions.push(this.triggeredShot$.subscribe((source) => {
             if (source.id < 0) return
             this.logger.info('has been ordered to shot 😣')
@@ -224,6 +237,12 @@ export class Gabin {
         micsMap.set(micId, !mic)
 
         this.availableMics$.next(micsMap)
+    }
+
+    setNewScene(scene: Asset['scene']|undefined) {
+        if (!scene) return
+        this.logger.info('has received a new scene 🎬', scene.name)
+        if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene.name)
     }
 
 }

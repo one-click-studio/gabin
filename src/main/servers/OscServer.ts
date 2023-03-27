@@ -4,7 +4,7 @@ import { Server } from '../../main/servers/Server'
 
 import type {
     Connection,
-    ConnectionsConfig
+    ConnectionsConfig,
 } from '../../types/protocol'
 
 import db from '../../main/utils/db'
@@ -25,12 +25,8 @@ export class OscServer extends Server {
     }
 
     private getConfigFromProfile() {
-        const oscServerConfig = db.getSpecificAndDefault(['connections', 'osc_server'], true)
-        const oscClientConfig = db.getSpecificAndDefault(['connections', 'osc_client'], true)
-        this.oscConfig = {
-            server: oscServerConfig.defaultValue,
-            client: oscClientConfig.defaultValue
-        }
+        const oscConfig = db.getSpecificAndDefault(['connections', 'osc'], true)
+        this.oscConfig = oscConfig.defaultValue
     }
 
     override listen(connections?: ConnectionsConfig['osc']) {
@@ -38,7 +34,7 @@ export class OscServer extends Server {
             this.oscConfig = connections
         }
 
-        if (!this.oscConfig) return
+        if (!this.oscConfig || !this.oscConfig.server || !this.oscConfig.client) return
         super.listen()
 
         const serverIp = this.splitIp(this.oscConfig.server.ip)
@@ -55,12 +51,12 @@ export class OscServer extends Server {
             this.reachable$.next(true)
             this.logger.info("connection was established")
         })
-        
+
         this.server.on('close', () => {
             this.reachable$.next(false)
             this.logger.info("connection was closed")
         })
-        
+
         this.server.on('error', (err: Error) => {
             this.reachable$.next(false)
             this.logger.error("an error occurred")
@@ -96,6 +92,7 @@ export class OscServer extends Server {
         if (!this.server || !this.isReachable) return
 
         const message = new OSC.Message(path)
+        this.logger.debug(`sending message: ${message.address}`)
         this.server.send(message)
     }
 

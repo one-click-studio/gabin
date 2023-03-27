@@ -117,6 +117,10 @@ function handler(io: Server) {
       io.emit('handleOscConnected', reachable)
     })
 
+    profileSetup.mainScene$.subscribe((scene) => {
+      io.emit('handleMainScene', scene)
+    })
+
     // ELECTRON
     client.on('openLink', (link: string, callback) => callback(openUrl(link)))
 

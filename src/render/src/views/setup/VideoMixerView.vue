@@ -12,6 +12,7 @@ const router = useRouter()
 const goNext = (route: string) => {
     const connections = store.profiles.connections()
 
+    connections.type = undefined
     connections.obs = undefined
     connections.osc = undefined
     store.connections.obs = false

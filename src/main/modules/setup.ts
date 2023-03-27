@@ -1,3 +1,5 @@
+import { Subject } from 'rxjs'
+
 import { ObsServer } from '../../main/servers/ObsServer'
 import { OscServer } from '../../main/servers/OscServer'
 import { Connections } from '../../main/servers/Connections'
@@ -12,7 +14,8 @@ import type {
     ConnectionsConfig,
     AudioDevice,
     Profile,
-    Thresholds,  
+    Thresholds,
+    Asset
 } from '../../types/protocol'
 
 export class ProfileSetup {
@@ -20,6 +23,7 @@ export class ProfileSetup {
     obs: ObsServer
     osc: OscServer
     connections: Connections
+    mainScene$: Subject<Asset['scene']['name']>
 
     private profiles: SpecificAndDefault
 
@@ -33,6 +37,8 @@ export class ProfileSetup {
         this.profiles.configPart$.subscribe(v => {
             this.profiles.defaultValue = v
         })
+
+        this.mainScene$ = new Subject()
     }
 
     connectObs(connection: Connection) {
@@ -50,6 +56,11 @@ export class ProfileSetup {
     connectOsc(connections: ConnectionsConfig['osc']) {
         if (!this.osc.isReachable) {
             this.osc.listen(connections)
+
+            this.osc.on('/scene/*', (message: any) => {
+                const scene = message.address.split('/').pop()
+                this.mainScene$.next(scene)
+            })
         }
     }
     

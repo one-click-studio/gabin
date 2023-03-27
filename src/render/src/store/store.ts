@@ -170,6 +170,7 @@ export const store = reactive({
     assets: {
         scenes: <Asset['scene'][]>[],
         audios: <AudioDevice[]>[],
+        scene: <Asset['scene']['name']>'',
     },
     connections: {
         osc: false,
