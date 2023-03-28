@@ -88,7 +88,7 @@ const updateContainer = (container: Asset['container'], scIndex: number, soIndex
 const filterScenes = (scenes: Asset['scene'][]): Asset['scene'][] => {
     const filtered: Asset['scene'][] = []
     const scenesNames = scenes.map(s => s.name)
-    
+
     for (const scene of scenes) {
         for (const container of scene.containers) {
             for (const source of container.sources) {
@@ -99,23 +99,46 @@ const filterScenes = (scenes: Asset['scene'][]): Asset['scene'][] => {
         }
     }
 
+    filtered.sort((a, b) => {
+        if (a.name < b.name) return -1
+        if (a.name > b.name) return 1
+        return 0
+    })
+
     return filtered
 }
 
-const getContainersFromScene = (sceneName: Asset['scene']['name']): Asset['container'][] => {
+const removeChoosenScenes = (sceneName: Asset['scene']['name']): Asset['scene'][] => {
+    const scenesNames = scenes_.value.filter(s => s.name !== sceneName).map(s => s.name)
+    return filtered_.value.filter(s => scenesNames.indexOf(s.name) === -1)
+}
+
+const getContainersFromScene = (sceneName: Asset['scene']['name'], containerName: Asset['container']['name']): Asset['container'][] => {
     const containers: Asset['container'][] = []
 
     const scene = filtered_.value.find(s => s.name === sceneName)
     if (!scene) return containers
 
+    const selectedScene = scenes_.value.find(s => s.name === sceneName)
+    if (!selectedScene) return containers
+
+    const containersNames = selectedScene.containers.filter(c => c.name !== containerName).map(c => c.name)
+
     for (const i in scene.containers) {
         for (const source of scene.containers[i].sources) {
             const container = containers_.value.find(c => c.name === source.name)
-            if (container && containers.indexOf(container) === -1) {
+            if (container && containers.indexOf(container) === -1 && containersNames.indexOf(container.name) === -1) {
                 containers.push(container)
             }
         }
     }
+
+    containers.sort((a, b) => {
+        if (a.name < b.name) return -1
+        if (a.name > b.name) return 1
+        return 0
+    })
+
     return containers
 }
 
@@ -247,7 +270,7 @@ updateNextBtn()
                 <div class="w-2/3 flex justify-start items-center">
                     <SelectUi
                         class="bg-bg-1 flex-1 mr-2"
-                        :options="filtered_"
+                        :options="removeChoosenScenes(scene.name)"
                         label="Scene"
                         :value="scenes_[scIndex].name"
                         keyvalue="name"
@@ -280,7 +303,7 @@ updateNextBtn()
                     <div class="w-8" />
                     <SelectUi
                         class="bg-bg-1 flex-1 mr-2"
-                        :options="getContainersFromScene(scenes_[scIndex].name)"
+                        :options="getContainersFromScene(scenes_[scIndex].name, container.name)"
                         label="Container"
                         :value="scenes_[scIndex].containers[soIndex].name"
                         keyvalue="name"
