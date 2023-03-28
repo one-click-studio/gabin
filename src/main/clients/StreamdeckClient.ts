@@ -38,7 +38,7 @@ export class StreamdeckClient extends Client {
     send$ = new Subject<TcpRequest>()
     autocam$: BehaviorSubject<boolean>
     toggleMicAvailability$: Subject<MicId>
-    triggeredShot$: BehaviorSubject<Asset['source']|undefined>
+    triggeredShot$: BehaviorSubject<Asset['source']['name']|undefined>
     sockets: string[] = []
 
     private emits = {
@@ -60,7 +60,7 @@ export class StreamdeckClient extends Client {
         super('streamdeck')
 
         this.autocam$ = new BehaviorSubject(<boolean>true)
-        this.triggeredShot$ = new BehaviorSubject(<Asset['source']|undefined>undefined)
+        this.triggeredShot$ = new BehaviorSubject(<Asset['source']['name']|undefined>undefined)
         this.toggleMicAvailability$ = new Subject()
     }
 
@@ -72,7 +72,7 @@ export class StreamdeckClient extends Client {
         this.audioDevices = audioDevices.defaultValue
 
         this.autocam$ = new BehaviorSubject(<boolean>true)
-        this.triggeredShot$ = new BehaviorSubject(<Asset['source']|undefined>undefined)
+        this.triggeredShot$ = new BehaviorSubject(<Asset['source']['name']|undefined>undefined)
         this.toggleMicAvailability$ = new Subject()
 
         this.addSubscription(
@@ -156,16 +156,7 @@ export class StreamdeckClient extends Client {
     }
 
     private handleTriggerShot(params: TriggerShotParams) {
-        for (const scene of this.videoContainers) {
-            for (const container of scene.containers) {
-                for (const source of container.sources) {
-                    if (source.name === params.shot) {
-                        this.triggeredShot$.next(source)
-                        return
-                    }
-                }
-            }   
-        }
+        this.triggeredShot$.next(params.shot)
     }
 
     private handleAvailableMic(params: AvailableMicParams) {

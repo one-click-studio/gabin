@@ -1,7 +1,6 @@
-import { Subject } from 'rxjs'
 
 import { ObsServer } from '../../main/servers/ObsServer'
-import { OscServer } from '../../main/servers/OscServer'
+import { OscClient } from '../clients/OSCClient'
 import { Connections } from '../../main/servers/Connections'
 
 import { getDevices } from '../../main/modules/audioActivity'
@@ -21,15 +20,14 @@ import type {
 export class ProfileSetup {
 
     obs: ObsServer
-    osc: OscServer
+    osc: OscClient
     connections: Connections
-    mainScene$: Subject<Asset['scene']['name']>
 
     private profiles: SpecificAndDefault
 
     constructor() {
         this.obs = new ObsServer(false)
-        this.osc = new OscServer(false)
+        this.osc = new OscClient(false)
         this.connections = new Connections()
 
         this.profiles = db.getSpecificAndDefault(['profiles'], false)
@@ -38,7 +36,6 @@ export class ProfileSetup {
             this.profiles.defaultValue = v
         })
 
-        this.mainScene$ = new Subject()
     }
 
     connectObs(connection: Connection) {
@@ -55,15 +52,10 @@ export class ProfileSetup {
 
     connectOsc(connections: ConnectionsConfig['osc']) {
         if (!this.osc.isReachable) {
-            this.osc.listen(connections)
-
-            this.osc.on('/scene/*', (message: any) => {
-                const scene = message.address.split('/').pop()
-                this.mainScene$.next(scene)
-            })
+            this.osc.connect(connections)
         }
     }
-    
+
     disconnectOsc() {
         if (this.osc.isReachable) {
             this.osc.clean()

@@ -48,6 +48,7 @@ export class Gabin {
 
     private logger: Logger
     private subscriptions: Subscription[] = []
+    private scenes: Asset['scene'][]
 
     constructor() {
         this.logger = getLogger('Gabin 🤖')
@@ -61,11 +62,18 @@ export class Gabin {
         this.availableMics$ = new BehaviorSubject<AvailableMicsMap>(new Map())
         this.timeline$ = new BehaviorSubject('')
         this.volumeMics$ = new BehaviorSubject<Map<string, number>>(new Map())
-        
+
         this.connections$ = new BehaviorSubject<Connections>({
             obs: false,
             osc: false,
             streamdeck: false
+        })
+
+        const containers = db.getSpecificAndDefault(['settings', 'containers'], true)
+        this.scenes = containers.defaultValue
+
+        containers.configPart$.subscribe((containers_) => {
+            this.scenes = containers_
         })
 
         this.logger.info('is currently asleep 💤')
@@ -172,15 +180,23 @@ export class Gabin {
             this.volumeMics$.next(vm)
         })
 
+        // OSC EVT
+        if (this.osc) {
+            this.subscriptions.push(this.osc.triggeredShot$.pipe(skip(1)).subscribe((shotName) => {
+                this.triggerShot(shotName)
+            }))
+            this.subscriptions.push(this.osc.autocam$.pipe(skip(1)).subscribe((autocam) => {
+                this.autocam$.next(autocam)
+            }))
+        }
+
         // STREAMDECK EVT
         if (this.streamdeck) {
-            this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {
-                this.autocam$.next(autoCam)
+            this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autocam) => {
+                this.autocam$.next(autocam)
             }))
-            this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shot) => {
-                if (shot) {
-                    this.triggeredShot$.next(shot)
-                }
+            this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shotName) => {
+                this.triggerShot(shotName)
             }))
         }
     }
@@ -198,6 +214,9 @@ export class Gabin {
         // OSC EVT
         if (this.osc) {
             this.subscriptions.push(this.osc.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+            this.subscriptions.push(this.osc.micAvailability$.subscribe(({mic, available}) => {
+                this.toggleAvailableMic(mic, available)
+            }))
         }
 
         // STREAMDECK EVT
@@ -234,19 +253,49 @@ export class Gabin {
         }))
     }
 
-    toggleAvailableMic(micId: MicId) {
+    toggleAvailableMic(micId: MicId, available: boolean|undefined=undefined) {
         const micsMap = this.availableMics$.getValue()
 
         const mic = micsMap.get(micId)
+        if (mic === available) return
         micsMap.set(micId, !mic)
 
         this.availableMics$.next(micsMap)
     }
 
-    setNewScene(scene: Asset['scene']|undefined) {
-        if (!scene) return
+    private triggerShot(sourceName: Asset['source']['name']|undefined) {
+        if (!sourceName) return
+
+        for (const scene of this.scenes) {
+            for (const container of scene.containers) {
+                for (const source of container.sources) {
+                    if (source.name === sourceName) {
+                        this.triggeredShot$.next(source)
+                        return
+                    }
+                }
+            }
+        }
+
+        this.logger.error('cannot find source 🤷‍♂️', sourceName)
+    }
+
+    private setNewScene(sceneName: Asset['scene']['name']|undefined) {
+        const scene = this.getScene(sceneName)
+        if (!scene) {
+            this.logger.error('cannot find scene 🤷‍♂️', sceneName)
+            return
+        }
+
         this.logger.info('has received a new scene 🎬', scene.name)
         if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene.name)
     }
+
+    private getScene(sceneName: Asset['scene']['name']|undefined): Asset['scene']|undefined {
+        if (!sceneName) return
+        return this.scenes.find(s => s.name === sceneName)
+    }
+
+
 
 }

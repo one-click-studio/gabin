@@ -8,6 +8,7 @@ import Systray from 'systray2'
 import { auditTime } from 'rxjs/operators'
 
 import { Server } from "socket.io"
+import type { Subscription } from 'rxjs'
 
 import { getLogger } from './utils/logger'
 
@@ -68,6 +69,8 @@ const PORT = process.env.GABIN_PORT || 1510
 
 const logger = getLogger('Gabin - main process 🤖')
 let gabin: Gabin | undefined
+const subscriptions: Subscription[] = []
+
 
 function openApp() {
   const port = process.env.GABIN_CLIENT_PORT || PORT
@@ -111,24 +114,39 @@ const sendGabinEvents = (io: Server) => {
 }
 
 function handler(io: Server) {
+
   const profileSetup = new ProfileSetup()
 
   io.on('connection', client => {
-    profileSetup.obs.reachable$.subscribe((reachable) => {
+    for (const s of subscriptions) s.unsubscribe()
+
+    subscriptions.push(profileSetup.obs.reachable$.subscribe((reachable) => {
       io.emit('handleObsConnected', reachable)
-    })
+    }))
 
-    profileSetup.obs.scenes$.subscribe((scenes) => {
+    subscriptions.push(profileSetup.obs.scenes$.subscribe((scenes) => {
       io.emit('handleObsScenes', scenes)
-    })
+    }))
 
-    profileSetup.osc.reachable$.subscribe((reachable) => {
+    subscriptions.push(profileSetup.osc.reachable$.subscribe((reachable) => {
       io.emit('handleOscConnected', reachable)
-    })
+    }))
 
-    profileSetup.mainScene$.subscribe((scene) => {
+    subscriptions.push(profileSetup.osc.mainScene$.subscribe((scene) => {
       io.emit('handleMainScene', scene)
-    })
+    }))
+
+    subscriptions.push(profileSetup.osc.triggeredShot$.subscribe((source) => {
+      io.emit('handleTriggerSource', source)
+    }))
+
+    subscriptions.push(profileSetup.osc.autocam$.subscribe((autocam) => {
+      io.emit('handleAutocam', autocam)
+    }))
+
+    subscriptions.push(profileSetup.osc.micAvailability$.subscribe((data) => {
+      io.emit('handleMicAvailability', data)
+    }))
 
     // ELECTRON
     client.on('openLink', (link: string, callback) => callback(openUrl(link)))

@@ -16,15 +16,25 @@ import PlayIcon from '@src/components/icons/PlayIcon.vue'
 import Tuto from '@src/components/setup/OscTuto.vue'
 
 import { onEnterPress } from '@src/components/utils/KeyPress.vue'
-import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
+import { socketEmitter, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
 import type { 
-    Asset
+    Asset,
+    MicId
 } from '../../../../types/protocol'
 
 const scenes_ = ref<Asset['scene'][]>(store.profiles.settings().containers)
 const containers_ = ref<Map<Asset['container']['name'], Asset['container']>>(new Map())
 const tuto_ = ref<boolean>(store.profiles.editProfile? false : true)
+
+const testData = ref({
+    mainSource: '',
+    mic: {
+        mic: '',
+        available: false
+    },
+    autocam: true,
+})
 
 const connectOsc = () => {
     if (store.connections.osc || !store.profiles.editProfile) return
@@ -33,11 +43,11 @@ const connectOsc = () => {
     if (!connections.osc) return
 
     socketEmitter(store.socket, 'connectOsc', toRaw(connections.osc))
-    store.toast.info('OSC connection attempt')
+    store.toast.info('OSC connection attempt', 'Please wait...', 3000)
 
     setTimeout(() => {
         if (store.connections.osc) {
-            store.toast.success('OSC connection succeeded')
+            store.toast.success('OSC connection succeeded', '', 2000)
         } else {
             store.toast.error('OSC connection failed', 'Please check your settings')
             socketEmitter(store.socket, 'disconnectOsc')
@@ -170,7 +180,8 @@ const testSource = (i: number, j: number, k: number) => {
         store.toast.error('No path defined')
         return
     }
-    store.toast.info('Sending test OSC message')
+    store.toast.info('Sending OSC message', 'Path: '+path, 2500)
+
     socketEmitter(store.socket, 'sendOsc', toRaw(path))
 }
 
@@ -195,6 +206,18 @@ const resetContainersMap = () => {
         }
     }
 }
+
+
+socketHandler(store.socket, 'handleTriggerSource', (source: Asset['source']['name']) => {
+    testData.value.mainSource = source
+})
+
+socketHandler(store.socket, 'handleAutocam', (autocam: boolean) => {
+    testData.value.autocam = autocam
+})
+socketHandler(store.socket, 'handleMicAvailability', (data: {mic: MicId, available: boolean}) => {
+    testData.value.mic = data
+})
 
 connectOsc()
 updateNextBtn()
@@ -232,8 +255,37 @@ updateNextBtn()
     <div class="flex flex-col w-full pb-10">
         <div class="flex items-center bg-bg-2 text-content-2 text-sm p-4">
             <span class="emoji">📺</span>
-            <p>Tell Gabin which scenes you want him to manage.</p>
+            <p>
+                Tell Gabin which scenes you want him to manage.
+                You can test OSC command on Gabin on the on the
+                <code>{{ store.profiles.connections().osc?.server.ip }}</code> ip
+            </p>
         </div>
+        <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-2 p-3">
+            <p class="flex-1 pr-4">
+                Call <code>/scene/$NAME_OF_YOUR_SCENE</code> to tell Gabin what the current scene is.
+            </p>
+            <p class="text-white text-right">Current scene : <b>{{ store.assets.scene? store.assets.scene : 'Undefined' }}</b></p>
+        </div>
+        <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-2 p-3">
+            <p class="flex-1 pr-4">
+                Call <code>/source/$NAME_OF_YOUR_SOURCE</code> to trigger a specific shot.
+            </p>
+            <p class="text-white text-right">Current source : <b>{{ testData.mainSource? testData.mainSource : 'Undefined' }}</b></p>
+        </div>
+        <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-2 p-3">
+            <p class="flex-1 pr-4">
+                Call <code>/mic/$NAME_OF_YOUR_MIC</code> with first argument set to <code>1</code> or <code>0</code> to toggle mic availability.
+            </p>
+            <p class="text-white text-right">Last mic set : <b>{{ testData.mic.mic? `${testData.mic.mic} is ${testData.mic.available? 'ON':'OFF'}` : 'Undefined' }}</b></p>
+        </div>
+        <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-2 p-3">
+            <p class="flex-1 pr-4">
+                Call <code>/autocam</code> with first argument set to <code>1</code> or <code>0</code> to toggle autocam.
+            </p>
+            <p class="text-white text-right">Autocam : <b>{{ testData.autocam? 'ON' : 'OFF' }}</b></p>
+        </div>
+
         <ButtonUi
             class="add-scene-btn i-first primary w-full h-14 mt-4"
             @click="addScene"
@@ -241,15 +293,6 @@ updateNextBtn()
             <PlusIcon />
             Add a scene
         </ButtonUi>
-
-        <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-4 p-4">
-            <p class="flex-1">
-                Call <code>/scene/$NAME_OF_YOUR_SCENE</code> with OSC
-                on the <code>{{ store.profiles.connections().osc?.server.ip }}</code> port
-                to tell Gabin what the current scene is. You can test it now !
-            </p>
-            <p class="text-white font-bold text-right">Current scene :<br> {{ store.assets.scene? store.assets.scene : 'Undefined' }}</p>
-        </div>
 
         <div
             v-for="(_scene, i) in scenes_"
