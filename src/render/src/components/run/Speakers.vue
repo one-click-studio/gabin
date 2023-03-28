@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 import UserIcon from '@src/components/icons/UserIcon.vue'
 import SettingsIcon from '@src/components/icons/SettingsIcon.vue'

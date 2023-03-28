@@ -20,7 +20,6 @@ import type {
     AutocamSettings,
     Shoot,
     Thresholds,
-    AssetContainer,
     AutocamContainer,
 } from '../../types/protocol'
 
