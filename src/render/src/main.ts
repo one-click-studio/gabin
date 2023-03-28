@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { io, Manager } from "socket.io-client"
+import { Manager } from "socket.io-client"
 
 import { store } from '@src/store/store'
 
@@ -23,7 +23,6 @@ import SetupVisionMixerView from '@src/views/setup/VideoMixerView.vue'
 import SetupObsView from '@src/views/setup/ObsView.vue'
 import SetupOscView from '@src/views/setup/OscView.vue'
 import SetupAudioView from '@src/views/setup/AudioView.vue'
-import SetupContainerView from '@src/views/setup/ContainerView.vue'
 import SetupMappingObsView from '@src/views/setup/MappingObsView.vue'
 import SetupMappingOscView from '@src/views/setup/MappingOscView.vue'
 import SetupSettingsView from '@src/views/setup/SettingsView.vue'

@@ -1,11 +1,9 @@
 <script setup lang="ts">
 
-interface Props {
+defineProps<{
     value: string
     position?: string
-}
-
-defineProps<Props>()
+}>()
 
 </script>
 

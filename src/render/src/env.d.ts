@@ -6,6 +6,11 @@ declare module '*.vue' {
   export default component
 }
 
+declare module "*.ts" {
+  const value: any;
+  export = value;
+}
+
 declare module "*.png" {
   const value: any;
   export = value;

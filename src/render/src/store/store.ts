@@ -1,7 +1,7 @@
 import { reactive } from 'vue'
 import { Subject } from 'rxjs'
 import { klona } from 'klona'
-import { Socket } from "socket.io-client"
+
 // @ts-ignore I DON'T KNOW WHY IT DOESN'T WORK
 import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
 
@@ -32,9 +32,8 @@ const generateId = (): number => {
     return Date.now()
 }
 
-// @ts-ignore
 export const store = reactive({
-    socket: <Socket|undefined>undefined,
+    socket: <any>undefined,
     keyPress$: new Subject<string>(),
     isFirstRun: true,
     toast: {

@@ -4,18 +4,16 @@ import { Listbox, ListboxButton, ListboxOptions, ListboxOption, ListboxLabel } f
 
 import ChevronBottomIcon from '@src/components/icons/ChevronBottomIcon.vue'
 
-interface Props {
-    label: string
-    options: any[]
-    value?: any
-    keyvalue?: string
-}
-
 interface Emits {
     (e: 'update', value: any): void
 }
 
-const props = defineProps<Props>()
+const props = defineProps<{
+    label: string
+    options: any[]
+    value?: any
+    keyvalue?: string
+}>()
 const $emit = defineEmits<Emits>()
 
 watch(() => props.options, (newO, oldO) => {
