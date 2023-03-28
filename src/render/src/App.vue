@@ -29,8 +29,8 @@ socketHandler(store.socket, 'handleMainScene', (scene: Asset['scene']['name']) =
 })
 
 socketHandler(store.socket, 'handleStreamdeckConnected', (reachable: boolean) => {
-    if (store.connections.companion !== reachable) {
-        store.connections.companion = reachable
+    if (store.connections.tcp !== reachable) {
+        store.connections.tcp = reachable
     }
 })
 

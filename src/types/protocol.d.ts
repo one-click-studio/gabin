@@ -123,7 +123,7 @@ export interface ServerConfig {
 export type ConnectionType = 'obs' | 'tcp'
 export interface ConnectionsConfig {
     type?: 'obs' | 'osc'
-    tcp: Connection
+    tcp?: Connection
     obs?: Connection
     osc?: {
         server: Connection

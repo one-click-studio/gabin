@@ -25,9 +25,7 @@ const DEFAULT_SETTINGS = (): ProfileSettings => {
 }
 
 const DEFAULT_CONNECTIONS = (): ConnectionsConfig => {
-    return {
-        tcp: { ip:'127.0.0.1:6481' }
-    }
+    return {}
 }
 
 const generateId = (): number => {
@@ -175,7 +173,7 @@ export const store = reactive({
     connections: {
         osc: false,
         obs: false,
-        companion: false,
+        tcp: false,
     },
     redirect: {
         path: '',

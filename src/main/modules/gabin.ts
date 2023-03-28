@@ -73,19 +73,22 @@ export class Gabin {
 
     private connect() {
         const connections = db.getSpecificAndDefault(['connections'], true)
+        this.logger.info('is connecting to', connections.defaultValue)
 
         if (connections.defaultValue.type === 'obs') {
             this.obs = new ObsClient()
         } else if (connections.defaultValue.type === 'osc') {
             this.osc = new OscClient()
         }
+        if (connections.defaultValue.tcp) {
+            this.streamdeck = new StreamdeckClient()
+            this.tcpServer = new TcpServer([this.streamdeck])
+        }
         this.autocam = new AutocamClient()
-        this.streamdeck = new StreamdeckClient()
-        this.tcpServer = new TcpServer([this.streamdeck])
 
         if (this.obs) this.updateConnections(this.obs.reachable$, 'obs')
         if (this.osc) this.updateConnections(this.osc.reachable$, 'osc')
-        this.updateConnections(this.streamdeck.reachable$, 'streamdeck')
+        if (this.streamdeck && this.tcpServer) this.updateConnections(this.streamdeck.reachable$, 'streamdeck')
 
         this.isReady = true
     }
@@ -156,9 +159,7 @@ export class Gabin {
     }
 
     private selfEvents() {
-        if (!this.autocam || !this.streamdeck) {
-            return
-        }
+        if (!this.autocam) return
 
         // AUTOCAM EVT
         this.subscriptions.push(this.autocam.shoot$.subscribe(shot => {
@@ -170,21 +171,22 @@ export class Gabin {
         this.autocam.volumeMics$.subscribe(vm => {
             this.volumeMics$.next(vm)
         })
+
         // STREAMDECK EVT
-        this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {
-            this.autocam$.next(autoCam)
-        }))
-        this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shot) => {
-            if (shot) {
-                this.triggeredShot$.next(shot)
-            }
-        }))
+        if (this.streamdeck) {
+            this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {
+                this.autocam$.next(autoCam)
+            }))
+            this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shot) => {
+                if (shot) {
+                    this.triggeredShot$.next(shot)
+                }
+            }))
+        }
     }
 
     private manageEvents() {
-        if (!this.autocam || !this.streamdeck) {
-            return
-        }
+        if (!this.autocam) return
 
         this.selfEvents()
 
@@ -199,9 +201,11 @@ export class Gabin {
         }
 
         // STREAMDECK EVT
-        this.subscriptions.push(this.streamdeck.toggleMicAvailability$.subscribe((micId) => {
-            this.toggleAvailableMic(micId)
-        }))
+        if (this.streamdeck) {
+            this.subscriptions.push(this.streamdeck.toggleMicAvailability$.subscribe((micId) => {
+                this.toggleAvailableMic(micId)
+            }))
+        }
 
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
             this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)

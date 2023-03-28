@@ -95,14 +95,18 @@ init()
 
             <div class="flex justify-between items-center w-full">
                 <div class="flex flex-col items-start">
-                    <div
+                    <template
                         v-for="(m, index) in store.connections"
                         :key="'module-'+index"
-                        class="connected-module"
-                        :class="m? 'is-connected' : ''"
                     >
-                        <span class="uppercase">{{ index }}</span>
-                    </div>
+                        <div
+                            v-if="store.profiles.connections()[index]"
+                            class="connected-module"
+                            :class="m? 'is-connected' : ''"
+                        >
+                            <span class="uppercase">{{ index }}</span>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>

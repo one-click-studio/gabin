@@ -7,6 +7,7 @@ import Gabin from '@src/components/basics/GabinFace.vue'
 import InfoIcon from '@src/components/icons/InfoIcon.vue'
 
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
+import ToggleUi from '@src/components/basics/ToggleUi.vue'
 import EditConnection from '@src/components/settings/EditConnection.vue'
 
 import { validURL } from '@src/components/utils/UtilsTools.vue'
@@ -14,7 +15,18 @@ import { onEnterPress } from '@src/components/utils/KeyPress.vue'
 
 import type { Connection } from '../../../../types/protocol'
 
-const tcpConnection = ref<Connection>(store.profiles.connections().tcp)
+const DEFAUTL_TCP = { ip:'127.0.0.1:6481' }
+
+const useCompanion = ref(store.profiles.connections().tcp? true : false)
+const tcpConnection = ref<Connection|undefined>(store.profiles.connections().tcp)
+
+const toggleUseCompanion = () => {
+    useCompanion.value = !useCompanion.value
+    if (!useCompanion.value) tcpConnection.value = undefined
+    else tcpConnection.value = DEFAUTL_TCP
+
+    updateNextBtn()
+}
 
 const update = (c: Connection) => {
     tcpConnection.value = c
@@ -22,11 +34,15 @@ const update = (c: Connection) => {
 }
 
 const updateNextBtn = () => {
-    store.layout.footer.next.disable = !validURL(tcpConnection.value.ip)
+    if (!useCompanion.value) {
+        store.layout.footer.next.disable = false
+    } else if (!tcpConnection.value || !validURL(tcpConnection.value?.ip)) {
+        store.layout.footer.next.disable = true
+    }
 }
 
 onEnterPress(() => {
-    if (validURL(tcpConnection.value.ip) && store.layout.footer.next.trigger) {
+    if ((!useCompanion.value || (tcpConnection.value && validURL(tcpConnection.value.ip))) && store.layout.footer.next.trigger) {
         store.layout.footer.next.trigger()
     }
 })
@@ -57,7 +73,6 @@ updateNextBtn()
             </h1>
             <span class="text-content-2 text-sm">
                 In order to communicate with companion software, please choose the tcp port Gabin will expose.
-                (if you don't know what we're talking about, just leave it has it is)
             </span>
             <ButtonUi
                 class="small w-44 mt-2"
@@ -66,12 +81,24 @@ updateNextBtn()
                 <InfoIcon class="w-4" /> What is Companion?
             </ButtonUi>
 
-            <div class="mt-10 w-full">
-                <EditConnection
-                    label="TCP"
-                    :connection="tcpConnection"
-                    @update="update"
-                />
+            <ToggleUi
+                class="mt-10"
+                label="Use companion"
+                :value="useCompanion"
+                @update="toggleUseCompanion"
+            />
+
+            <div class="mt-4 w-full h-14">
+                <div
+                    v-if="useCompanion && tcpConnection"
+                    class="w-full"
+                >
+                    <EditConnection
+                        label="TCP"
+                        :connection="tcpConnection"
+                        @update="update"
+                    />
+                </div>
             </div>
         </div>
     </div>
