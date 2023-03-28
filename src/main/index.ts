@@ -95,16 +95,25 @@ const initGabin = (io: Server) => {
   gabin.connections$.subscribe((c) => {
     io.emit('handleObsConnected', c.obs)
     io.emit('handleStreamdeckConnected', c.streamdeck)
+    io.emit('handleOscConnected', c.osc)
   })
+}
+
+const sendGabinEvents = (io: Server) => {
+  if (!gabin) return
+
+  io.emit('handleTimeline', gabin.timeline$.getValue())
+  io.emit('handleVolumeMics', Object.fromEntries(gabin.volumeMics$.getValue()))
+  io.emit('handleAvailableMics', Object.fromEntries(gabin.availableMics$.getValue()))
+  io.emit('handleObsConnected', gabin.connections$.getValue().obs)
+  io.emit('handleStreamdeckConnected', gabin.connections$.getValue().streamdeck)
+  io.emit('handleOscConnected', gabin.connections$.getValue().osc)
 }
 
 function handler(io: Server) {
   const profileSetup = new ProfileSetup()
 
   io.on('connection', client => {
-    // client.on('event', data => { console.log(data) })
-    // io.emit('responseEvent', data)
-
     profileSetup.obs.reachable$.subscribe((reachable) => {
       io.emit('handleObsConnected', reachable)
     })
@@ -145,7 +154,13 @@ function handler(io: Server) {
       callback(profileSetup.getProfiles())
     })
 
-    client.on('setDefaultProfile', (id: Profile['id'], callback) => callback(profileSetup.setDefault(id)))
+    client.on('setDefaultProfile', (id: Profile['id'], callback) => {
+      if (gabin) {
+        gabin.power(false)
+        gabin = undefined
+      }
+      callback(profileSetup.setDefault(id))
+    })
     client.on('setProfileIcon', (p: {id: Profile['id'], icon: Profile['icon']}, callback) => callback(profileSetup.setIcon(p.id, p.icon)))
     client.on('setProfileName', (p: {id: Profile['id'], name: Profile['name']}, callback) => callback(profileSetup.setName(p.id, p.name)))
     client.on('setAutostart', (p: {id: Profile['id'], autostart: Profile['autostart']}, callback) => callback(profileSetup.setAutostart(p.id, p.autostart)))
@@ -182,6 +197,8 @@ function handler(io: Server) {
       io.emit('handlePower', power)
       callback()
     })
+
+    if (gabin) sendGabinEvents(io)
 
     // client.on('disconnect', () => {})
   })
