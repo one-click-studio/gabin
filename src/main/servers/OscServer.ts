@@ -59,7 +59,7 @@ export class OscServer extends Server {
 
         this.server.on('error', (err: Error) => {
             this.reachable$.next(false)
-            this.logger.error("an error occurred")
+            this.logger.error("an error occurred", err.stack)
         })
 
         this.server.open()

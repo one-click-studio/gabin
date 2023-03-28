@@ -13,7 +13,6 @@ fetchProfiles(() => {
     router.push(route)
 })
 
-
 </script>
 
 

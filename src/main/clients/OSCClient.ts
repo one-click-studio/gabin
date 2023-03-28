@@ -64,6 +64,7 @@ export class OscClient extends Client {
     override clean() {
         this.reachable$.next(false)
 
+        this.osc.clean()
         super.clean()
     }
 

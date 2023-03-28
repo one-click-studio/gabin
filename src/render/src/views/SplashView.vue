@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
 
-// import { store } from '@src/store/store'
 import Gabin from '@src/components/basics/GabinFace.vue'
 import { fetchProfiles } from '@src/components//setup/FetchProfile.vue';
 
