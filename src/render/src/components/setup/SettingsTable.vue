@@ -41,12 +41,12 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
 
     for (const i in scenes) {
         const scene = scenes[i]
-        const autocamScene = autocam?.find((a) => a.id === scene.id)
+        const autocamScene = autocam?.find((a) => a.name === scene.name)
 
         const containersSettings: AutocamContainer[] = []
         for (const j in scene.containers) {
             const container = scene.containers[j]
-            const autocamContainer = autocamScene?.containers.find((a) => a.id === container.id)
+            const autocamContainer = autocamScene?.containers.find((a) => a.name === container.name)
 
             const micsSettings: AutocamMic[] = []
             for (const k in devices) {
@@ -73,7 +73,6 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
                 }
             }
             containersSettings.push({
-                id: container.id,
                 name: container.name,
                 sources: container.sources,
                 mics: micsSettings,
@@ -84,7 +83,6 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
             })
         }
         s.push({
-            id: scene.id,
             name: scene.name,
             containers: containersSettings
         })

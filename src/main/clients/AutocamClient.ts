@@ -330,7 +330,7 @@ export class AutocamClient extends Client {
 
         for (const mContainer of this.currentMapping) {
             const container = new Container(mContainer, this.shoot$, this.currentShots$)
-            this.containerMap.set(container.id, container)
+            this.containerMap.set(container.name, container)
         }
 
         this.enableContainers()
@@ -392,7 +392,7 @@ export class AutocamClient extends Client {
             if (showing) {
                 this.logger.debug('One container is already showing this mic')
                 showing.trigger$.next({ micId })
-                this.unfocusContainers(showing.id)
+                this.unfocusContainers(showing.name)
                 return
             }
 
@@ -400,7 +400,7 @@ export class AutocamClient extends Client {
             if (random) {
                 this.logger.debug('Get a random container')
                 random.trigger$.next({ micId })
-                this.unfocusContainers(random.id)
+                this.unfocusContainers(random.name)
                 return
             }
 
@@ -420,7 +420,7 @@ export class AutocamClient extends Client {
             if (random) {
                 this.logger.debug('Get a random container')
                 random.trigger$.next({ micId: currentMic, shotName: source.name })
-                this.unfocusContainers(random.id)
+                this.unfocusContainers(random.name)
                 return
             }
 
@@ -460,9 +460,9 @@ export class AutocamClient extends Client {
         })
     }
 
-    private unfocusContainers(containerId?: Container['id']) {
+    private unfocusContainers(containerId?: Container['name']) {
         this.containerMap.forEach(container => {
-            if (container.id !== containerId){
+            if (container.name !== containerId){
                 container.unfocus()
             }
         })
@@ -510,7 +510,7 @@ class Container {
     lock = false
     trigger$ = new Subject<MicTrigger>()
 
-    id: Asset['container']['name'] = ''
+    name: Asset['container']['name'] = ''
     private container: Asset['container']
     private shots: Asset['source']['name'][] = []
     private allShots: Asset['source']['name'][] = []
@@ -525,7 +525,7 @@ class Container {
     private logger: Logger
 
     private currentMic: MicId = ''
-    private currentShot: Asset['source'] = { id: -1, name: '' }
+    private currentShot: Asset['source'] = { name: '' }
     private timeouts: NodeJS.Timeout[] = []
 
     constructor(container: AutocamContainer, shoot$: Subject<Shoot>, currentShots$: BehaviorSubject<CurrentShotsMap>) {
@@ -543,7 +543,7 @@ class Container {
     }
 
     private parseContainer(container: AutocamContainer) {
-        this.id = container.name
+        this.name = container.name
         this.shotsMap = container.mics
         this.filteredShotsMap = container.mics
         this.durations = container.durations
@@ -586,11 +586,11 @@ class Container {
         this.currentShot = shot
 
         const currentShots = new Map([...this.currentShots$.getValue()])
-        currentShots.set(this.id, shot.name)
+        currentShots.set(this.name, shot.name)
         this.currentShots$.next(currentShots)
 
         if (!shot || !shot.name) {
-            this.logger.error('No shotId selected')
+            this.logger.error('No shot selected')
             return
         }
 
@@ -636,7 +636,7 @@ class Container {
 
         // FILTER ONLY OTHER CONTAINERS SHOTS
         const otherShots: Asset['source']['name'][] = [...currentShots]
-        .filter(([key]) => key !== this.id)
+        .filter(([key]) => key !== this.name)
         .map(row => row[1])
 
         // GET MICS SHOWED BY THESE SHOTS
@@ -680,21 +680,21 @@ class Container {
         }
 
         const allowedShots = this.getAllowedShots(this.shots)
-        let shotId = this.getRandomShot(allowedShots)
+        let shotName = this.getRandomShot(allowedShots)
 
-        if (!shotId) {
+        if (!shotName) {
             this.logger.error('problem with allowedShots probably')
-            shotId = this.getRandomShot(this.shots)
+            shotName = this.getRandomShot(this.shots)
         }
 
-        return shotId
+        return shotName
     }
 
-    private getShotFromId(shotId: Asset['source']['name']): Asset['source']|undefined {
-        return this.container.sources.find(s => s.name === shotId)
+    private getShotFromName(shotName: Asset['source']['name']): Asset['source']|undefined {
+        return this.container.sources.find(s => s.name === shotName)
     }
 
-    private illustrationMode(micId?: MicId, shotId?: Asset['source']['name']) {
+    private illustrationMode(micId?: MicId, shotName?: Asset['source']['name']) {
         if (!this.enable){
             return
         }
@@ -702,17 +702,17 @@ class Container {
         this.clearTimeouts()
         const duration = this.getIllustrationDuration()
 
-        shotId = shotId? shotId : this.getIllustrationShot(micId)
+        shotName = shotName? shotName : this.getIllustrationShot(micId)
 
-        if (!shotId) {
+        if (!shotName) {
             this.logger.error('problem with getIllustrationShot : no shot can be found')
             return
         }
 
         this.lock = true
-        const shot = this.getShotFromId(shotId)
+        const shot = this.getShotFromName(shotName)
         if (!shot) {
-            this.logger.error('problem with getShotFromId : no shot can be found')
+            this.logger.error('problem with getShotFromName : no shot can be found')
             return
         }
         this.shoot(shot)
@@ -738,43 +738,43 @@ class Container {
         const unallowedShots = this.getUnallowedShots()
         const allowedShots = shots.filter(s => unallowedShots.indexOf(s.source.name) < 0)
 
-        let shotId = this.pickShot(allowedShots)
+        let shotName = this.pickShot(allowedShots)
 
-        if (!shotId) {
+        if (!shotName) {
             this.logger.error('problem with pickShot and this mic\'s shots', micId)
             let allowedShotsId = this.getAllowedShots(shots.map(s => s.source.name))
-            shotId = this.getRandomShot(allowedShotsId)
+            shotName = this.getRandomShot(allowedShotsId)
 
-            if (!shotId) {
+            if (!shotName) {
                 this.logger.error('problem with randomShot and this mic\'s shots', micId)
                 allowedShotsId = this.getAllowedShots(this.shots)
-                shotId = this.getRandomShot(allowedShotsId)
+                shotName = this.getRandomShot(allowedShotsId)
             }
         }
 
-        return shotId
+        return shotName
     }
 
-    private focusMode(micId: MicId, shotId?: Asset['source']['name']) {
-        if ((!this.enable || this.lock) && !shotId) {
+    private focusMode(micId: MicId, shotName?: Asset['source']['name']) {
+        if ((!this.enable || this.lock) && !shotName) {
             return
         }
-        const forced = shotId? true : false
+        const forced = shotName? true : false
         const duration = forced? this.getIllustrationDuration() : this.durations.min
 
         this.clearTimeouts()
 
-        shotId = shotId? shotId : this.getFocusShot(micId)
-        if (!shotId) {
+        shotName = shotName? shotName : this.getFocusShot(micId)
+        if (!shotName) {
             this.logger.error('problem with getFocusShot : no shot can be found')
             return
         }
 
         this.lock = true
 
-        const shot = this.getShotFromId(shotId)
+        const shot = this.getShotFromName(shotName)
         if (!shot) {
-            this.logger.error('problem with getShotFromId : no shot can be found')
+            this.logger.error('problem with getShotFromName : no shot can be found')
             return
         }
         this.shoot(shot)

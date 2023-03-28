@@ -50,13 +50,13 @@ const nextIsInvalid = (): boolean => {
 
     for (const i in scenes_.value) {
         const scene = scenes_.value[i]
-        if (!scene.id || !sceneNameIsValid(parseInt(i)) || !scene.containers.length || !scene.containers.reduce((p, c)=> p += c.sources.length, 0)) return true
+        if (!sceneNameIsValid(parseInt(i)) || !scene.containers.length || !scene.containers.reduce((p, c)=> p += c.sources.length, 0)) return true
 
         for (const container of scene.containers) {
-            if (!container.id || !container.name || !container.sources.length) return true
+            if (!container.name || !container.sources.length) return true
 
             for (const source of container.sources) {
-                if (!source.id || !source.options.path || !source.name) return true
+                if (!source.options.path || !source.name) return true
             }
         }
     }
@@ -90,7 +90,6 @@ store.layout.footer.next.callback = async () => {
 
 const addScene = () => {
     scenes_.value.push({
-        id: -1,
         name: 'Scene ' + (scenes_.value.length + 1),
         containers: [],
     })
@@ -106,7 +105,6 @@ const removeScene = (i: number) => {
 const addContainer = (i: number) => {
     const scene = scenes_.value[i]
     scene.containers.push({
-        id: -1,
         name: 'Container ' + (containers_.value.size + 1),
         sources: [],
     })
@@ -124,7 +122,6 @@ const removeContainer = (i: number, j: number) => {
 const addSource = (i: number, j: number) => {
     const constainer = scenes_.value[i].containers[j]
     constainer.sources.push({
-        id: -1,
         name: 'Source ' + (constainer.sources.length + 1),
         options: {
             path: `/${constainer.name}/Source ${constainer.sources.length + 1}`.replace(/ /g, ''),

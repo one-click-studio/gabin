@@ -46,7 +46,6 @@ const connectObs = () => {
 
 const addScene = () => {
     scenes_.value.push({
-        id: -1,
         name: '',
         containers: []
     })
@@ -60,7 +59,6 @@ const removeScene = (index: number) => {
 
 const addContainer = (index: number) => {
     scenes_.value[index].containers.push({
-        id: -1,
         name: '',
         sources: []
     })
@@ -73,7 +71,6 @@ const removeContainer = (scIndex: number, soIndex: number) => {
 }
 
 const updateScene = (asset: Asset['scene'], index: number) => {
-    scenes_.value[index].id = asset.id
     scenes_.value[index].name = asset.name
     scenes_.value[index].containers = []
 
@@ -160,7 +157,6 @@ const getContainersFromScenes = (scenes: Asset['scene'][]): Asset['container'][]
     for (const scene of scenes) {
         if (containersNames.indexOf(scene.name) > -1) {
             containers.push({
-                id: scene.id,
                 name: scene.name,
                 sources: scene.containers[0].sources
             })
@@ -313,7 +309,7 @@ updateNextBtn()
                 <div class="flex justify-end items-center">
                     <div class="flex-1">
                         <SourcesTree
-                            v-if="scenes_[scIndex].containers[soIndex].id >= 0"
+                            v-if="scenes_[scIndex].containers[soIndex].name"
                             :list="scenes_[scIndex].containers[soIndex].sources.map(s => s.name)"
                         />
                     </div>

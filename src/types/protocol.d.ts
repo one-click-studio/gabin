@@ -29,19 +29,16 @@ export type AssetId = number
 export type AssetName = string
 
 export type AssetScene = {
-    id: AssetId
     name: AssetName
     containers: AssetContainer[]
 }
 
 export type AssetContainer = {
-    id: AssetId
     name: AssetName
     sources: AssetSource[]
 }
 
 export type AssetSource = {
-    id: AssetId
     name: AssetName
     options?: any
 }

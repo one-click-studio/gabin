@@ -101,12 +101,12 @@ export class ObsClient extends Client {
     }
 
     private isValidContainer(container: Asset['container']): boolean {
-        const found = this.mainScene$.getValue()?.containers.find(c => c.id === container.id)
+        const found = this.mainScene$.getValue()?.containers.find(c => c.name === container.name)
         return (found? true : false)
     }
 
     private getSourcesFromContainer(container: Asset['container']): Asset['source'][] {
-        const c = this.mainScene$.getValue()?.containers.find(c => c.id === container.id)
+        const c = this.mainScene$.getValue()?.containers.find(c => c.name === container.name)
         return (c? c.sources : [])
     }
 
@@ -131,7 +131,7 @@ export class ObsClient extends Client {
         this.obs.websocket
         .call('SetSceneItemEnabled', {
             sceneName: container.name,
-            sceneItemId: shot.id,
+            sceneItemId: shot.options.id,
             sceneItemEnabled: true
         })
         .catch((err) => this.onError(err))
@@ -142,7 +142,7 @@ export class ObsClient extends Client {
             this.obs.websocket
             .call('SetSceneItemEnabled', {
                 sceneName: container.name,
-                sceneItemId: shot_.id,
+                sceneItemId: shot_.options.id,
                 sceneItemEnabled: false,
             })
             .catch((err) => this.onError(err))

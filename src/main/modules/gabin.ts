@@ -57,7 +57,7 @@ export class Gabin {
 
         this.shoot$ = new Subject<Shoot>()
         this.autocam$ = new Subject<boolean>()
-        this.triggeredShot$ = new BehaviorSubject({ id: -1, name: '' })
+        this.triggeredShot$ = new BehaviorSubject({ name: '' })
         this.availableMics$ = new BehaviorSubject<AvailableMicsMap>(new Map())
         this.timeline$ = new BehaviorSubject('')
         this.volumeMics$ = new BehaviorSubject<Map<string, number>>(new Map())
@@ -228,7 +228,7 @@ export class Gabin {
         }))
 
         this.subscriptions.push(this.triggeredShot$.subscribe((source) => {
-            if (source.id < 0) return
+            if (!source.name) return
             this.logger.info('has been ordered to shot 😣')
             this.autocam?.forcedShot$.next(source)
         }))

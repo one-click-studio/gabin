@@ -168,14 +168,14 @@ export class ObsServer extends Server {
             const items = await this.getSceneItemList(scene.sceneName)
             const sceneItems = items.sceneItems as ResponseObsItem[]
             data.push({
-                id: scene.sceneIndex,
                 name: scene.sceneName,
                 containers: [{
-                    id: -1,
                     name: 'root',
                     sources: sceneItems.map(si => ({
-                        id: si.sceneItemId,
-                        name: si.sourceName
+                        name: si.sourceName,
+                        options: {
+                            id: si.sceneItemId,
+                        }
                     }))
                 }]
             })
