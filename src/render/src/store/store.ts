@@ -38,17 +38,17 @@ export const store = reactive({
     keyPress$: new Subject<string>(),
     isFirstRun: true,
     toast: {
-        show: (title: string, description: string='', type: Toast['type']='') => {
-            store.toast.data = { title, description, type }
+        show: (data: Toast) => {
+            store.toast.data = data
         },
-        success: (title: string, description: string='') => {
-            store.toast.data = { title, description, type:'success' }
+        success: (title: string, description: string='', duration?: number) => {
+            store.toast.data = { title, description, type:'success', duration }
         },
-        info: (title: string, description: string='') => {
-            store.toast.data = { title, description, type:'info' }
+        info: (title: string, description: string='', duration?: number) => {
+            store.toast.data = { title, description, type:'info', duration }
         },
-        error: (title: string, description: string='') => {
-            store.toast.data = { title, description, type:'error' }
+        error: (title: string, description: string='', duration?: number) => {
+            store.toast.data = { title, description, type:'error', duration }
         },
         data: <Toast|undefined>undefined,
     },
@@ -163,6 +163,16 @@ export const store = reactive({
             if (!current) return
             const currentClone = klona(current)
             await socketEmitter(store.socket, 'saveProfile', currentClone)
+        },
+        isComplete: (): boolean => {
+            const current = store.profiles.getCurrent()
+            if (!current) return false
+            const settings = current.settings
+            return (
+                settings.mics.length > 0 &&
+                settings.containers.length > 0 &&
+                settings.autocam.length > 0
+            )
         }
     },
     assets: {

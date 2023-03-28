@@ -32,11 +32,11 @@ const connectObs = () => {
     if (!connections.obs) return
 
     socketEmitter(store.socket, 'connectObs', toRaw(connections.obs))
-    store.toast.info('OBS connection attempt')
+    store.toast.info('OBS connection attempt', 'Please wait...', 3000)
 
     setTimeout(() => {
         if (store.connections.obs) {
-            store.toast.success('OBS connection succeeded')
+            store.toast.success('OBS connection succeeded', '', 2000)
         } else {
             store.toast.error('OBS connection failed', 'Please check your settings')
             socketEmitter(store.socket, 'disconnectObs')

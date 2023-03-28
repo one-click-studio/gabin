@@ -105,6 +105,7 @@ export interface Toast {
     title: string
     description: string
     type: 'success' | 'error' | 'info' | ''
+    duration?: number
 }
 
 
