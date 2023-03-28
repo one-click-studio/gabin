@@ -214,7 +214,7 @@ const socket = manager.socket("/")
 store.socket = socket
 
 socket.on("connect", () => {
-    if (store.redirect.path) {
+    if (store.redirect.path && router.currentRoute.value.path === '/disconnect') {
         router.push(store.redirect.path)
     }
 })
