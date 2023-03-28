@@ -9,13 +9,14 @@ import Gabin from '@src/components/basics/GabinFace.vue'
 import ControlBtns from '@src/components/run/ControlBtns.vue'
 import Speakers from '@src/components/run/Speakers.vue'
 
-import type { SpeakingMic } from '../../../types/protocol'
+import type { SpeakingMic, Shoot } from '../../../types/protocol'
 
 const INIT_MSG = 'Not showing any camera.'
 
 const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
 const speakingMics = ref(<SpeakingMic[]>[])
+const shoot_ = ref<Shoot>()
 
 const togglePower = async () => {
     if (!loading.value){
@@ -32,7 +33,8 @@ socketHandler(store.socket, 'handlePower', (power) => {
     }
 })
 
-socketHandler(store.socket, 'handleNewShot', (shoot) => {
+socketHandler(store.socket, 'handleNewShot', (shoot: Shoot) => {
+    shoot_.value = shoot
     msg.value.default = 'I\'m now showing'
     msg.value.main = `${shoot.shot.name}`
 })
@@ -112,7 +114,7 @@ init()
         </div>
 
         <div class="flex flex-col items-center flex-1 bg-bg-2">
-            <ControlBtns />
+            <ControlBtns :shoot="shoot_"/>
         </div>
     </div>
 </template>

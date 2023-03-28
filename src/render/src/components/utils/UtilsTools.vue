@@ -54,6 +54,7 @@ export const socketEmitter = async (socket: any|undefined, event: string, data?:
 export const socketHandler = async (socket: any|undefined, event: string, callback?: (res: any)=>void) => {
     if (!socket) return
 
+    socket.off(event)
     socket.on(event, callback)
 }
 

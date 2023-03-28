@@ -50,19 +50,17 @@ const getAllSources = (): Asset['source'][] => {
     return Object.values(Object.fromEntries(sourcesMap))
 }
 
-const autocam = ref(true)
 
-const currentContainers = ref(getAllContainers())
+defineProps<{
+    shoot: Shoot|undefined
+}>()
+
+const autocam = ref(true)
 const shots = ref(getAllSources())
 const availableMics = ref(getAvailableMics())
 
-const currentShots = ref<Asset['source']['name']>()
-
 const init = () => {
 
-    socketHandler(store.socket, 'handleNewShot', (shot: Shoot) => {
-        setCurrentShot(shot)
-    })
     socketHandler(store.socket, 'handleAutocam', (ac: boolean) => {
         autocam.value = ac
     })
@@ -73,10 +71,6 @@ const init = () => {
     onSpacePress(() => {
         toggleAutocam()
     })
-}
-
-const setCurrentShot = (shot: Shoot) => {
-    currentShots.value = shot.shot.name
 }
 
 const toggleAutocam = () => {
@@ -147,12 +141,12 @@ init()
             <ButtonContainerUi
                 v-for="(shot, i) in shots"
                 :key="'shot-'+shot"
-                :active="(shot.name === currentShots)"
+                :active="(shoot && shot.name === shoot.shot.name)"
                 :primary="true"
             >
                 <ButtonUi
                     class="flex flex-col items-center control-btn"
-                    :active="(shot.name === currentShots)"
+                    :active="(shoot && shot.name === shoot.shot.name)"
                     @click="() => triggerShot(shot)"
                 >
                     <CamIcon class="m-4" />
