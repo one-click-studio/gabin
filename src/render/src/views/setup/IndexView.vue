@@ -14,7 +14,7 @@ const initStore = () => {
         return
     }
 
-    store.profiles.editProfile = store.profiles.isComplete()
+    if (route.meta.order !== TimelineSteps.length-1) store.profiles.editProfile = store.profiles.isComplete()
 
     store.layout.header.title =  TimelineSteps[step].name
     store.layout.timeline.currentStep = step
