@@ -75,7 +75,7 @@ updateNextBtn()
                 In order to communicate with companion software, please choose the tcp port Gabin will expose.
             </span>
             <ButtonUi
-                class="small w-44 mt-2"
+                class="small i-first mt-2"
                 :href="'https://bitfocus.io/'"
             >
                 <InfoIcon class="w-4" /> What is Companion?

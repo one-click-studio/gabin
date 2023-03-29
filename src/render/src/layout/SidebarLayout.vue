@@ -45,7 +45,7 @@ const changeProfile = async (id: number) => {
 
 const newProfile = () => {
     store.profiles.current = 0
-    router.push('/setup/profile')
+    router.push('/setup/landing')
 }
 
 if (store.profiles.current === 0) {

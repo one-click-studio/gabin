@@ -4,7 +4,7 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { store } from '@src/store/store'
-import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
+import { socketEmitter, downloadFile } from '@src/components/utils/UtilsTools.vue'
 
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
 import ModalUi from '@src/components/basics/ModalUi.vue'
@@ -13,6 +13,7 @@ import ToggleUi from '@src/components/basics/ToggleUi.vue'
 import MainProfile from '@src/components/home/MainProfile.vue'
 import Gabin from '@src/components/basics/GabinFace.vue'
 
+import DownloadIcon from '@src/components/icons/DownloadIcon.vue'
 import PenIcon from '@src/components/icons/PenIcon.vue'
 import PlayIcon from '@src/components/icons/PlayIcon.vue'
 import BinIcon from '@src/components/icons/BinIcon.vue'
@@ -37,6 +38,10 @@ const setup = (edit: 0|1=0) => {
     } else {
         router.push('/setup/landing')
     }
+}
+
+const downloadConfig = () => {
+    downloadFile('profile.json', JSON.stringify(current, null, 4))
 }
 
 const deleteProfile = async () => {
@@ -131,7 +136,7 @@ prepareHomeView()
             <Teleport to="#header-dotmenu-slot">
                 <div class="w-full flex flex-col">
 
-                    <div class="w-full mx-4 my-2 text-sm">
+                    <div class="toggle-autostart">
                         <ToggleUi
                             label="Autostart"
                             :value="current?.autostart || false"
@@ -139,12 +144,22 @@ prepareHomeView()
                         />
                     </div>
 
+                    <div class="w-[80%] mx-[10%] my-2 border-solid border-0 border-b-2 border-content-3" />
+
                     <ButtonUi
-                        class="i-first mx-1 small"
+                        class="mx-1 small"
+                        @click="downloadConfig"
+                    >
+                        Download profile
+                        <DownloadIcon />
+                    </ButtonUi>
+
+                    <ButtonUi
+                        class="mx-1 small"
                         @click="deleteModal = true"
                     >
-                        <BinIcon />
                         Delete profile
+                        <BinIcon />
                     </ButtonUi>
                 </div>
             </Teleport>
@@ -173,3 +188,20 @@ prepareHomeView()
         </template>
     </div>
 </template>
+
+<style>
+
+.toggle-autostart {
+    @apply w-full mx-4 my-2 text-sm;
+}
+.toggle-autostart > .toggleui-container {
+    @apply flex-row-reverse justify-between;
+}
+.toggle-autostart > .toggleui-container > .toggleui-label {
+    @apply ml-0;
+}
+.toggle-autostart > .toggleui-container > .toggleui-btn {
+    @apply mr-8;
+}
+
+</style>

@@ -111,7 +111,7 @@ const submitProfileId = async () => {
             <PopUpContainer
                 id="header-dotmenu-slot"
                 :open="open"
-                class="top-12 right-0 w-40"
+                class="top-12 right-0 w-50"
                 @close="close"
             />
         </div>
