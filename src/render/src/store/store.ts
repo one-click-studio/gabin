@@ -95,6 +95,7 @@ export const store = reactive({
                 icon:'folder',
                 settings: DEFAULT_SETTINGS(),
                 connections: DEFAULT_CONNECTIONS(),
+                active: true
             })
             store.profiles.current = id
         },
