@@ -26,7 +26,7 @@ import { store } from '@src/store/store'
                                 :rowspan="device.mics.reduce((p,c) => p += c?1:0, 0)"
                             >{{ device.name }}</td>
                             <td>{{ mic }}</td>
-                            <td>Channel {{ j + 1 }}</td>
+                            <td>Channel {{ device.micsName.indexOf(mic) + 1 }}</td>
                         </tr>
                     </template>
                 </template>
