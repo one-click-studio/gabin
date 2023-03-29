@@ -51,8 +51,10 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
             const micsSettings: AutocamMic[] = []
             for (const k in devices) {
                 const device = devices[k]
-                for (const l in device.micsName) {
-                    const mic = device.micsName[l]
+                const micsNames = device.micsName.filter((_name, index) => device.mics[index])
+
+                for (const l in micsNames) {
+                    const mic = micsNames[l]
                     const autocamMic = autocamContainer?.mics.find((a) => a.id === mic)
 
                     const camsSettings: AutocamSource[] = []
