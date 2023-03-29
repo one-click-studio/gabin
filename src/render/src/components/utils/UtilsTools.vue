@@ -58,12 +58,23 @@ export const socketHandler = async (socket: any|undefined, event: string, callba
     socket.on(event, callback)
 }
 
+export const downloadFile = (filename: string, content: string) => {
+    var data = "data:text/json;charset=utf-8," + encodeURIComponent(content)
+    var $a = document.createElement('a')
+    $a.setAttribute("href", data)
+    $a.setAttribute("download", filename)
+    document.body.appendChild($a)
+    $a.click()
+    $a.remove()
+}
+
 export default {
     validURL,
     deepCopy,
     getOS,
     socketEmitter,
-    socketHandler
+    socketHandler,
+    downloadFile
 }
 
 </script>
