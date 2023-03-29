@@ -164,8 +164,9 @@ export const store = reactive({
             const currentClone = klona(current)
             await socketEmitter(store.socket, 'saveProfile', currentClone)
         },
-        isComplete: (): boolean => {
-            const current = store.profiles.getCurrent()
+        isComplete: (current?: Profile): boolean => {
+            if (!current) current = store.profiles.getCurrent()
+
             if (!current) return false
             const settings = current.settings
             return (
