@@ -12,27 +12,23 @@ import { onEnterPress } from '@src/components/utils/KeyPress.vue'
 
 import type {
     Connection,
-    ConnectionsConfig
 } from '../../../../types/protocol'
 
 const connections = store.profiles.connections()
-if (!connections.osc) connections.osc = {
-    server: { ip:'127.0.0.1:32123' },
-    client: { ip:'127.0.0.1:12321' }
-}
+if (!connections.osc) connections.osc = { ip:'127.0.0.1:12321' }
 
-const oscConnection = ref<ConnectionsConfig['osc']>(connections.osc)
+const oscConnection = ref<Connection>(connections.osc)
 const oscConnectionOk = ref(store.connections.osc ? true : false)
 const oscConnectionLoading = ref(false)
 const oscConnectionError = ref(false)
 
 store.profiles.connections().type = 'osc'
 
-const update = (c: Connection, type: 'client'|'server') => {
+const update = (c: Connection) => {
     if (!oscConnection.value) return
     resetOscConnection()
     oscConnectionError.value = false
-    oscConnection.value[type] = c
+    oscConnection.value = c
 }
 
 const connectOsc = () => {
@@ -62,7 +58,7 @@ const updateNextBtn = () => {
 onEnterPress(() => {
     if (!oscConnection.value) return
 
-    if (validURL(oscConnection.value.client.ip) && validURL(oscConnection.value.server.ip) && !store.connections.osc) {
+    if (validURL(oscConnection.value.ip) && !store.connections.osc) {
         connectOsc()
     } else if (store.connections.osc && store.layout.footer.next.trigger) {
         store.layout.footer.next.trigger()
@@ -119,19 +115,11 @@ updateNextBtn()
                     Connection failed, please check the client ip.
                 </span>
                 <EditConnection
-                    label="OSC server (the port Gabin will open)"
-                    :connection="oscConnection.server"
-                    :password="false"
-                    :error="oscConnectionError"
-                    @update="(v) => update(v, 'server')"
-                />
-                <div class="mt-4" />
-                <EditConnection
                     label="OSC client (the port Gabin will reach)"
-                    :connection="oscConnection.client"
+                    :connection="oscConnection"
                     :password="false"
                     :error="oscConnectionError"
-                    @update="(v) => update(v, 'client')"
+                    @update="update"
                 />
             </div>
 
@@ -140,7 +128,7 @@ updateNextBtn()
                 class="primary txt-only my-4 w-full"
                 :class="{ '!bg-green': oscConnectionOk }"
                 :loading="oscConnectionLoading"
-                :disabled="!validURL(oscConnection.client.ip) || !validURL(oscConnection.server.ip) || store.connections.osc"
+                :disabled="!validURL(oscConnection.ip) || store.connections.osc"
                 @click="connectOsc"
             >
                 Connect to osc client

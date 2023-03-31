@@ -1,94 +1,101 @@
 import { BehaviorSubject, Subject } from 'rxjs'
 
-import { OscServer } from '../../main/servers/OscServer'
 import { Client } from '../../main/clients/Client'
-
-import type {
-    Asset,
-    MicId,
-    ConnectionsConfig
-} from '../../types/protocol'
 
 import db from '../../main/utils/db'
 
+import type { OscServer } from '../../main/servers/OscServer'
+import type {
+    Asset,
+    MicId,
+    Connection
+} from '../../types/protocol'
 
 export class OscClient extends Client {
 
     mainScene$: BehaviorSubject<Asset['scene']['name']|undefined>
     triggeredShot$: BehaviorSubject<Asset['source']['name']|undefined>
-    micAvailability$: Subject<{mic: MicId, available: boolean}>
     autocam$: BehaviorSubject<boolean>
+    micAvailability$: Subject<{mic: MicId, available: boolean}>
 
     private osc: OscServer
-    private scenes: Asset['scene'][]
+    private config: Connection | undefined
 
-    constructor(fromProfile = true) {
+    constructor(osc: OscServer, fromProfile = true) {
         super('osc-client')
 
-        this.osc = new OscServer(fromProfile)
-        this.mainScene$ = new BehaviorSubject<Asset['scene']['name']|undefined>(undefined)
+        this.osc = osc
+
+        this.mainScene$ = new BehaviorSubject(<Asset['scene']['name']|undefined>undefined)
         this.triggeredShot$ = new BehaviorSubject(<Asset['source']['name']|undefined>undefined)
-        this.micAvailability$ = new Subject()
         this.autocam$ = new BehaviorSubject(<boolean>true)
+        this.micAvailability$ = new Subject()
 
-        this.scenes = []
+        if (fromProfile) this.getConfigFromProfile()
+
     }
 
-    init(connections?: ConnectionsConfig['osc']) {
-        const scenes = db.getSpecificAndDefault(['settings', 'containers'], true)
-        this.scenes = scenes.defaultValue
+    private getConfigFromProfile() {
+        const config = db.getSpecificAndDefault(['connections', 'osc'], true)
+        this.config = config.defaultValue
+    }
 
-        this.addSubscription(
-            scenes.configPart$.subscribe((scenes_) => {
-                this.scenes = scenes_
-            })
-        )
+    private splitIp(ip: string) {
+        const c = ip.split(':')
+        return {
+            host: c[0],
+            port: parseInt(c[1])
+        }
+    }
 
-        this.addSubscription(
-            this.osc.reachable$.subscribe(r => {
-                if (r !== this.isReachable){
-                    this.reachable$.next(r)
-                }
-            })
-        )
+    private init(connection?: Connection) {
+        if (connection) {
+            this.config = connection
+        }
 
-        this.reachable$.subscribe(r => {
-            if (r) {
-                this.osc.on('/scene/*', (message: any) => {
-                    const scene = message.address.split('/').pop()
-                    this.sceneTransition(scene)
-                })
-                this.osc.on('/source/*', (message: any) => {
-                    const source = message.address.split('/').pop()
-                    this.sourceTrigger(source)
-                })
-                this.osc.on('/mic/*', (message: any) => {
-                    if (!message.args.length || [0,1].indexOf(message.args[0]) === -1) return
-                    
-                    const mic = message.address.split('/').pop()
-                    const available = (message.args[0]===1)
-                    this.availableMic(mic, available)
-                })
-                this.osc.on('/autocam', (message: any) => {
-                    if (!message.args.length || [0,1].indexOf(message.args[0]) === -1) return
-                    const autocam = (message.args[0]===1)
-                    this.autocam(autocam)
-                })
-            }
+        this.addCommands()
+
+        this.reachable$.next(true)
+    }
+
+    private addCommands() {
+        this.osc.on('/scene/*', (message: any) => {
+            const scene = message.address.split('/').pop()
+            this.sceneTransition(scene)
         })
-
-        this.osc.listen(connections)
+        this.osc.on('/source/*', (message: any) => {
+            const source = message.address.split('/').pop()
+            this.sourceTrigger(source)
+        })
+        this.osc.on('/mic/*', (message: any) => {
+            if (!message.args.length || [0,1].indexOf(message.args[0]) === -1) return
+            
+            const mic = message.address.split('/').pop()
+            const available = (message.args[0]===1)
+            this.availableMic(mic, available)
+        })
+        this.osc.on('/autocam', (message: any) => {
+            if (!message.args.length || [0,1].indexOf(message.args[0]) === -1) return
+            const autocam = (message.args[0]===1)
+            this.autocam(autocam)
+        })
     }
 
-    override connect(connections?: ConnectionsConfig['osc']) {
+    override connect(connection?: Connection) {
         super.connect()
-        this.init(connections)
+        this.init(connection)
+    }
+
+    send(path: string) {
+        if (!this.config) return
+
+        const clientIp = this.splitIp(this.config.ip)
+        this.osc.send(path, clientIp.port)
     }
 
     override clean() {
         this.reachable$.next(false)
 
-        this.osc.clean()
         super.clean()
     }
 
@@ -126,14 +133,6 @@ export class OscClient extends Client {
         }
 
         this.send(shot.options.path)
-    }
-
-    send(path: string){
-        if (!this.isReachable || !this.osc.isReachable) {
-            this.logger.error('Can\'t send, osc not connected')
-        }
-
-        this.osc.send(path)
     }
 
 }

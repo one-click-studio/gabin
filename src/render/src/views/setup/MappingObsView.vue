@@ -205,7 +205,6 @@ store.layout.footer.back.callback = () => {
 store.layout.footer.next.callback = async () => {
     if (store.profiles.editProfile) {
         await store.profiles.save()
-        socketEmitter(store.socket, 'disconnectObs')
         store.toast.success('Profile saved !')
     }
 }

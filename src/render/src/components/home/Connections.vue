@@ -9,7 +9,7 @@ import type {
     Connection
 } from '../../../../types/protocol'
 
-type ConnectionType = 'tcp' | 'obs' | 'osc (server)' | 'osc (client)'
+type ConnectionType = 'tcp' | 'obs' | 'osc'
 
 const showPassword = ref<ConnectionType>()
 
@@ -17,15 +17,10 @@ const getConnections = (): Map<ConnectionType, Connection> => {
     const connections = store.profiles.connections()
     const result: Map<ConnectionType, Connection> = new Map()
 
-    if (connections.tcp) {
-        result.set('tcp', connections.tcp)
-    }
-
-    if (connections.type === 'obs' && connections.obs) {
-        result.set('obs', connections.obs)
-    } else if (connections.type === 'osc' && connections.osc) {
-        result.set('osc (server)', connections.osc.server)
-        result.set('osc (client)', connections.osc.client)
+    let cType: keyof typeof connections
+    for (cType in connections) {
+        if (cType === 'type') continue
+        result.set(cType as ConnectionType, connections[cType] as Connection)
     }
 
     return result

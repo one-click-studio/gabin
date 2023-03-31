@@ -118,15 +118,12 @@ export interface ServerConfig {
 
 
 /********** CONNECTIONS **********/
-export type ConnectionType = 'obs' | 'tcp'
+export type ConnectionType = 'obs' | 'tcp' | 'osc'
 export interface ConnectionsConfig {
     type?: 'obs' | 'osc'
     tcp?: Connection
     obs?: Connection
-    osc?: {
-        server: Connection
-        client: Connection
-    }
+    osc?: Connection
 }
 export interface Connection {
     ip: string

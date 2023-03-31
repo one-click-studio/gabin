@@ -93,7 +93,6 @@ store.layout.footer.back.callback = () => {
 store.layout.footer.next.callback = async () => {
     if (store.profiles.editProfile) {
         await store.profiles.save()
-        socketEmitter(store.socket, 'disconnectOsc')
         store.toast.success('Profile saved !')
     }
 }
@@ -207,11 +206,9 @@ const resetContainersMap = () => {
     }
 }
 
-
 socketHandler(store.socket, 'handleTriggerSource', (source: Asset['source']['name']) => {
     testData.value.mainSource = source
 })
-
 socketHandler(store.socket, 'handleAutocam', (autocam: boolean) => {
     testData.value.autocam = autocam
 })
@@ -258,7 +255,7 @@ updateNextBtn()
             <p>
                 Tell Gabin which scenes you want him to manage.
                 You can test OSC command on Gabin on the on the
-                <code>{{ store.profiles.connections().osc?.server.ip }}</code> ip
+                <!-- <code>{{ store.profiles.connections().osc?.server.ip }}</code> ip -->
             </p>
         </div>
         <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-2 p-3">

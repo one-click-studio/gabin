@@ -1,11 +1,4 @@
 <script lang="ts" setup>
-
-import ObsContainerImg from '@src/assets/pictures/obs/obs-container.png'
-import ObsContainersImg from '@src/assets/pictures/obs/obs-containers.png'
-import ObsNewSceneImg from '@src/assets/pictures/obs/obs-new-scene.png'
-import ObsAddSceneImg from '@src/assets/pictures/obs/obs-add-scene.png'
-import ObsScenesImg from '@src/assets/pictures/obs/obs-scenes.png'
-
 </script>
 
 <template>
