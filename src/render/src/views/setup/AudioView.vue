@@ -17,7 +17,7 @@ import BinIcon from '@src/components/icons/BinIcon.vue'
 
 import type { AudioDevice, AudioDeviceSettings } from '../../../../types/protocol'
 
-const devices_ = ref<AudioDeviceSettings[]>([])
+const devices_ = ref<AudioDeviceSettings[]>(store.profiles.settings().mics)
 const audioDevices = ref<AudioDevice[]>([])
 
 const addDevice = () => {

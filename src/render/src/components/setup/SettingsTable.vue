@@ -131,7 +131,7 @@ const getTdClass = (o: {scene: AutocamSettings, container: AutocamContainer, mic
 
     const state = {
         container: isLast(scene.containers, scene.containers.indexOf(container)),
-        mic: mic && isLast(container.mics, container.mics.indexOf(mic)),
+        mic: mic && isLast(container.mics.filter(m => m.cams.length), container.mics.filter(m => m.cams.length).indexOf(mic)),
         source: mic && source && isLast(mic.cams, mic.cams.indexOf(source)),
     }
     
