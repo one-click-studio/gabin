@@ -155,6 +155,12 @@ router.beforeEach(async (to, from) => {
         return { path: '/loading' }
     }
 
+    if (['/running', '/loading'].indexOf(to.path) === -1 && store.power) {
+        return { path: '/running' }
+    } else if (to.path === '/running' && !store.power) {
+        return { path: '/home' }
+    }
+
     store.layout.header.iconEdit = false
     store.layout.header.dotMenu = false
     store.layout.footer.back.url = undefined

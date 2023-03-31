@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { klona } from 'klona'
 import { store } from '@src/store/store'
-import { useRouter } from 'vue-router'
 
 import ToggleUi from '@src/components/basics/ToggleUi.vue'
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
@@ -18,11 +17,8 @@ import CamIcon from '@src/components/icons/CamIcon.vue'
 
 import type { Shoot, AvailableMicsMap, Asset } from '../../../../types/protocol'
 
-const router = useRouter()
-
-const togglePower = async () => {
-    await socketEmitter(store.socket, 'togglePower', !store.power)
-    router.push('/home')
+const powerOff = async () => {
+    await socketEmitter(store.socket, 'togglePower', false)
 }
 
 const getAvailableMics = (): AvailableMicsMap => {
@@ -111,7 +107,7 @@ init()
             <ButtonContainerUi class="flex-1">
                 <ButtonUi
                     class="i-first danger w-full h-full !justify-center"
-                    @click="togglePower"
+                    @click="powerOff"
                 >
                     <StopIcon />
                     Stop Gabin
@@ -133,6 +129,7 @@ init()
                     <ToggleUi
                         :label="mic"
                         :value="a"
+                        @update="() => toggleMicAvailability(mic)"
                     />
                 </ButtonUi>
             </ButtonContainerUi>

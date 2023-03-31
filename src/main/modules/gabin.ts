@@ -10,9 +10,10 @@ import { TcpServer } from '../servers/TcpServer'
 
 import db from '../utils/db'
 
-import type { Logger } from '../utils/logger'
 import { getLogger } from '../utils/logger'
 
+import type { Logger } from '../utils/logger'
+import type { OscServer } from '../../main/servers/OscServer'
 import type {
     Shoot,
     AvailableMicsMap,
@@ -28,7 +29,6 @@ interface Connections {
 }
 
 export class Gabin {
-    isOn: boolean
     isReady: boolean
 
     obs: ObsClient | undefined
@@ -39,6 +39,7 @@ export class Gabin {
 
     connections$: BehaviorSubject<Connections>
 
+    power$: BehaviorSubject<boolean>
     shoot$: Subject<Shoot>
     autocam$: Subject<boolean>
     availableMics$: BehaviorSubject<AvailableMicsMap>
@@ -50,12 +51,16 @@ export class Gabin {
     private subscriptions: Subscription[] = []
     private scenes: Asset['scene'][]
 
-    constructor() {
+    private oscServer: OscServer
+
+    constructor(oscServer: OscServer) {
         this.logger = getLogger('Gabin 🤖')
 
-        this.isOn = false
+        this.oscServer = oscServer
+
         this.isReady = false
 
+        this.power$ = new BehaviorSubject<boolean>(false)
         this.shoot$ = new Subject<Shoot>()
         this.autocam$ = new Subject<boolean>()
         this.triggeredShot$ = new BehaviorSubject({ name: '' })
@@ -76,7 +81,7 @@ export class Gabin {
             this.scenes = containers_
         })
 
-        this.logger.info('is currently asleep 💤')
+        this.init()
     }
 
     private connect() {
@@ -86,7 +91,7 @@ export class Gabin {
         if (connections.defaultValue.type === 'obs') {
             this.obs = new ObsClient()
         } else if (connections.defaultValue.type === 'osc') {
-            this.osc = new OscClient()
+            this.osc = new OscClient(this.oscServer)
         }
         if (connections.defaultValue.tcp) {
             this.streamdeck = new StreamdeckClient()
@@ -109,16 +114,7 @@ export class Gabin {
         })
     }
 
-    async power(on: boolean) {
-        if (!this.isOn && on){
-            await this.on()
-        } else if (this.isOn && !on){
-            this.off()
-        }
-        return on
-    }
-
-    private async on() {
+    private async init() {
         this.logger.info('is waking up 👋')
 
         if (!this.isReady) {
@@ -135,20 +131,19 @@ export class Gabin {
 
         this.streamdeck?.setAvailableMics(this.availableMics$.getValue())
         this.manageEvents()
-        this.isOn = true
+        this.power$.next(true)
     }
 
-    private off() {
+    clean() {
         this.logger.info('is going to sleep 💤')
         this.cleanSubscriptions()
 
         this.obs?.clean()
-        this.osc?.clean()
         this.autocam?.clean()
         this.streamdeck?.clean()
         this.tcpServer?.clean()
 
-        this.isOn = false
+        this.power$.next(false)
     }
 
     private cleanSubscriptions() {

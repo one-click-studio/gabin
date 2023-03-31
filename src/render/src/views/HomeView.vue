@@ -27,8 +27,8 @@ const deleteModal = ref(false)
 
 store.profiles.editProfile = false
 
-const run = () => {
-    router.push('/running')
+const run = async () => {
+    await socketEmitter(store.socket, 'togglePower', !store.power)
 }
 
 const setup = (edit: 0|1=0) => {
@@ -83,6 +83,7 @@ watch(() => store.profiles.current, () => {
     prepareHomeView()
 })
 
+socketEmitter(store.socket, 'setup', false)
 prepareHomeView()
 
 </script>

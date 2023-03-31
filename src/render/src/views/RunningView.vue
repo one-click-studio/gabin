@@ -18,20 +18,13 @@ const msg = ref({ default: INIT_MSG, main: '' })
 const speakingMics = ref(<SpeakingMic[]>[])
 const shoot_ = ref<Shoot>()
 
-const togglePower = async () => {
+const powerOn = async () => {
     if (!loading.value){
         loading.value = true
-        await socketEmitter(store.socket, 'togglePower', !store.power)
+        await socketEmitter(store.socket, 'togglePower', true)
         loading.value = false
     }
 }
-
-socketHandler(store.socket, 'handlePower', (power) => {
-    store.power = power
-    if (!power) {
-        msg.value = { default: INIT_MSG, main: '' }
-    }
-})
 
 socketHandler(store.socket, 'handleNewShot', (shoot: Shoot) => {
     shoot_.value = shoot
@@ -72,10 +65,7 @@ const init = () => {
     })
 }
 
-if (!store.power) {
-    togglePower()
-}
-
+powerOn()
 init()
 
 

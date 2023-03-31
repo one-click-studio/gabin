@@ -3,16 +3,19 @@
 import { useRouter } from 'vue-router'
 import { store } from '@src/store/store'
 import { TimelineSteps } from '@src/components//setup/TimelineSteps.vue'
+import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
 
 const router = useRouter()
 
-const initStore = () => {
+const initStore = async () => {
     const route = router.currentRoute.value
     const step = (route.meta.order as number)
 
     if (!(step >= 0)) {
         return
     }
+
+    socketEmitter(store.socket, 'setup', true)
 
     if (route.meta.order !== TimelineSteps.length-1) store.profiles.editProfile = store.profiles.isComplete()
 

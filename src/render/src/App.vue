@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+import { useRouter } from 'vue-router'
+
 import { store } from '@src/store/store'
 import { getOS, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
@@ -7,6 +9,19 @@ import Background from '@src/layout/BackgroundLayout.vue'
 import Layout from '@src/layout/GlobalLayout.vue'
 import { Asset } from '../../types/protocol'
 
+const router = useRouter()
+
+socketHandler(store.socket, 'handlePower', (power) => {
+    store.power = power
+
+    const currentRoute = router.currentRoute.value.path
+
+    if (['/running', '/loading'].indexOf(currentRoute) === -1 && power) {
+        return router.push('/running')
+    } else if (currentRoute === '/running' && !power) {
+        return router.push('/home')
+    }
+})
 
 socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
     if (store.connections.obs !== reachable) {
