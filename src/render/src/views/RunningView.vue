@@ -32,13 +32,13 @@ socketHandler(store.socket, 'handleNewShot', (shoot: Shoot) => {
     msg.value.main = `${shoot.shot.name}`
 })
 
-socketHandler(store.socket, 'handleTimeline', (data) => {
+socketHandler(store.socket, 'handleTimeline', (data: string) => {
     for (const i in  speakingMics.value){
         speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
     }
 })
 
-socketHandler(store.socket, 'handleVolumeMics', (data) => {
+socketHandler(store.socket, 'handleVolumeMics', (data: {[k: string]: number}) => {
     let deviceName: keyof typeof data
     for (deviceName in data) {
         for (const i in speakingMics.value){

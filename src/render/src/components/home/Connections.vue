@@ -19,7 +19,7 @@ const getConnections = (): Map<ConnectionType, Connection> => {
 
     let cType: keyof typeof connections
     for (cType in connections) {
-        if (cType === 'type') continue
+        if (cType === 'type' || !connections[cType]) continue
         result.set(cType as ConnectionType, connections[cType] as Connection)
     }
 

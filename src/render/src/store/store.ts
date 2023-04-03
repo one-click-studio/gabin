@@ -176,6 +176,10 @@ export const store = reactive({
             )
         }
     },
+    osc: {
+        host: '',
+        port: 0,
+    },
     assets: {
         scenes: <Asset['scene'][]>[],
         audios: <AudioDevice[]>[],

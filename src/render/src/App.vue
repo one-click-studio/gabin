@@ -23,6 +23,10 @@ socketHandler(store.socket, 'handlePower', (power) => {
     }
 })
 
+socketHandler(store.socket, 'handleOscConfig', (config: {host: string, port: number}) => {
+    store.osc = config
+})
+
 socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
     if (store.connections.obs !== reachable) {
         store.connections.obs = reachable

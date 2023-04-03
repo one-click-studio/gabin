@@ -255,7 +255,7 @@ updateNextBtn()
             <p>
                 Tell Gabin which scenes you want him to manage.
                 You can test OSC command on Gabin on the on the
-                <!-- <code>{{ store.profiles.connections().osc?.server.ip }}</code> ip -->
+                <code>{{ store.osc.host }}:{{ store.osc.port }}</code> ip
             </p>
         </div>
         <div class="flex justify-between items-center bg-bg-2 text-content-2 text-sm mt-2 p-3">
