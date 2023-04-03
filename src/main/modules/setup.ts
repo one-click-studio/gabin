@@ -70,25 +70,24 @@ export class Setup {
         if (!this.osc.isReachable) return
         this.osc.send(path)
     }
+}
 
-    getAllAudioDevices(): AudioDevice[] {
-        const aDevices: AudioDevice[] = []
+export const getAllAudioDevices = (): AudioDevice[] => {
+    const aDevices: AudioDevice[] = []
 
-        const devices = getDevices()
-        for (const d of devices) {
-            if (!d.data.inputChannels) continue
+    const devices = getDevices()
+    for (const d of devices) {
+        if (!d.data.inputChannels) continue
 
-            aDevices.push({
-                id: d.id,
-                name: d.data.name,
-                sampleRate: d.data.preferredSampleRate,
-                nChannels: d.data.inputChannels,
-                api: d.apiId,
-                apiName: d.apiName,
-            })
-        }
-
-        return aDevices
+        aDevices.push({
+            id: d.id,
+            name: d.data.name,
+            sampleRate: d.data.preferredSampleRate,
+            nChannels: d.data.inputChannels,
+            api: d.apiId,
+            apiName: d.apiName,
+        })
     }
 
+    return aDevices
 }

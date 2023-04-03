@@ -92,13 +92,10 @@ export class AutocamClient extends Client {
 
         this.addSubscription(
             audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
-                this.audioDevices = aDevices
-                this.micsSpeaking = this.getMicsMap(this.audioDevices)
-                this.micsVolume = this.getMicsVolumeMap(this.audioDevices)
-                this.volumeMics$.next(this.micsVolume)
+                this.updateAudioDevices(aDevices)
             })
         )
-            
+
         this.addSubscription(
             autocamMapping.configPart$.subscribe((mapping: AutocamSettings[]) => {
                 this.autocamMapping = mapping
@@ -109,7 +106,7 @@ export class AutocamClient extends Client {
     override async connect() {
         super.connect()
         this.init()
-        
+
         this.enable = true
 
         const devicesData = this.getDevicesData()
@@ -161,6 +158,29 @@ export class AutocamClient extends Client {
     }
 
     // HELPERS
+
+    private updateAudioDevices(devices: AudioDeviceSettings[]) {
+        if (this.recorders.length){
+
+            for (const i in this.recorders){
+                const recorder = this.recorders[i]
+                const rname = recorder.getName()
+
+                const device = devices.find(d => d.name === rname)
+                if (!device || !device.thresholds) continue
+
+                this.recorders[i].setThresholds(device.thresholds)
+            }
+
+            return
+        }
+
+        this.audioDevices = devices
+
+        this.micsSpeaking = this.getMicsMap(this.audioDevices)
+        this.micsVolume = this.getMicsVolumeMap(this.audioDevices)
+        this.volumeMics$.next(this.micsVolume)
+    }
 
     private getMicsMap(devices: AudioDeviceSettings[]): Map<string, BehaviorSubject<boolean>> {
         const micIds = devices.reduce((p, d) => p.concat(d.micsName.filter((_m,i) => d.mics[i])), <string[]>[])
@@ -490,16 +510,6 @@ export class AutocamClient extends Client {
 
         this.manageContainers()
     }
-
-    setThresholds(deviceName: AudioDevice['name'], thresholds: Thresholds) {
-        for (const i in this.recorders) {
-            if (this.recorders[i].getName() !== deviceName) continue
-
-            this.recorders[i].setThresholds(thresholds)
-            break
-        }
-    }
-
 }
 
 class Container {

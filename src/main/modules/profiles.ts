@@ -71,9 +71,22 @@ export class Profiles {
 
     setDefault(id: Profile['id']) {
         const profiles = this.getProfiles()
+        if (this.getIndex(id, profiles) === -1) return
 
         for (const i in profiles) {
             profiles[i].active = (profiles[i].id === id)
+        }
+
+        this.save(profiles)
+    }
+
+    setDefaultByName(name: Profile['name']) {
+        const profiles = this.getProfiles()
+        const names = profiles.map(p => p.name)
+        if (names.indexOf(name) === -1) return
+
+        for (const i in profiles) {
+            profiles[i].active = (profiles[i].name === name)
         }
 
         this.save(profiles)
