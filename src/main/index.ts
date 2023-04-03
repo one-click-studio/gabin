@@ -344,6 +344,10 @@ class App {
                 this.ioClients.delete(socket.id)
             })
         })
+
+        this.profiles.default$.subscribe((profile) => {
+            this.io?.emit('handleDefault', profile)
+        })
     }
 
     private handleSetup() {

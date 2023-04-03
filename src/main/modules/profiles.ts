@@ -1,3 +1,5 @@
+import { Subject } from 'rxjs'
+
 import db from '../utils/db'
 import type { SpecificAndDefault } from '../utils/db'
 
@@ -9,6 +11,7 @@ import type {
 
 export class Profiles {
 
+    default$: Subject<Profile['id']>
     private profiles: SpecificAndDefault
 
     constructor() {
@@ -18,6 +21,7 @@ export class Profiles {
             this.profiles.defaultValue = v
         })
 
+        this.default$ = new Subject()
     }
 
     private getProfiles(): Profile[] {
@@ -76,19 +80,21 @@ export class Profiles {
         for (const i in profiles) {
             profiles[i].active = (profiles[i].id === id)
         }
-
+        
+        this.default$.next(id)
         this.save(profiles)
     }
 
     setDefaultByName(name: Profile['name']) {
         const profiles = this.getProfiles()
-        const names = profiles.map(p => p.name)
-        if (names.indexOf(name) === -1) return
+        const profile = profiles.find(p => p.name === name)
+        if (!profile) return
 
         for (const i in profiles) {
             profiles[i].active = (profiles[i].name === name)
         }
 
+        this.default$.next(profile.id)
         this.save(profiles)
     }
 

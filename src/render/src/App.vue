@@ -7,7 +7,7 @@ import { getOS, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
 import Background from '@src/layout/BackgroundLayout.vue'
 import Layout from '@src/layout/GlobalLayout.vue'
-import { Asset } from '../../types/protocol'
+import { Asset, Profile } from '../../types/protocol'
 
 const router = useRouter()
 
@@ -25,6 +25,13 @@ socketHandler(store.socket, 'handlePower', (power) => {
 
 socketHandler(store.socket, 'handleOscConfig', (config: {host: string, port: number}) => {
     store.osc = config
+})
+
+socketHandler(store.socket, 'handleDefault', (profileId: Profile['id']) => {
+    if (store.profiles.current !== profileId) {
+        store.redirect.path = router.currentRoute.value.path
+        router.push('loading')
+    }
 })
 
 socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
