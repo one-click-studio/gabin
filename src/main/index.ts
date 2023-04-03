@@ -8,14 +8,13 @@ import Systray from 'systray2'
 import { auditTime } from 'rxjs/operators'
 
 import { Server, Socket } from "socket.io"
-import type { Subscription } from 'rxjs'
 
 import { getLogger } from './utils/logger'
 import type { Logger } from './utils/logger'
 
 import { Gabin } from './modules/gabin'
 import { Profiles } from './modules/profiles'
-import { Setup } from './modules/setup'
+import { Setup, getAllAudioDevices } from './modules/setup'
 import { OscServer } from './servers/OscServer'
 
 import db from './utils/db'
@@ -286,9 +285,18 @@ class App {
             } else if (command.type === 'config') {
                 this.profiles.set(command.data)
             } else if (command.type === 'profile') {
-                this.setDefaultProfile(command.data)
+                this.setDefaultProfileByName(command.data)
             }
         })
+
+        this.osc?.request$.subscribe((request) => {
+            if (request.type === 'profiles') {
+                this.osc?.register$.next({type: request.type, data: this.profiles.getAll()})
+            } else if (request.type === 'devices') {
+                this.osc?.register$.next({type: request.type, data: getAllAudioDevices()})
+            }
+        })
+
     }
 
     private handleIo() {
@@ -383,7 +391,7 @@ class App {
         socket.on('sendOsc', (path: string, callback) => callback(this.setup?.sendOsc(path)))
 
         // AUDIO
-        socket.on('getAudioDevices', (_data, callback) => callback(this.setup?.getAllAudioDevices()))
+        socket.on('getAudioDevices', (_data, callback) => callback(getAllAudioDevices()))
     }
 
     private handleGabin() {
@@ -394,9 +402,11 @@ class App {
         })
         this.gabin.shoot$.subscribe((shoot) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleNewShot', shoot)
+            this.osc?.register$.next({ type: 'shot', data: shoot.shot.name })
         })
         this.gabin.autocam$.subscribe((autocam) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleAutocam', autocam)
+            this.osc?.register$.next({ type: 'autocam', data: JSON.stringify(autocam) })
         })
         this.gabin.timeline$.subscribe((micId) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleTimeline', micId)
@@ -426,16 +436,16 @@ class App {
     private sendAppState() {
         if (!this.io) return
 
-        if (this.gabin) {
-            this.io.emit('handleTimeline', this.gabin.timeline$.getValue())
-            this.io.emit('handleVolumeMics', Object.fromEntries(this.gabin.volumeMics$.getValue()))
-            this.io.emit('handleAvailableMics', Object.fromEntries(this.gabin.availableMics$.getValue()))
-        }
+        this.io.emit('handleTimeline', this.gabin? this.gabin.timeline$.getValue() : '')
+        this.io.emit('handleVolumeMics', this.gabin? Object.fromEntries(this.gabin.volumeMics$.getValue()) : {})
+        this.io.emit('handleAvailableMics', this.gabin? Object.fromEntries(this.gabin.availableMics$.getValue()) : {})
 
         this.io.emit('handlePower', this.gabin? true : false)
         this.io.emit('handleObsConnected', this.gabin?.connections$.getValue().obs || this.setup?.obs.isReachable)
         this.io.emit('handleOscConnected', this.gabin?.connections$.getValue().osc || this.setup?.osc.isReachable)
         this.io.emit('handleStreamdeckConnected', this.gabin?.connections$.getValue().streamdeck)
+
+        this.io.emit('handleOscConfig', this.osc?.getConfig())
     }
 
     private toggleSetup = (power: boolean, socket?: Socket) => {
@@ -473,21 +483,18 @@ class App {
         return this.profiles.setDefault(id)
     }
 
+    private setDefaultProfileByName = (name: Profile['name']) => {
+        if (this.gabin) this.toggleGabin(false)
+
+        // SET DEFAULT PROFILE
+        return this.profiles.setDefaultByName(name)
+    }
+
     private deleteProfile = (id: Profile['id']) => {
         this.gabin = undefined
         return this.profiles.delete(id)
     }
 }
-
-// // MICS
-// socket.on('setThresholds', (p: {id: Profile['id'], deviceName: AudioDevice['name'], thresholds: Thresholds}, callback) => {
-//     profileSetup.setThresholds(p.id, p.deviceName, p.thresholds)
-//     if (gabin && gabin.autocam) {
-//     gabin.autocam.setThresholds(p.deviceName, p.thresholds)
-//     }
-//     callback()
-// })
-
 
 const main = async () => {
     const app = new App()
