@@ -3,12 +3,18 @@ import fs from "fs"
 import os from "os"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
-import { getLogger } from '../../main/utils/logger'
+import { getLogger } from '../utils/logger'
 import { Thresholds } from "@src/types/protocol"
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
 
 const logger = getLogger('audio Activity')
+
+// @ts-ignore
+// const REC_FILE = path.join('./recordings', `./${Date.now()}.txt`)
+// if (!fs.existsSync(path.dirname(REC_FILE))) fs.mkdirSync(path.dirname(REC_FILE), { recursive: true })
+// if (!fs.existsSync(REC_FILE)) fs.writeFileSync(REC_FILE, '')
+
 
 interface Device {
     id: number
@@ -230,7 +236,7 @@ export class AudioActivity {
         return true
     }
 
-    public async start() {
+    public async init() {
         if (!this._device) return
 
         this._sileroVad = []
@@ -242,6 +248,12 @@ export class AudioActivity {
             await sileroVad.load()
             this._sileroVad[i] = sileroVad
         }
+    }
+
+    public async start() {
+        if (!this._device) return
+
+        this.init()
 
         this._rtAudio = new RtAudio(this._apiId)
 
@@ -311,10 +323,18 @@ export class AudioActivity {
         return volume
     }
 
-    private async process(pcm: Buffer) {
+    async process(pcm: Buffer) {
+        // make sure stream stays open
+        this._rtAudio?.write(Buffer.from([]))
+
+        // logger.info('process', Date.now())
+
         if (!this._device) return
         const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
-    
+
+        // const a = pcm.map((v) => v)
+        // fs.appendFileSync(REC_FILE, '\n'+JSON.stringify(a))
+
         // STEREO (COPY LEFT (0) TO RIGHT (1))
         // buffers[1] = JSON.parse(JSON.stringify(buffers[0]))
         // MUTE LEFT (0) OR RIGHT (1)
@@ -331,7 +351,7 @@ export class AudioActivity {
             if (this._channels.indexOf(i) === -1) continue
 
             const volume = Math.round(this.getVolume(buffers[i])*100)/100
-            const speaking = await this.processChannel(buffers[i], i)
+            const speaking = await this.processChannel(buffers[i], i, volume)
 
             processed.set(i, {volume, speaking})
         }
@@ -360,7 +380,7 @@ export class AudioActivity {
         }
 
     }
-    
+
     private tooManySpeakers(processed: ProcessedChannel): boolean {
         let speaking = 0
         for (let i = 0; i < this._channels.length; i++) {
@@ -402,7 +422,7 @@ export class AudioActivity {
         return this._channels[index]
     }
 
-    private async processChannel(buffer: number[], channel: number): Promise<boolean|undefined> {
+    private async processChannel(buffer: number[], channel: number, volume: number): Promise<boolean|undefined> {
         if (!this._sileroVad) return false
 
         if (buffer.length !== this._bufferLength){
@@ -413,7 +433,8 @@ export class AudioActivity {
 
         const channelIndex = this.shortIndex(channel)
         const vadLastProbability = await this._sileroVad[channelIndex].process(buffer)
-        if (vadLastProbability > this._vadThreshold) {
+        if (volume > 0 && vadLastProbability > this._vadThreshold) {
+            // fs.appendFileSync(REC_FILE, '\n\n'+JSON.stringify(buffer))
             isSpeaking = true
         }
 

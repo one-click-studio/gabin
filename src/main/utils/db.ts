@@ -20,10 +20,6 @@ const APP_DATA_FOLDER = path.join(process.env.APPDATA || (process.platform === '
 const CONFIG_FILE = path.join((process.env.GABIN_CONFIG_FOLDER || (process.pkg? APP_DATA_FOLDER : '')), './database.json')
 
 const EMPTY_CONFIG = {
-    connections: {
-        obs: { ip:''},
-        tcp: { ip:''},
-    },
     profiles: []
 }
 

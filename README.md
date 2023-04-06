@@ -83,14 +83,15 @@ Register :
 | ---- | ------ | ----------- |
 | ```/register/shot``` | host: string, port: number, path: string | get updated on each triggered shot |
 | ```/register/autocam``` | host: string, port: number, path: string | get updated when play/pause Gabin |
+| ```/register/defaultProfile``` | host: string, port: number, path: string | get updated when new default profile is set |
 
 #### Module (video mixer)
 | path | params | description |
 | ---- | ------ | ----------- |
 | ```/scene/$NAME_OF_YOUR_SCENE``` | none | tell Gabin what the current scene is |
 | ```/source/$NAME_OF_YOUR_SOURCE``` | none | trigger a specific shot |
-| ```/mic/$NAME_OF_YOUR_MIC``` | availabe: 1|0 | toggle mic availability
-| ```/autocam``` | autocam: 1|0 | toggle autocam
+| ```/mic/$NAME_OF_YOUR_MIC``` | availabe: 1,0 | toggle mic availability
+| ```/autocam``` | autocam: 1,0 | toggle autocam
 
 ---
 Made in 🇫🇷 by [OneClickStudio](https://oneclickstudio.fr/).

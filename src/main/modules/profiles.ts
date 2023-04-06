@@ -36,6 +36,17 @@ export class Profiles {
 
     private save(profiles: Profile[]) {
         this.profiles.edit(profiles)
+        this.profiles.defaultValue = profiles
+    }
+
+    private isValid(profile: Profile): boolean {
+        if (typeof profile !== 'object') return false
+
+        if (profile.hasOwnProperty('id') && typeof profile.id !== 'number') return false
+        if (profile.hasOwnProperty('name') && typeof profile.name !== 'string') return false
+        if (profile.hasOwnProperty('settings') && typeof profile.settings !== 'object') return false
+
+        return true
     }
 
     getAll(): Profile[] {
@@ -43,8 +54,9 @@ export class Profiles {
     }
 
     set(profile: Profile) {
-        const profiles = this.getProfiles()
+        if (!this.isValid(profile)) return
 
+        const profiles = this.getProfiles()
         const index = this.getIndex(profile.id, profiles)
 
         // new profile
@@ -80,7 +92,7 @@ export class Profiles {
         for (const i in profiles) {
             profiles[i].active = (profiles[i].id === id)
         }
-        
+
         this.default$.next(id)
         this.save(profiles)
     }

@@ -346,7 +346,9 @@ class App {
         })
 
         this.profiles.default$.subscribe((profile) => {
+            this.logger.debug('Default profile changed', profile)
             this.io?.emit('handleDefault', profile)
+            this.osc?.register$.next({ type: 'defaultProfile', data: profile })
         })
     }
 

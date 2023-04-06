@@ -113,7 +113,6 @@ export interface Toast {
 
 export interface ServerConfig {
     profiles: Profile[]
-    connections: ConnectionsConfig
 }
 
 

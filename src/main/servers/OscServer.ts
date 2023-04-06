@@ -9,7 +9,7 @@ type CmdType = typeof CMD_TYPES[number]
 const REQUEST_TYPES = ['profiles', 'devices'] as const
 type RequestType = typeof REQUEST_TYPES[number]
 
-const REGISTER_TYPES = [...REQUEST_TYPES, 'shot', 'autocam'] as const
+const REGISTER_TYPES = [...REQUEST_TYPES, 'shot', 'autocam', 'defaultProfile'] as const
 type RegisterType = typeof REGISTER_TYPES[number]
 
 export class OscServer extends Server {
@@ -87,16 +87,16 @@ export class OscServer extends Server {
         })
 
         this.server.on('/gabin/profiles', (message: any) => {
-            if (!message.args.length) return
+            if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             this.request('profiles', message.args[0], message.args[1], message.args[2])
         })
         this.server.on('/gabin/devices', (message: any) => {
-            if (!message.args.length) return
+            if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             this.request('devices', message.args[0], message.args[1], message.args[2])
         })
 
         this.server.on('/register/*', (message: any) => {
-            if (!message.args.length) return
+            if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             const type = message.address.split('/').pop()
             this.register(type, message.args[0], message.args[1], message.args[2])
         })
@@ -106,15 +106,15 @@ export class OscServer extends Server {
         })
     }
 
-    private command(type: CmdType, data: any, toJson?: boolean) {
+    private command(type: CmdType, data: any, fromJson?: boolean) {
         this.logger.debug('command', {type, data})
         if (CMD_TYPES.indexOf(type) === -1) return
 
-        if (data && toJson) {
+        if (data && fromJson) {
             try {
-                data = JSON.stringify(data)
+                data = JSON.parse(data)
             } catch (e) {
-                this.logger.error('Can\'t stringify data', data)
+                this.logger.error('Can\'t parse data', data)
                 return
             }
         }

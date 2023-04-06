@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@playwright/test': ^1.32.1
   '@types/deep-eql': ^4.0.0
   '@types/finalhandler': ^1.2.0
   '@types/node': ^18.13.0
@@ -16,7 +17,6 @@ specifiers:
   onnxruntime-node: ^1.13.1
   osc-js: ^2.4.0
   pkg: ^5.8.1
-  playwright: ^1.29.2
   rxjs: ^7.8.0
   serve-static: ^1.15.0
   shx: ^0.3.4
@@ -24,7 +24,7 @@ specifiers:
   socket.io: ^4.6.0
   systray2: github:one-click-studio/node-systray
   ts-node: ^10.9.1
-  typescript: ^4.9.5
+  typescript: ^5.0.3
   yarn: ^1.22.19
 
 dependencies:
@@ -42,6 +42,7 @@ dependencies:
   systray2: github.com/one-click-studio/node-systray/5cbccb3c8d949ad7bbc1d0e6867b95140fbd9fd6
 
 devDependencies:
+  '@playwright/test': 1.32.1
   '@types/deep-eql': 4.0.0
   '@types/finalhandler': 1.2.0
   '@types/node': 18.13.0
@@ -50,10 +51,9 @@ devDependencies:
   cross-env: 7.0.3
   nodemon: 2.0.20
   pkg: 5.8.1
-  playwright: 1.30.0
   shx: 0.3.4
-  ts-node: 10.9.1_4bewfcp2iebiwuold25d6rgcsy
-  typescript: 4.9.5
+  ts-node: 10.9.1_mp2g3ixfceum5cmxsasnzw3kp4
+  typescript: 5.0.3
   yarn: 1.22.19
 
 packages:
@@ -155,6 +155,17 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
+    dev: true
+
+  /@playwright/test/1.32.1:
+    resolution: {integrity: sha512-FTwjCuhlm1qHUGf4hWjfr64UMJD/z0hXYbk+O387Ioe6WdyZQ+0TBDAc6P+pHjx2xCv1VYNgrKbYrNixFWy4Dg==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@types/node': 18.13.0
+      playwright-core: 1.32.1
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /@socket.io/component-emitter/3.1.0:
@@ -762,7 +773,7 @@ packages:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
     engines: {node: '>=12'}
     dependencies:
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
       jsonfile: 6.1.0
       universalify: 2.0.0
     dev: false
@@ -853,6 +864,10 @@ packages:
 
   /graceful-fs/4.2.10:
     resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
+    dev: true
+
+  /graceful-fs/4.2.11:
+    resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
   /has-flag/3.0.0:
     resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
@@ -1000,7 +1015,7 @@ packages:
     dependencies:
       universalify: 2.0.0
     optionalDependencies:
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
 
   /lodash.isplainobject/4.0.6:
     resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==}
@@ -1322,19 +1337,10 @@ packages:
       - supports-color
     dev: true
 
-  /playwright-core/1.30.0:
-    resolution: {integrity: sha512-7AnRmTCf+GVYhHbLJsGUtskWTE33SwMZkybJ0v6rqR1boxq2x36U7p1vDRV7HO2IwTZgmycracLxPEJI49wu4g==}
+  /playwright-core/1.32.1:
+    resolution: {integrity: sha512-KZYUQC10mXD2Am1rGlidaalNGYk3LU1vZqqNk0gT4XPty1jOqgup8KDP8l2CUlqoNKhXM5IfGjWgW37xvGllBA==}
     engines: {node: '>=14'}
     hasBin: true
-    dev: true
-
-  /playwright/1.30.0:
-    resolution: {integrity: sha512-ENbW5o75HYB3YhnMTKJLTErIBExrSlX2ZZ1C/FzmHjUYIfxj/UnI+DWpQr992m+OQVSg0rCExAOlRwB+x+yyIg==}
-    engines: {node: '>=14'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.30.0
     dev: true
 
   /prebuild-install/7.1.1:
@@ -1758,7 +1764,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-node/10.9.1_4bewfcp2iebiwuold25d6rgcsy:
+  /ts-node/10.9.1_mp2g3ixfceum5cmxsasnzw3kp4:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -1784,7 +1790,7 @@ packages:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 4.9.5
+      typescript: 5.0.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true
@@ -1807,9 +1813,9 @@ packages:
     engines: {node: '>=12.20'}
     dev: false
 
-  /typescript/4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
-    engines: {node: '>=4.2.0'}
+  /typescript/5.0.3:
+    resolution: {integrity: sha512-xv8mOEDnigb/tN9PSMTwSEqAnUvkoXMQlicOb0IUVDBSQCgBSaAAROUZYy2IcUy5qU6XajK5jjjO7TMWqBTKZA==}
+    engines: {node: '>=12.20'}
     hasBin: true
     dev: true
 
