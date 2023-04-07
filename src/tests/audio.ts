@@ -7,6 +7,7 @@ import { Subject, BehaviorSubject } from 'rxjs'
 type ShotRegister = {
     name: string
     time: number
+    interval: number
 }
 
 const DEFAULT = {
@@ -17,9 +18,11 @@ const DEFAULT = {
 const CONFIG = {
     host: 'localhost',
     port: 57121,
+    device: "Existential Audio Inc.: BlackHole 16ch",
+    apiName: "MACOSX_CORE"
 } as const
 
-const sendWav = async (wavPath: string): Promise<boolean> => {
+const sendWav = async (wavPath: string, device: {id: number, nChannels: number}, callback: ()=>void): Promise<boolean> => {
 
     const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] => {
         const buffers: number[][] = []
@@ -83,8 +86,8 @@ const sendWav = async (wavPath: string): Promise<boolean> => {
     // return
 
     const virtualAudioLoopback = {
-        deviceId: 132,
-        nChannels: 16,
+        deviceId: device.id,
+        nChannels: device.nChannels,
         firstChannel: 0
     }
 
@@ -107,6 +110,10 @@ const sendWav = async (wavPath: string): Promise<boolean> => {
             frameSize,
             "MyStream",
             () => {
+                if (!index) {
+                    callback()
+                }
+
                 if (index >= buf.length) {
                     rtAudio.stop()
                     console.log(`stop streaming`)
@@ -186,25 +193,29 @@ const initOSC = async (): Promise<any> => {
     })
 }
 
-const getFiles = (): {wav: string, config: string}|undefined => {
+const getFiles = (): {wav: string, config: string, shots: string}|undefined => {
     const RESOURCES = path.join(__dirname, 'resources')
     const files = fs.readdirSync(RESOURCES)
 
     const wavFile = files.find((file) => file.includes('.wav'))
-    const configFile = files.find((file) => file.includes('.json'))
+    const configFile = files.find((file) => file.includes('profile.json'))
+    const shotsFile = files.find((file) => file.includes('shots.json'))
 
-    if (!wavFile) console.error('no wav file found')
-    if (!configFile) console.error('no config file found')
-    if (!wavFile || !configFile) return
+    if (!wavFile) console.error('no wav file found (must be a valid wav file)')
+    if (!configFile) console.error('no config file found (must be profile.json)')
+    if (!shotsFile) console.error('no config file found (must be shots.json)')
+    if (!wavFile || !configFile || !shotsFile) return
 
     return {
         wav: path.join(RESOURCES, wavFile),
-        config: path.join(RESOURCES, configFile)
+        config: path.join(RESOURCES, configFile),
+        shots: path.join(RESOURCES, shotsFile)
     }
 }
 
 // TODO
 // launch gabin
+// get devices OK
 // get settings OK
 // send settings OK
 // power on gabin OK
@@ -215,14 +226,16 @@ const getFiles = (): {wav: string, config: string}|undefined => {
 // stop gabin
 
 const main = async () => {
+    const devices$ = new BehaviorSubject<any>(undefined)
     const settings$ = new BehaviorSubject<any>(undefined)
     const autocam$ = new BehaviorSubject<boolean>(false)
     const playing$ = new BehaviorSubject<boolean|undefined>(undefined)
     const profileId$ = new BehaviorSubject<number|undefined>(undefined)
     const shot$ = new Subject<string>()
 
-    const shots: ShotRegister[] = []
     const files = getFiles()
+    const shots: ShotRegister[] = []
+    let initPlaying = false
 
     if (!files) return
 
@@ -230,6 +243,10 @@ const main = async () => {
 
     const addListeners = () => {
         console.log('adding listeners')
+        osc.on('/gabin/devices', (message: any) => {
+            if (!message.args[0]) return
+            devices$.next(JSON.parse(message.args[0]))
+        })
         osc.on('/gabin/autocam', (message: any) => {
             if (!message.args[0]) return
             autocam$.next(message.args[0] === 'true')
@@ -245,6 +262,11 @@ const main = async () => {
 
         osc.send('/register/autocam', CONFIG.host, CONFIG.port, '/gabin/autocam')
         osc.send('/register/defaultProfile', CONFIG.host, CONFIG.port, '/gabin/defaultProfile')
+    }
+
+    const getDevices = () => {
+        console.log('getting devices')
+        osc.send('/gabin/devices', CONFIG.host, CONFIG.port, '/gabin/devices')
     }
 
     const getSettings = () => {
@@ -281,20 +303,58 @@ const main = async () => {
         const scene = settings.settings.containers[0]
         osc.send(`/gabin/scene/${scene.name}`)
     }
+    
+    const sendSource = () => {
+        console.log('sending source')
+
+        const settings = settings$.getValue()
+        if (!settings) return
+        
+        const scene = settings.settings.containers[0]
+        const container = scene.containers[0]
+        const source = container.sources[0]
+        osc.send(`/gabin/source/${source.name}`)
+    }
 
     const play = async () => {
         console.log('playing')
-        if (playing$.getValue() === true) return
+        const devices = devices$.getValue()
+        const device = devices?.find((device: any) => device.name === CONFIG.device && device.apiName === CONFIG.apiName)
 
-        playing$.next(true)
-        sendWav(files.wav).then(() => {
+        if (playing$.getValue() === true || !device) return
+
+        sendWav(files.wav, device, () => {
+            initPlaying = false
+            playing$.next(true)
+        }).then(() => {
             playing$.next(false)
         }).catch((err) => {
             console.error(err)
         })
     }
 
+    const getShots = () => {
+        console.log('getting shots')
+
+        const shotsFile = fs.readFileSync(files.shots)
+        return JSON.parse(shotsFile.toString())
+    }
+
+    const saveShots = () => {
+        console.log('saving shots')
+
+        const data = getShots()
+        data[Date.now()] = shots
+        fs.writeFileSync(files.shots, JSON.stringify(data))
+    }
+
     const timeline = () => {
+
+        devices$.subscribe((devices) => {
+            if (!devices || !devices.length) return
+            getSettings()
+        })
+
         settings$.subscribe((settings) => {
             if (!settings) return
             sendSettings()
@@ -313,17 +373,26 @@ const main = async () => {
         shot$.subscribe((shot) => {
             const playing = playing$.getValue()
 
-            if (!shot || playing === false) return
+            if (!shot || playing === false || initPlaying) return
 
-            if (playing === undefined) {
-                return play()
+            if (playing === undefined && !initPlaying) {
+                initPlaying = true
+                sendSource()
+                setTimeout(() => {
+                    play()
+                }, 2500)
+                return
             }
 
-            console.log(`shot: ${shot}`)
+            const lastShotTime = (shots.length)? shots[shots.length-1].time : Date.now()
+            const shotTime = Date.now()
+            const interval = shotTime - lastShotTime
+            console.log(`shot: ${shot}\tinterval: ${interval}`)
 
             shots.push({
                 name: shot,
-                time: Date.now()
+                time: shotTime,
+                interval
             })
         })
 
@@ -333,6 +402,7 @@ const main = async () => {
             if (playing === false) {
                 powerOff()
                 console.log('shots:', shots)
+                saveShots()
             }
         })
     }
@@ -342,7 +412,7 @@ const main = async () => {
         timeline()
 
         setTimeout(() => {
-            getSettings()
+            getDevices()
         }, 1000)
     }
 

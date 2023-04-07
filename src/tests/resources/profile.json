@@ -15,7 +15,7 @@
                     true,
                     true,
                     true,
-                    true,
+                    false,
                     false,
                     false,
                     false,
@@ -33,7 +33,7 @@
                     "mic1",
                     "mic2",
                     "mic3",
-                    "mic4",
+                    "",
                     "",
                     "",
                     "",
@@ -75,27 +75,21 @@
                                 }
                             },
                             {
-                                "name": "mic4",
-                                "options": {
-                                    "path": "/gabin/shot/mic4"
-                                }
-                            },
-                            {
                                 "name": "mic1-mic2",
                                 "options": {
                                     "path": "/gabin/shot/mic1-mic2"
                                 }
                             },
                             {
-                                "name": "mic3-mic4",
+                                "name": "mic2-mic3",
                                 "options": {
-                                    "path": "/gabin/shot/mic3-mic4"
+                                    "path": "/gabin/shot/mic2-mic3"
                                 }
                             },
                             {
-                                "name": "mic1-mic2-mic3-mic4",
+                                "name": "mic1-mic2-mic3",
                                 "options": {
-                                    "path": "/gabin/shot/mic1-mic2-mic3-mic4"
+                                    "path": "/gabin/shot/mic1-mic2-mic3"
                                 }
                             }
                         ]
@@ -141,15 +135,15 @@
                                 }
                             },
                             {
-                                "name": "mic3-mic4",
+                                "name": "mic2-mic3",
                                 "options": {
-                                    "path": "/gabin/shot/mic3-mic4"
+                                    "path": "/gabin/shot/mic2-mic3"
                                 }
                             },
                             {
-                                "name": "mic1-mic2-mic3-mic4",
+                                "name": "mic1-mic2-mic3",
                                 "options": {
-                                    "path": "/gabin/shot/mic1-mic2-mic3-mic4"
+                                    "path": "/gabin/shot/mic1-mic2-mic3"
                                 }
                             }
                         ],
@@ -186,39 +180,30 @@
                                     },
                                     {
                                         "source": {
-                                            "name": "mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic4"
-                                            }
-                                        },
-                                        "weight": 0
-                                    },
-                                    {
-                                        "source": {
                                             "name": "mic1-mic2",
                                             "options": {
                                                 "path": "/gabin/shot/mic1-mic2"
                                             }
                                         },
-                                        "weight": 30
+                                        "weight": 0
                                     },
                                     {
                                         "source": {
-                                            "name": "mic3-mic4",
+                                            "name": "mic2-mic3",
                                             "options": {
-                                                "path": "/gabin/shot/mic3-mic4"
+                                                "path": "/gabin/shot/mic2-mic3"
                                             }
                                         },
                                         "weight": 0
                                     },
                                     {
                                         "source": {
-                                            "name": "mic1-mic2-mic3-mic4",
+                                            "name": "mic1-mic2-mic3",
                                             "options": {
-                                                "path": "/gabin/shot/mic1-mic2-mic3-mic4"
+                                                "path": "/gabin/shot/mic1-mic2-mic3"
                                             }
                                         },
-                                        "weight": 10
+                                        "weight": 0
                                     }
                                 ]
                             },
@@ -241,7 +226,7 @@
                                                 "path": "/gabin/shot/mic2"
                                             }
                                         },
-                                        "weight": 60
+                                        "weight": 50
                                     },
                                     {
                                         "source": {
@@ -254,39 +239,30 @@
                                     },
                                     {
                                         "source": {
-                                            "name": "mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic4"
-                                            }
-                                        },
-                                        "weight": 0
-                                    },
-                                    {
-                                        "source": {
                                             "name": "mic1-mic2",
                                             "options": {
                                                 "path": "/gabin/shot/mic1-mic2"
                                             }
                                         },
-                                        "weight": 30
+                                        "weight": 0
                                     },
                                     {
                                         "source": {
-                                            "name": "mic3-mic4",
+                                            "name": "mic2-mic3",
                                             "options": {
-                                                "path": "/gabin/shot/mic3-mic4"
+                                                "path": "/gabin/shot/mic2-mic3"
                                             }
                                         },
                                         "weight": 0
                                     },
                                     {
                                         "source": {
-                                            "name": "mic1-mic2-mic3-mic4",
+                                            "name": "mic1-mic2-mic3",
                                             "options": {
-                                                "path": "/gabin/shot/mic1-mic2-mic3-mic4"
+                                                "path": "/gabin/shot/mic1-mic2-mic3"
                                             }
                                         },
-                                        "weight": 10
+                                        "weight": 0
                                     }
                                 ]
                             },
@@ -322,15 +298,6 @@
                                     },
                                     {
                                         "source": {
-                                            "name": "mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic4"
-                                            }
-                                        },
-                                        "weight": 0
-                                    },
-                                    {
-                                        "source": {
                                             "name": "mic1-mic2",
                                             "options": {
                                                 "path": "/gabin/shot/mic1-mic2"
@@ -340,89 +307,21 @@
                                     },
                                     {
                                         "source": {
-                                            "name": "mic3-mic4",
+                                            "name": "mic2-mic3",
                                             "options": {
-                                                "path": "/gabin/shot/mic3-mic4"
-                                            }
-                                        },
-                                        "weight": 30
-                                    },
-                                    {
-                                        "source": {
-                                            "name": "mic1-mic2-mic3-mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic1-mic2-mic3-mic4"
-                                            }
-                                        },
-                                        "weight": 10
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "mic4",
-                                "cams": [
-                                    {
-                                        "source": {
-                                            "name": "mic1",
-                                            "options": {
-                                                "path": "/gabin/shot/mic1"
+                                                "path": "/gabin/shot/mic2-mic3"
                                             }
                                         },
                                         "weight": 0
                                     },
                                     {
                                         "source": {
-                                            "name": "mic2",
+                                            "name": "mic1-mic2-mic3",
                                             "options": {
-                                                "path": "/gabin/shot/mic2"
+                                                "path": "/gabin/shot/mic1-mic2-mic3"
                                             }
                                         },
                                         "weight": 0
-                                    },
-                                    {
-                                        "source": {
-                                            "name": "mic3",
-                                            "options": {
-                                                "path": "/gabin/shot/mic3"
-                                            }
-                                        },
-                                        "weight": 0
-                                    },
-                                    {
-                                        "source": {
-                                            "name": "mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic4"
-                                            }
-                                        },
-                                        "weight": 60
-                                    },
-                                    {
-                                        "source": {
-                                            "name": "mic1-mic2",
-                                            "options": {
-                                                "path": "/gabin/shot/mic1-mic2"
-                                            }
-                                        },
-                                        "weight": 0
-                                    },
-                                    {
-                                        "source": {
-                                            "name": "mic3-mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic3-mic4"
-                                            }
-                                        },
-                                        "weight": 30
-                                    },
-                                    {
-                                        "source": {
-                                            "name": "mic1-mic2-mic3-mic4",
-                                            "options": {
-                                                "path": "/gabin/shot/mic1-mic2-mic3-mic4"
-                                            }
-                                        },
-                                        "weight": 10
                                     }
                                 ]
                             }

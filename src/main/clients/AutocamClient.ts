@@ -408,7 +408,7 @@ export class AutocamClient extends Client {
 
             const showing = this.getShowingContainer(micId)
             if (showing) {
-                if (this.lastSpeaker === micId && showing.focus) return
+                if (this.lastSpeaker === micId && showing.toUnfocus) return showing.focus_()
                 
                 this.logger.debug('One container is already showing this mic')
                 showing.trigger$.next({ micId })
@@ -483,7 +483,7 @@ export class AutocamClient extends Client {
     private unfocusContainers(containerId?: Container['name']) {
         this.containerMap.forEach(container => {
             if (container.name !== containerId){
-                container.unfocus()
+                container.unfocus_()
             }
         })
     }
@@ -549,6 +549,7 @@ class Container {
 
         this.trigger$.subscribe(params => {
             if (!this.focus) this.focus = true
+            this.logger.warn('FOCUS MODE (triggered)', params)
             this.focusMode(params.micId, params.shotName)
         })
     }
@@ -791,28 +792,31 @@ class Container {
         this.shoot(shot)
 
         this.timeouts.push(setTimeout(() => {
+            this.logger.warn('unlock (focus)')
             this.lock = false
 
             if (this.currentMic && this.currentMic !== micId) {
-                this.logger.warn('currentMic changed during focusMode', {currentMic:this.currentMic, micId})
+                this.logger.warn('FOCUS MODE (currentMic changed)', {currentMic:this.currentMic, micId})
                 this.focusMode(this.currentMic)
             } else if (forced) {
-                this.logger.warn('focusMode forced return to illustrationMode', {forced})
-                this.unfocus()
+                this.logger.warn('ILLUSTRATION MODE (focusMode forced)', {forced})
+                this.unfocus_()
                 this.illustrationMode()
             }
         }, duration * 1000))
 
         this.timeouts.push(setTimeout(() => {
-            if (this.toUnfocus) {
-                this.logger.warn('Unfocus after max duration -> got to illustrationMode')
+            this.logger.warn('end (focus)')
+            if (!this.focus || !this.toUnfocus) {
+                this.logger.warn('ILLUSTRATION MODE (after max duration && !focus)')
 
-                this.focus = false
                 this.toUnfocus = false
+                this.focus = false
+
                 this.illustrationMode(this.currentMic)
             } else {
 
-                this.logger.warn('focusMode on the currentMic', {currentMic:this.currentMic})
+                this.logger.warn('FOCUS MODE (after max duration)', {currentMic:this.currentMic})
                 this.focusMode(this.currentMic)
             }
 
@@ -870,8 +874,13 @@ class Container {
         this.micsMap = this.getMicsMapFromShotMap(this.filteredShotsMap)
     }
 
-    unfocus() {
+    unfocus_() {
         if (this.focus) this.toUnfocus = true
         // this.focus = false
     }
+
+    focus_() {
+        this.focus = true
+    }
+
 }
