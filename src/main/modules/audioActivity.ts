@@ -436,6 +436,7 @@ export class AudioActivity {
         if (volume > 0 && vadLastProbability > this._vadThreshold) {
             // fs.appendFileSync(REC_FILE, '\n\n'+JSON.stringify(buffer))
             isSpeaking = true
+            logger.warn('SPEAKING', {channel, volume, vadLastProbability})
         }
 
         if (isSpeaking) {

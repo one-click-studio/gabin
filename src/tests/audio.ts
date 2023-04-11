@@ -333,6 +333,7 @@ const main = async () => {
     const play = async () => {
         console.log('playing')
         const devices = devices$.getValue()
+        console.log('\n\n\ndevices', devices, '\n\n\n')
         const device = devices?.find((device: any) => device.name === CONFIG.device && device.apiName === CONFIG.apiName)
         console.log('\n\n\ndevice', device)
 
