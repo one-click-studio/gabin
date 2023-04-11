@@ -4,6 +4,8 @@ import { RtAudio, RtAudioFormat } from "audify"
 import OSC from 'osc-js'
 import { Subject, BehaviorSubject } from 'rxjs'
 
+import { App as Gabin } from '../main/app'
+
 type ShotRegister = {
     name: string
     time: number
@@ -171,12 +173,17 @@ const initOSC = async (): Promise<any> => {
             server.on(path, callback)
         }
 
+        const close = () => {
+            server.close()
+        }
+
         server.on('open', () => {
             console.log("connection was established")
             return resolve ({
                 server,
                 send,
-                on
+                on,
+                close
             })
         })
 
@@ -221,8 +228,8 @@ const getFiles = (): {wav: string, config: string, shots: string}|undefined => {
 // power on gabin OK
 // send wav OK
 // listen to shots OK
+// verify shots OK
 // power off gabin OK
-// verify shots
 // stop gabin
 
 const main = async () => {
@@ -235,11 +242,14 @@ const main = async () => {
 
     const files = getFiles()
     const shots: ShotRegister[] = []
+    let referential: any
     let initPlaying = false
 
     if (!files) return
 
     const osc = await initOSC()
+    const app = new Gabin()
+    await app.init()
 
     const addListeners = () => {
         console.log('adding listeners')
@@ -303,7 +313,7 @@ const main = async () => {
         const scene = settings.settings.containers[0]
         osc.send(`/gabin/scene/${scene.name}`)
     }
-    
+
     const sendSource = () => {
         console.log('sending source')
 
@@ -340,12 +350,29 @@ const main = async () => {
         return JSON.parse(shotsFile.toString())
     }
 
-    const saveShots = () => {
-        console.log('saving shots')
+    const checkLastShot = () => {
+        const index = shots.length-1
+        const shot = shots[index]
 
-        const data = getShots()
-        data[Date.now()] = shots
-        fs.writeFileSync(files.shots, JSON.stringify(data))
+        if (!shot) return
+
+        const r = referential[index]
+        if (!r) {
+            console.error(`\n\n[KO]\tshot: ${shots[shots.length-1].name}\tinterval: ${shots[shots.length-1].interval}\n`)
+            stop(1)
+        }
+
+        // if referential shot name is in shot name
+        if (!shot.name.includes(r.name)) {
+            console.error(`\n\n[KO]\tshot: ${shots[shots.length-1].name}\tinterval: ${shots[shots.length-1].interval}\nshould contain: ${r.name}\n`)
+            stop(1)
+        }
+
+        const diff = Math.abs(shot.interval - r.interval)
+        if (diff > 250) {
+            console.error(`\n\n[KO]\tshot: ${shots[shots.length-1].name}\tinterval: ${shots[shots.length-1].interval}\nshould have been: ${r.interval}ms (±250)\n`)
+            stop(1)
+        }
     }
 
     const timeline = () => {
@@ -387,29 +414,41 @@ const main = async () => {
             const lastShotTime = (shots.length)? shots[shots.length-1].time : Date.now()
             const shotTime = Date.now()
             const interval = shotTime - lastShotTime
-            console.log(`shot: ${shot}\tinterval: ${interval}`)
 
             shots.push({
                 name: shot,
                 time: shotTime,
                 interval
             })
+
+            checkLastShot()
         })
 
         playing$.subscribe((playing) => {
             if (playing === undefined) return
 
             if (playing === false) {
-                powerOff()
-                console.log('shots:', shots)
-                saveShots()
+                console.log(`\n\n[OK]`)
+                stop(0)
             }
         })
+    }
+
+    const stop = (code=0) => {
+        console.log('stopping')
+        powerOff()
+        setTimeout(() => {
+            osc.close()
+        }, 250)
+
+        process.exit(code)
     }
 
     const init = () => {
         addListeners()
         timeline()
+
+        referential = getShots()
 
         setTimeout(() => {
             getDevices()
