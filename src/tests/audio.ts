@@ -93,6 +93,8 @@ const sendWav = async (wavPath: string, device: {id: number, nChannels: number},
         firstChannel: 0
     }
 
+    console.log(`virtualAudioLoopback: ${JSON.stringify(virtualAudioLoopback)}`)
+
     let index = 0
     const dataSize = 2
     const frameSize = 1920
@@ -330,6 +332,7 @@ const main = async () => {
         console.log('playing')
         const devices = devices$.getValue()
         const device = devices?.find((device: any) => device.name === CONFIG.device && device.apiName === CONFIG.apiName)
+        console.log('\n\n\ndevice', device)
 
         if (playing$.getValue() === true || !device) return
 
@@ -455,7 +458,9 @@ const main = async () => {
         }, 1000)
     }
 
-    init()
+    setTimeout(() => {
+        init()
+    }, 2000)
 }
 
 main()
