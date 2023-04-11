@@ -5,6 +5,7 @@ import { Client } from '../../main/clients/Client'
 import db from '../../main/utils/db'
 import type { Logger } from '../../main/utils/logger'
 import { getLogger } from '../../main/utils/logger'
+import { random } from '../../main/utils/utils'
 
 import { AudioActivity, getDevices } from '../../main/modules/audioActivity'
 import type { RtAudioApi } from 'audify'
@@ -293,7 +294,7 @@ export class AutocamClient extends Client {
         })
 
         if (containers.length > 0) {
-            return containers[Math.floor(Math.random() * containers.length)]
+            return containers[Math.floor(random() * containers.length)]
         }
 
         return null
@@ -308,7 +309,7 @@ export class AutocamClient extends Client {
         })
 
         if (containers.length > 0) {
-            return containers[Math.floor(Math.random() * containers.length)]
+            return containers[Math.floor(random() * containers.length)]
         }
 
         return null
@@ -625,14 +626,14 @@ class Container {
     }
 
     private getRandomShot(shots: Asset['source']['name'][]): Asset['source']['name']|undefined {
-        const index = Math.floor(Math.random() * shots.length)
+        const index = Math.floor(random() * shots.length)
 
         return shots[index]
     }
 
     private pickShot(shots: AutocamSource[]): Asset['source']['name'] | undefined {
         const totalWeight = shots.reduce((res, shot) => res + shot.weight, 0)
-        const rand = Math.random() * totalWeight
+        const rand = random() * totalWeight
         let sum = 0
         for (const shot of shots) {
             sum += shot.weight

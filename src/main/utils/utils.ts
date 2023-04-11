@@ -159,3 +159,16 @@ export function openUrl(url: string): void {
     var start = (process.platform == 'darwin'? 'open': process.platform == 'win32'? 'start': 'xdg-open')
     require('child_process').exec(start + ' ' + url)
 }
+
+const mulberry32 = () => {
+    let a = 1337 ^ 0xDEADBEEF
+
+    return function() {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+}
+
+export const random: ()=>number = mulberry32()
