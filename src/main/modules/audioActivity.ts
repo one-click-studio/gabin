@@ -332,6 +332,8 @@ export class AudioActivity {
         if (!this._device) return
         const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
 
+        logger.warn(buffers.slice(0,3).map((v) => v.slice(0, 16).join(', ')))
+
         // const a = pcm.map((v) => v)
         // fs.appendFileSync(REC_FILE, '\n'+JSON.stringify(a))
 
