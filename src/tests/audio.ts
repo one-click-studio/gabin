@@ -124,19 +124,24 @@ const sendWav = async (wavPath: string, device: {id: number, nChannels: number},
                     return resolve(true)
                 }
 
-                let resp = buf.subarray(index, index + frameSize*nChannels*dataSize)
-                const buffers = splitBuffer(resp, dataSize, nChannels)
-
-                if (nChannels < channels){
-                    while (buffers.length < channels) {
-                        buffers.push(new Array(frameSize*dataSize).fill(0))
-                    }
-                } else if (nChannels >  channels) {
-                    while (buffers.length > channels) {
-                        buffers.pop()
-                    }
+                // let resp = buf.subarray(index, index + frameSize*nChannels*dataSize)
+                // const buffers = splitBuffer(resp, dataSize, nChannels)
+                const buffers:number[][] = []
+                while (buffers.length < channels) {
+                    buffers.push(new Array(frameSize*dataSize).fill(244))
                 }
-                resp = joinBuffers(buffers, dataSize)
+                let resp = joinBuffers(buffers, dataSize)
+
+                // if (nChannels < channels){
+                //     while (buffers.length < channels) {
+                //         buffers.push(new Array(frameSize*dataSize).fill(0))
+                //     }
+                // } else if (nChannels >  channels) {
+                //     while (buffers.length > channels) {
+                //         buffers.pop()
+                //     }
+                // }
+                // resp = joinBuffers(buffers, dataSize)
                 index += frameSize*nChannels*dataSize
 
                 if (resp.length !== length) {

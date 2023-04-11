@@ -257,6 +257,12 @@ export class AudioActivity {
 
         this._rtAudio = new RtAudio(this._apiId)
 
+        logger.debug({
+            deviceId: this._device.id,
+            nChannels: this._device.data.inputChannels,
+            firstChannel: 0
+        })
+
         this._rtAudio.openStream(
             null,
             {
@@ -332,7 +338,10 @@ export class AudioActivity {
         if (!this._device) return
         const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
 
-        logger.warn(buffers.slice(0,3).map((v) => v.slice(0, 16).join(', ')))
+        if (buffers[0].reduce((a, b) => a + b, 0) > 0) {
+            logger.warn(buffers.slice(0,3).map((v) => v.slice(0, 16).join(', ')))
+        }
+
 
         // const a = pcm.map((v) => v)
         // fs.appendFileSync(REC_FILE, '\n'+JSON.stringify(a))
