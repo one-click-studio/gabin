@@ -10,12 +10,6 @@ const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx
 
 const logger = getLogger('audio Activity')
 
-// @ts-ignore
-// const REC_FILE = path.join('./recordings', `./${Date.now()}.txt`)
-// if (!fs.existsSync(path.dirname(REC_FILE))) fs.mkdirSync(path.dirname(REC_FILE), { recursive: true })
-// if (!fs.existsSync(REC_FILE)) fs.writeFileSync(REC_FILE, '')
-
-
 interface Device {
     id: number
     data: RtAudioDeviceInfo
@@ -333,18 +327,12 @@ export class AudioActivity {
         // make sure stream stays open
         this._rtAudio?.write(Buffer.from([]))
 
-        // logger.info('process', Date.now())
-
         if (!this._device) return
         const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
 
-        if (buffers[0].reduce((a, b) => a + b, 0) > 0) {
-            logger.warn(buffers.slice(0,3).map((v) => v.slice(0, 16).join(', ')))
-        }
-
-
-        // const a = pcm.map((v) => v)
-        // fs.appendFileSync(REC_FILE, '\n'+JSON.stringify(a))
+        // if (buffers[0].reduce((a, b) => a + b, 0) > 0) {
+        //     logger.warn(buffers.slice(0,3).map((v) => v.slice(0, 16).join(', ')))
+        // }
 
         // STEREO (COPY LEFT (0) TO RIGHT (1))
         // buffers[1] = JSON.parse(JSON.stringify(buffers[0]))
@@ -445,9 +433,7 @@ export class AudioActivity {
         const channelIndex = this.shortIndex(channel)
         const vadLastProbability = await this._sileroVad[channelIndex].process(buffer)
         if (volume > 0 && vadLastProbability > this._vadThreshold) {
-            // fs.appendFileSync(REC_FILE, '\n\n'+JSON.stringify(buffer))
             isSpeaking = true
-            logger.warn('SPEAKING', {channel, volume, vadLastProbability})
         }
 
         if (isSpeaking) {
