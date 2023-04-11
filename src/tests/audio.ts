@@ -20,7 +20,7 @@ const DEFAULT = {
 const CONFIG = {
     host: 'localhost',
     port: 57121,
-    device: "Existential Audio Inc.: BlackHole 16ch",
+    device: "Existential Audio Inc.: BlackHole 2ch",
     apiName: "MACOSX_CORE"
 } as const
 
