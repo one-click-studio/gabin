@@ -250,6 +250,8 @@ const main = async () => {
     if (!files) return
 
     const osc = await initOSC()
+
+    process.env.DEBUG = 'true'
     const app = new Gabin()
     await app.init()
 
