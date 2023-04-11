@@ -1,6 +1,6 @@
 {
   "name": "gabin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packageManager": "pnpm@7.27.0",
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "OneClickStudio",
@@ -17,7 +17,8 @@
     "build": "shx rm -rf ./build && concurrently \"pnpm run build:client\" \"pnpm run build:server\"",
     "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "pnpm -C ./src/render build && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
-    "preview": "pnpm run build && node build/main/index.js"
+    "preview": "pnpm run build && node build/main/index.js",
+    "test": "ts-node ./src/tests/audio.ts --no-auto-open --debug"
   },
   "pkg": {
     "assets": [
