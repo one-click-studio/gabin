@@ -424,7 +424,7 @@ const main = async () => {
                 interval
             })
 
-            checkLastShot()
+            // checkLastShot()
         })
 
         playing$.subscribe((playing) => {
