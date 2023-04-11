@@ -41,7 +41,9 @@ const testBH = async () => {
         console.log(device)
     })
 
-    const device = devices.find((device) => device.name === 'Existential Audio Inc.: BlackHole 2ch')
+    // const deviceName = 'Existential Audio Inc.: BlackHole 2ch'
+    const deviceName = 'VB Audio: VB-Cable'
+    const device = devices.find((device) => device.name === deviceName)
     if (!device) throw new Error('device not found')
 
     const virtualAudioLoopback = {
