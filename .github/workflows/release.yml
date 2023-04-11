@@ -16,6 +16,7 @@ jobs:
         run: |
           curl --output blackhole.pkg https://existential.audio/downloads/BlackHole16ch.v0.5.0.pkg
           sudo installer -pkg ./blackhole.pkg -target ~/
+          sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
         name: Install pnpm
