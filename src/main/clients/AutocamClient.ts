@@ -808,7 +808,7 @@ class Container {
 
         this.timeouts.push(setTimeout(() => {
             this.logger.warn('end (focus)')
-            if (!this.focus || !this.toUnfocus) {
+            if (!this.focus || !this.toUnfocus || !this.currentMic) {
                 this.logger.warn('ILLUSTRATION MODE (after max duration && !focus)')
 
                 this.toUnfocus = false
