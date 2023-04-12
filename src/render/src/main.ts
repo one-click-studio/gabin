@@ -66,12 +66,17 @@ const routes = [
             {
                 path: 'profile',
                 component: SetupProfileView,
-                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, back: '/setup/landing', next: '/setup/video-mixer' },
+                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, back: '/setup/landing', next: '/setup/audio' },
+            },
+            {
+                path: 'audio',
+                component: SetupAudioView,
+                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, back: '/setup/profile', next: '/setup/video-mixer' },
             },
             {
                 path: 'video-mixer',
                 component: SetupVisionMixerView,
-                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, back: '/setup/profile' },
+                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/audio' },
             },
             {
                 path: 'vm-choice',
@@ -81,17 +86,12 @@ const routes = [
             {
                 path: 'obs',
                 component: SetupObsView,
-                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
             },
             {
                 path: 'osc',
                 component: SetupOscView,
-                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
-            },
-            {
-                path: 'audio',
-                component: SetupAudioView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/mapping' },
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
             },
             {
                 path: 'mapping',
@@ -101,12 +101,12 @@ const routes = [
             {
                 path: 'mapping-obs',
                 component: SetupMappingObsView,
-                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/settings' },
             },
             {
                 path: 'mapping-osc',
                 component: SetupMappingOscView,
-                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/settings' },
             },
             {
                 path: 'settings',
