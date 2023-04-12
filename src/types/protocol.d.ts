@@ -117,10 +117,9 @@ export interface ServerConfig {
 
 
 /********** CONNECTIONS **********/
-export type ConnectionType = 'obs' | 'tcp' | 'osc'
+export type ConnectionType = 'obs' | 'osc'
 export interface ConnectionsConfig {
     type?: 'obs' | 'osc'
-    tcp?: Connection
     obs?: Connection
     osc?: Connection
 }
@@ -209,19 +208,4 @@ export interface NavBtn {
     disable: boolean
     callback: Callback
     trigger: Callback
-}
-
-
-/*************** TCP SERVER ***************/
-
-export type TcpRequest = {
-    type: string
-    data: unknown
-}
-export type TcpClient = {
-    types: string[]
-    handler: (request: TcpRequest) => void,
-    sockets?: string[]
-    send$?: any
-    // listen?: () => void
 }

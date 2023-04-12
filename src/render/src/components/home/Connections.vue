@@ -9,7 +9,7 @@ import type {
     Connection
 } from '../../../../types/protocol'
 
-type ConnectionType = 'tcp' | 'obs' | 'osc'
+type ConnectionType = 'obs' | 'osc'
 
 const showPassword = ref<ConnectionType>()
 

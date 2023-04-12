@@ -5,8 +5,6 @@ import type { Subscription } from 'rxjs'
 import { ObsClient } from '../clients/OBSClient'
 import { OscClient } from '../clients/OSCClient'
 import { AutocamClient } from '../clients/AutocamClient'
-import { StreamdeckClient } from '../clients/StreamdeckClient'
-import { TcpServer } from '../servers/TcpServer'
 
 import db from '../utils/db'
 
@@ -33,9 +31,7 @@ export class Gabin {
 
     obs: ObsClient | undefined
     osc: OscClient | undefined
-    streamdeck: StreamdeckClient | undefined
     autocam: AutocamClient | undefined
-    tcpServer: TcpServer | undefined
 
     connections$: BehaviorSubject<Connections>
 
@@ -93,15 +89,10 @@ export class Gabin {
         } else if (connections.defaultValue.type === 'osc') {
             this.osc = new OscClient(this.oscServer)
         }
-        if (connections.defaultValue.tcp) {
-            this.streamdeck = new StreamdeckClient()
-            this.tcpServer = new TcpServer([this.streamdeck])
-        }
         this.autocam = new AutocamClient()
 
         if (this.obs) this.updateConnections(this.obs.reachable$, 'obs')
         if (this.osc) this.updateConnections(this.osc.reachable$, 'osc')
-        if (this.streamdeck && this.tcpServer) this.updateConnections(this.streamdeck.reachable$, 'streamdeck')
 
         this.isReady = true
     }
@@ -126,10 +117,7 @@ export class Gabin {
         this.obs?.connect()
         this.osc?.connect()
         this.autocam?.connect()
-        this.streamdeck?.connect()
-        this.tcpServer?.listen()
 
-        this.streamdeck?.setAvailableMics(this.availableMics$.getValue())
         this.manageEvents()
         this.power$.next(true)
     }
@@ -140,8 +128,6 @@ export class Gabin {
 
         this.obs?.clean()
         this.autocam?.clean()
-        this.streamdeck?.clean()
-        this.tcpServer?.clean()
 
         this.power$.next(false)
     }
@@ -184,16 +170,6 @@ export class Gabin {
                 this.autocam$.next(autocam)
             }))
         }
-
-        // STREAMDECK EVT
-        if (this.streamdeck) {
-            this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autocam) => {
-                this.autocam$.next(autocam)
-            }))
-            this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shotName) => {
-                this.triggerShot(shotName)
-            }))
-        }
     }
 
     private manageEvents() {
@@ -214,31 +190,21 @@ export class Gabin {
             }))
         }
 
-        // STREAMDECK EVT
-        if (this.streamdeck) {
-            this.subscriptions.push(this.streamdeck.toggleMicAvailability$.subscribe((micId) => {
-                this.toggleAvailableMic(micId)
-            }))
-        }
-
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
             this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
             if (this.osc?.isReachable) this.osc.shoot(shoot.container, shoot.shot)
             if (this.obs?.isReachable) this.obs.shoot(shoot.container, shoot.shot)
-            if (this.streamdeck?.isReachable) this.streamdeck.setCurrentShot(shoot.shot)
         }))
 
         this.subscriptions.push(this.autocam$.subscribe((autocam) => {
             this.logger.info('has to toggle autocam 🎚')
             this.autocam?.setEnabled(autocam)
-            this.streamdeck?.setAutocam(autocam)
         }))
 
         this.subscriptions.push(this.availableMics$.subscribe((availableMics) => {
             this.logger.info('has new availability map 🗺', availableMics)
             this.autocam?.setAvailableMics(availableMics)
-            this.streamdeck?.setAvailableMics(availableMics)
         }))
 
         this.subscriptions.push(this.triggeredShot$.subscribe((source) => {
@@ -290,7 +256,5 @@ export class Gabin {
         if (!sceneName) return
         return this.scenes.find(s => s.name === sceneName)
     }
-
-
 
 }

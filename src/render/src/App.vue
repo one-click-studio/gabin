@@ -54,12 +54,6 @@ socketHandler(store.socket, 'handleMainScene', (scene: Asset['scene']['name']) =
     store.assets.scene = scene
 })
 
-socketHandler(store.socket, 'handleStreamdeckConnected', (reachable: boolean) => {
-    if (store.connections.tcp !== reachable) {
-        store.connections.tcp = reachable
-    }
-})
-
 socketHandler(store.socket, 'handleSimpleString', (data: string) => {
     console.log(data)
 })

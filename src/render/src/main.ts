@@ -18,7 +18,6 @@ import DisconnectView from '@src/views/DisconnectView.vue'
 import SetupView from '@src/views/setup/IndexView.vue'
 import SetupLandingView from '@src/views/setup/LandingView.vue'
 import SetupProfileView from '@src/views/setup/ProfileView.vue'
-import SetupTcpView from '@src/views/setup/TcpView.vue'
 import SetupVisionMixerView from '@src/views/setup/VideoMixerView.vue'
 import SetupObsView from '@src/views/setup/ObsView.vue'
 import SetupOscView from '@src/views/setup/OscView.vue'
@@ -67,17 +66,12 @@ const routes = [
             {
                 path: 'profile',
                 component: SetupProfileView,
-                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, back: '/setup/landing', next: '/setup/tcp' },
-            },
-            {
-                path: 'tcp',
-                component: SetupTcpView,
-                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, back: '/setup/profile', next: '/setup/video-mixer' },
+                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, back: '/setup/landing', next: '/setup/video-mixer' },
             },
             {
                 path: 'video-mixer',
                 component: SetupVisionMixerView,
-                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/tcp' },
+                meta: { type: 3, order: 2, header: true, footer: true, timeline: true, back: '/setup/profile' },
             },
             {
                 path: 'vm-choice',
@@ -87,17 +81,17 @@ const routes = [
             {
                 path: 'obs',
                 component: SetupObsView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
+                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
             },
             {
                 path: 'osc',
                 component: SetupOscView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
+                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
             },
             {
                 path: 'audio',
                 component: SetupAudioView,
-                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/mapping' },
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/mapping' },
             },
             {
                 path: 'mapping',
@@ -107,22 +101,22 @@ const routes = [
             {
                 path: 'mapping-obs',
                 component: SetupMappingObsView,
-                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
             },
             {
                 path: 'mapping-osc',
                 component: SetupMappingOscView,
-                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/settings' },
             },
             {
                 path: 'settings',
                 component: SetupSettingsView,
-                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/mapping', next: '/setup/summary' },
+                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/mapping', next: '/setup/summary' },
             },
             {
                 path: 'summary',
                 component: SetupSummaryView,
-                meta: { type: 3, order: 8, header: true, footer: true, timeline: true, back: '/setup/settings', next: '/loading' },
+                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/settings', next: '/loading' },
             },
         ],
     },
