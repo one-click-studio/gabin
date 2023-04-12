@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 
+import ButtonUi from '@src/components/basics/ButtonUi.vue'
+import CrossIcon from '@src/components/icons/CrossIcon.vue'
+
 interface Emits {
     (e: 'close'): void
 }
@@ -26,6 +29,13 @@ const close = () => {
             />
 
             <div class="modal-container scroll-bar">
+                <div class="absolute top-4 right-4">
+                    <ButtonUi
+                        @click="close"
+                    >
+                        <CrossIcon />
+                    </ButtonUi>
+                </div>
                 <slot />
             </div>
         </div>
