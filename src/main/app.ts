@@ -395,6 +395,8 @@ export class App {
         socket.on('triggerShot', (s: Asset['source'], callback) => callback(this.gabin?.triggeredShot$.next(s)))
         socket.on('toggleAvailableMic', (m: MicId, callback) => callback(this.gabin?.toggleAvailableMic(m)))
         socket.on('toggleAutocam', (a: boolean, callback) => callback(this.gabin?.autocam$.next(a)))
+
+        this.sendAppState()
     }
 
     private sendAppState() {
