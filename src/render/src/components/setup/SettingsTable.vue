@@ -32,6 +32,8 @@ defineProps<{
 const $emit = defineEmits<Emits>()
 const acSettings = ref<AutocamSettings[]>(store.profiles.settings().autocam)
 
+// console.log(store.profiles.settings())
+
 watch(() => store.profiles.current, () => {
     acSettings.value = store.profiles.settings().autocam
 })
@@ -62,10 +64,9 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
                         const source = container.sources[m]
 
                         const autocamCam = autocamMic?.cams.find((a) => a.source.name === source.name)
-
                         camsSettings.push({
                             source,
-                            weight: autocamCam?.weight || l===m? 100 : 0
+                            weight: autocamCam?.weight? autocamCam?.weight : (l===m? 100 : 0)
                         })
                     }
                     micsSettings.push({
@@ -262,7 +263,7 @@ update()
                                     >
                                         <ToggleUi
                                             :value="(source.weight > 0)"
-                                            @update="(v) => updateWeightSettings(i, j, k, l, v? getCorrectPercent(mic.cams, k) : 0)"
+                                            @update="(v) => updateWeightSettings(i, j, k, l, v? getCorrectPercent(mic.cams, l) : 0)"
                                         />
                                     </td>
                                     <td
