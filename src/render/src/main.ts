@@ -20,9 +20,11 @@ import SetupLandingView from '@src/views/setup/LandingView.vue'
 import SetupProfileView from '@src/views/setup/ProfileView.vue'
 import SetupVisionMixerView from '@src/views/setup/VideoMixerView.vue'
 import SetupObsView from '@src/views/setup/ObsView.vue'
+import SetupVmixView from '@src/views/setup/VmixView.vue'
 import SetupOscView from '@src/views/setup/OscView.vue'
 import SetupAudioView from '@src/views/setup/AudioView.vue'
 import SetupMappingObsView from '@src/views/setup/MappingObsView.vue'
+import SetupMappingVmixView from '@src/views/setup/MappingVmixView.vue'
 import SetupMappingOscView from '@src/views/setup/MappingOscView.vue'
 import SetupSettingsView from '@src/views/setup/SettingsView.vue'
 import SetupSummaryView from '@src/views/setup/SummaryView.vue'
@@ -89,6 +91,11 @@ const routes = [
                 meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
             },
             {
+                path: 'vmix',
+                component: SetupVmixView,
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
+            },
+            {
                 path: 'osc',
                 component: SetupOscView,
                 meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
@@ -101,6 +108,11 @@ const routes = [
             {
                 path: 'mapping-obs',
                 component: SetupMappingObsView,
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/settings' },
+            },
+            {
+                path: 'mapping-vmix',
+                component: SetupMappingVmixView,
                 meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/settings' },
             },
             {
@@ -133,10 +145,10 @@ const redirection = (to: string) => {
 
     switch (to) {
         case '/setup/vm-choice':
-            redirect.path = connections.type === 'osc' ? '/setup/osc' : '/setup/obs'
+            redirect.path = '/setup/' + connections.type
             break
         case '/setup/mapping':
-            redirect.path = connections.type === 'osc' ? '/setup/mapping-osc' : '/setup/mapping-obs'
+            redirect.path = '/setup/mapping-' + connections.type
             break
     }
 

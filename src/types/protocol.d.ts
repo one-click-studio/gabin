@@ -31,11 +31,13 @@ export type AssetName = string
 export type AssetScene = {
     name: AssetName
     containers: AssetContainer[]
+    options?: any
 }
 
 export type AssetContainer = {
     name: AssetName
     sources: AssetSource[]
+    options?: any
 }
 
 export type AssetSource = {
@@ -117,11 +119,12 @@ export interface ServerConfig {
 
 
 /********** CONNECTIONS **********/
-export type ConnectionType = 'obs' | 'osc'
+export type ConnectionType = 'obs' | 'osc' | 'vmix'
 export interface ConnectionsConfig {
-    type?: 'obs' | 'osc'
+    type?: 'obs' | 'osc' | 'vmix'
     obs?: Connection
     osc?: Connection
+    vmix?: Connection
 }
 export interface Connection {
     ip: string

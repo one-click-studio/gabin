@@ -3,8 +3,6 @@ import { BehaviorSubject } from 'rxjs'
 import { ObsServer } from '../../main/servers/ObsServer'
 import { Client } from '../../main/clients/Client'
 
-import db from '../../main/utils/db'
-
 import type {
     Asset,
 } from '../../types/protocol'

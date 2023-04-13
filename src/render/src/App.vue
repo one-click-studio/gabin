@@ -46,7 +46,13 @@ socketHandler(store.socket, 'handleOscConnected', (reachable: boolean) => {
     }
 })
 
-socketHandler(store.socket, 'handleObsScenes', (scenes: Asset['scene'][]) => {
+socketHandler(store.socket, 'handleVmixConnected', (reachable: boolean) => {
+    if (store.connections.vmix !== reachable) {
+        store.connections.vmix = reachable
+    }
+})
+
+socketHandler(store.socket, 'handleMixerScenes', (scenes: Asset['scene'][]) => {
     store.assets.scenes = scenes
 })
 

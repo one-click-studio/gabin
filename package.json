@@ -36,6 +36,7 @@
     "audify": "^1.8.1",
     "deep-eql": "^4.1.3",
     "dotenv": "^16.0.3",
+    "fast-xml-parser": "^4.2.0",
     "finalhandler": "^1.2.0",
     "obs-websocket-js": "^5.0.2",
     "onnxruntime-node": "^1.13.1",

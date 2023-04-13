@@ -4,6 +4,7 @@ import type { Subscription } from 'rxjs'
 
 import { ObsClient } from '../clients/OBSClient'
 import { OscClient } from '../clients/OSCClient'
+import { VmixClient } from '../clients/VMIXClient'
 import { AutocamClient } from '../clients/AutocamClient'
 
 import db from '../utils/db'
@@ -23,7 +24,7 @@ import type {
 interface Connections {
     obs: boolean
     osc: boolean
-    streamdeck: boolean
+    vmix: boolean
 }
 
 export class Gabin {
@@ -31,6 +32,7 @@ export class Gabin {
 
     obs: ObsClient | undefined
     osc: OscClient | undefined
+    vmix: VmixClient | undefined
     autocam: AutocamClient | undefined
 
     connections$: BehaviorSubject<Connections>
@@ -67,15 +69,11 @@ export class Gabin {
         this.connections$ = new BehaviorSubject<Connections>({
             obs: false,
             osc: false,
-            streamdeck: false
+            vmix: false
         })
 
         const containers = db.getSpecificAndDefault(['settings', 'containers'], true)
         this.scenes = containers.defaultValue
-
-        containers.configPart$.subscribe((containers_) => {
-            this.scenes = containers_
-        })
 
         this.init()
     }
@@ -88,11 +86,14 @@ export class Gabin {
             this.obs = new ObsClient()
         } else if (connections.defaultValue.type === 'osc') {
             this.osc = new OscClient(this.oscServer)
+        } else if (connections.defaultValue.type === 'vmix') {
+            this.vmix = new VmixClient()
         }
         this.autocam = new AutocamClient()
 
         if (this.obs) this.updateConnections(this.obs.reachable$, 'obs')
         if (this.osc) this.updateConnections(this.osc.reachable$, 'osc')
+        if (this.vmix) this.updateConnections(this.vmix.reachable$, 'vmix')
 
         this.isReady = true
     }
@@ -116,6 +117,7 @@ export class Gabin {
 
         this.obs?.connect()
         this.osc?.connect()
+        this.vmix?.connect()
         this.autocam?.connect()
 
         this.manageEvents()
@@ -127,6 +129,7 @@ export class Gabin {
         this.cleanSubscriptions()
 
         this.obs?.clean()
+        this.vmix?.clean()
         this.autocam?.clean()
 
         this.power$.next(false)
@@ -182,6 +185,11 @@ export class Gabin {
             this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
         }
 
+        // VMIX EVT
+        if (this.vmix) {
+            this.subscriptions.push(this.vmix.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+        }
+
         // OSC EVT
         if (this.osc) {
             this.subscriptions.push(this.osc.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
@@ -195,6 +203,7 @@ export class Gabin {
 
             if (this.osc?.isReachable) this.osc.shoot(shoot.container, shoot.shot)
             if (this.obs?.isReachable) this.obs.shoot(shoot.container, shoot.shot)
+            if (this.vmix?.isReachable) this.vmix.shoot(shoot.container, shoot.shot)
         }))
 
         this.subscriptions.push(this.autocam$.subscribe((autocam) => {
