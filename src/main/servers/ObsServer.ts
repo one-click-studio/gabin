@@ -164,7 +164,6 @@ export class ObsServer extends Server {
         const data: Asset['scene'][] = []
 
         for (const scene of scenes as ResponseObsScene[]){
-            scene.sceneIndex
             const items = await this.getSceneItemList(scene.sceneName)
             const sceneItems = items.sceneItems as ResponseObsItem[]
             data.push({
