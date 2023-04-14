@@ -16,7 +16,7 @@ if (args.includes('--help') || args.includes('-h')) {
 
     Environment variables:
       GABIN_HOST              Hostname to use (default: ${DEFAULT.HOST})
-      GABIN_HTTP_PORT              Port to use (default: ${DEFAULT.HTTP_PORT})
+      GABIN_HTTP_PORT         Port to use (default: ${DEFAULT.HTTP_PORT})
       GABIN_OSC_PORT          Port to use (default: ${DEFAULT.OSC_PORT})
       GABIN_BASE_URL          Base url to use (default: ${DEFAULT.BASE_URL})
       GABIN_LOGS_FOLDER       Folder to store logs (default: $appdata/gabin/gabin.log)

@@ -49,7 +49,7 @@ const updateDevice = (device: AudioDevice, index: number) => {
         nChannels: device.nChannels,
         sampleRate: device.sampleRate,
         mics: Array(device.nChannels).fill((device.nChannels === 1)),
-        micsName: Array(device.nChannels).fill('')
+        micsName: Array(device.nChannels).fill(device.nChannels === 1? 'Person 1' : ''),
     }
 
     updateNextBtn()

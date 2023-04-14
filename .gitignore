@@ -13,5 +13,7 @@ certificate.p12
 /playwright/.cache/
 /tests
 /tests-examples
-playwright.config.ts
 * copy.*
+/test-results/
+/playwright-report/
+/playwright/.cache/

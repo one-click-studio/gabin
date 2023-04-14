@@ -18,7 +18,8 @@
     "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "pnpm -C ./src/render build && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
     "preview": "pnpm run build && node build/main/index.js",
-    "test": "ts-node ./src/tests/audio.ts --no-auto-open --debug"
+    "test-audio": "ts-node ./src/tests/audio.ts --no-auto-open --debug",
+    "test": "pnpm exec playwright test"
   },
   "pkg": {
     "assets": [
@@ -47,6 +48,7 @@
     "systray2": "github:one-click-studio/node-systray"
   },
   "devDependencies": {
+    "@playwright/test": "^1.32.3",
     "@types/deep-eql": "^4.0.0",
     "@types/finalhandler": "^1.2.0",
     "@types/node": "^18.13.0",
