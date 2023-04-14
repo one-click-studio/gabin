@@ -33,14 +33,21 @@ test.describe('Setup one profile', () => {
 
     const audioDevices = await page.locator('css=ul.selectui-opts > li').count()
     expect(audioDevices).toBeGreaterThan(0)
-
+    
+    const devices = await page.locator('css=ul.selectui-opts > li').allInnerTexts()
+    console.log("DEVICES", devices)
+    
+    // await page.waitForTimeout(3000)
     await page.locator('css=ul.selectui-opts > li:first-child').click()
-
+    // await page.waitForTimeout(3000)
+    
     const tagsUi = await page.locator('css=div.tagui-container').count()
+    console.log("TAGS UI", tagsUi)
     if (tagsUi > 0) {
       await page.locator('css=div.tagui-container').first().click()
     } 
     await page.getByRole('button', { name: 'Next' }).click()
+    // await page.waitForTimeout(3000)
     
     // SETUP VIDEO MIXER
     await expect(page).toHaveURL(/\/setup\/video-mixer/)
@@ -49,7 +56,7 @@ test.describe('Setup one profile', () => {
     // SETUP OSC
     await expect(page).toHaveURL(/\/setup\/osc/)
     await page.getByRole('button', { name: 'Connect to osc client' }).click()
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(1500)
     await page.getByRole('button', { name: 'Next' }).click()
     
     // SETUP MAPPING
