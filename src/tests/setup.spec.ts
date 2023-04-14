@@ -31,23 +31,16 @@ test.describe('Setup one profile', () => {
     await page.getByRole('button', { name: 'Add audio device' }).click()
     await page.locator('css=.selectui-container > button.selectui-btn').click()
 
-    const audioDevices = await page.locator('css=ul.selectui-opts > li').count()
-    expect(audioDevices).toBeGreaterThan(0)
-    
     const devices = await page.locator('css=ul.selectui-opts > li').allInnerTexts()
-    console.log("DEVICES", devices)
-    
-    // await page.waitForTimeout(3000)
+    expect(devices).not.toContain('Empty')
+
     await page.locator('css=ul.selectui-opts > li:first-child').click()
-    // await page.waitForTimeout(3000)
     
     const tagsUi = await page.locator('css=div.tagui-container').count()
-    console.log("TAGS UI", tagsUi)
     if (tagsUi > 0) {
       await page.locator('css=div.tagui-container').first().click()
     } 
     await page.getByRole('button', { name: 'Next' }).click()
-    // await page.waitForTimeout(3000)
     
     // SETUP VIDEO MIXER
     await expect(page).toHaveURL(/\/setup\/video-mixer/)
