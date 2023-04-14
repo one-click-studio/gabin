@@ -9,7 +9,7 @@ test.describe('Setup one profile', () => {
 
   test('new profile', async ({ page }) => {
     const DEFAULT = {
-      name: 'E2E test'
+      name: 'E2E test - setup'
     }
 
     await page.goto('/')

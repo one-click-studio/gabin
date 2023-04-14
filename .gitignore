@@ -2,7 +2,7 @@ node_modules
 dist
 out
 build
-database.json
+/database.json
 *.log*
 .env
 test.sh

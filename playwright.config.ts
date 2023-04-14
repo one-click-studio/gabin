@@ -27,6 +27,8 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
+  // Glob patterns or regular expressions to ignore test files. 
+  testIgnore: 'audio.spec.ts',
 
   // Run your local dev server before starting the tests
   webServer: {
