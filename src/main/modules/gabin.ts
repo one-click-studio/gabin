@@ -257,4 +257,8 @@ export class Gabin {
         return this.scenes.find(s => s.name === sceneName)
     }
 
+    updateDeviceOptions(devices: AudioDeviceSettings[]) {
+        this.autocam?.updateAudioDevices(devices)
+    }
+
 }

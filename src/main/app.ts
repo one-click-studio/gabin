@@ -283,7 +283,16 @@ export class App {
             socket.on('setProfileIcon', (p: IoRequests['icon'], callback) => callback(this.profiles.setIcon(p.id, p.icon)))
             socket.on('setProfileName', (p: IoRequests['name'], callback) => callback(this.profiles.setName(p.id, p.name)))
             socket.on('setAutostart', (p: IoRequests['autostart'], callback) => callback(this.profiles.setAutostart(p.id, p.autostart)))
-            socket.on('setThresholds', (p: IoRequests['thresholds'], callback) => callback(this.profiles.setThresholds(p.id, p.deviceName, p.thresholds)))
+
+            // UPDATE DEVICE OPTIONS
+            socket.on('setThresholds', (p: IoRequests['thresholds'], callback) => {
+                this.profiles.setThresholds(p.id, p.deviceName, p.thresholds)
+                if (this.gabin) {
+                    const audioDevices = db.getDefaultValue(['settings', 'mics'], true)
+                    this.gabin.updateDeviceOptions(audioDevices)
+                }
+                callback()
+            })
 
             // SETUP
             socket.on('setup', (p: boolean, callback) => {

@@ -93,12 +93,6 @@ export class AutocamClient extends Client {
         this.autocamMapping = autocamMapping.defaultValue
 
         this.addSubscription(
-            audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
-                this.updateAudioDevices(aDevices)
-            })
-        )
-
-        this.addSubscription(
             autocamMapping.configPart$.subscribe((mapping: AutocamSettings[]) => {
                 this.autocamMapping = mapping
             })
@@ -161,17 +155,17 @@ export class AutocamClient extends Client {
 
     // HELPERS
 
-    private updateAudioDevices(devices: AudioDeviceSettings[]) {
+    updateAudioDevices(devices: AudioDeviceSettings[]) {
         if (this.recorders.length){
-
+            
             for (const i in this.recorders){
                 const recorder = this.recorders[i]
                 const rname = recorder.getName()
-
+                
                 const device = devices.find(d => d.name === rname)
-                if (!device || !device.thresholds) continue
+                if (!device) continue
 
-                this.recorders[i].setThresholds(device.thresholds)
+                if (device.thresholds) this.recorders[i].setThresholds(device.thresholds)
             }
 
             return
