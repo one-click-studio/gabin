@@ -102,23 +102,6 @@ const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] 
     return buffers
 }
 
-// const joinBuffers = (buffers: number[][], size: number): Buffer => {
-//     const length = buffers[0].length
-//     const channels = buffers.length
-
-//     let array: number[] = []
-
-//     for (let i = 0; i < length; i+=size) {
-//         for (let j = 0; j < channels; j++) {
-//             for (let k = 0; k < size; k++) {
-//                 array.push(buffers[j][i+k])
-//             }
-//         }
-//     }
-
-//     return Buffer.from(array)
-// }
-
 export class AudioActivity {
     private _speaking: boolean[]
     private _consecutiveSilence: number[]
@@ -330,15 +313,6 @@ export class AudioActivity {
         if (!this._device) return
         const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
 
-        // if (buffers[0].reduce((a, b) => a + b, 0) > 0) {
-        //     logger.warn(buffers.slice(0,3).map((v) => v.slice(0, 16).join(', ')))
-        // }
-
-        // STEREO (COPY LEFT (0) TO RIGHT (1))
-        // buffers[1] = JSON.parse(JSON.stringify(buffers[0]))
-        // MUTE LEFT (0) OR RIGHT (1)
-        // buffers[0].fill(0)
-
         if (!this.isReady()) {
             await this.load()
         }
@@ -393,17 +367,33 @@ export class AudioActivity {
     }
 
     private chooseSpeaker(processed: ProcessedChannel): number {
-        let maxVolume = 0
-        let maxChannel = 0
+        const wasSpeaking = this.wasSpeaking(processed)
+        if (wasSpeaking !== -1) return wasSpeaking
+
+        return this.getLoudestChannel(processed)
+    }
+
+    private wasSpeaking(processed: ProcessedChannel): number {
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = this._channels[i]
-            const volume = processed.get(channel)?.volume
-            if (volume && volume > maxVolume) {
-                maxVolume = volume
-                maxChannel = channel
+            const channel = processed.get(this._channels[i])
+            if ((channel?.speaking || channel?.speaking === undefined) && this._speaking[i]) {
+                return this._channels[i]
             }
         }
 
+        return -1
+    }
+    
+    private getLoudestChannel(processed: ProcessedChannel): number {
+        let maxVolume = 0
+        let maxChannel = 0
+        for (let i = 0; i < this._channels.length; i++) {
+            const channel = processed.get(this._channels[i])
+            if (channel?.volume && channel.volume > maxVolume) {
+                maxVolume = channel.volume
+                maxChannel = this._channels[i]
+            }
+        }
         return maxChannel
     }
 
