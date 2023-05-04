@@ -17,7 +17,7 @@ interface Device {
     apiName: string
 }
 
-type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined}>
+type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined, consecutive: number}>
 
 const AudioApiByPlateform = {
     LINUX_ALSA: ['linux'],
@@ -104,8 +104,7 @@ const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] 
 
 export class AudioActivity {
     private _speaking: boolean[]
-    private _consecutiveSilence: number[]
-    private _consecutiveSpeech: number[]
+    private _consecutive: number[]
 
     private _speakingThreshold = 3
     private _silenceThreshold = 10
@@ -119,7 +118,7 @@ export class AudioActivity {
 
     private _deviceName: string
     private _device : Device | undefined
-        
+
     private _apiId: RtAudioApi | undefined
     private _framesPerBuffer: number
     private _sampleRate: number = 0
@@ -134,7 +133,7 @@ export class AudioActivity {
         channels: number[]
         framesPerBuffer: number
         sampleRate?: number
-        onAudio: (speaking: boolean, channel: number, volume:  number) => void,
+        onAudio: (speaking: boolean, channel: number, volume: number) => void,
         thresholds?: {
             speaking?: number,
             silence?: number,
@@ -154,8 +153,7 @@ export class AudioActivity {
         if (options?.thresholds?.vad) this.setvadThreshold(options.thresholds.vad)
 
         this._speaking = Array(options.channels.length).fill(false)
-        this._consecutiveSilence = Array(options.channels.length).fill(0)
-        this._consecutiveSpeech = Array(options.channels.length).fill(0)
+        this._consecutive = Array(options.channels.length).fill(0)
         this._isOpen = false
 
         this.getDevice()
@@ -325,8 +323,8 @@ export class AudioActivity {
 
             const volume = Math.round(this.getVolume(buffers[i])*100)/100
             const speaking = await this.processChannel(buffers[i], i, volume)
-
-            processed.set(i, {volume, speaking})
+            
+            processed.set(i, {volume, speaking, consecutive: 0})
         }
 
         if (this.tooManySpeakers(processed)){
@@ -336,10 +334,9 @@ export class AudioActivity {
                 const cId = this.longIndex(i)
                 const channel = processed.get(cId)
                 if (!channel || cId === channelId) continue
-                if (channel.speaking !== true && !this._speaking[cId]) continue
+                if (channel.speaking !== true && !this._speaking[i]) continue
 
-                const speaking = this._speaking[cId]? false : undefined
-                processed.set(i, {speaking, volume: channel.volume})
+                channel.speaking = this._speaking[i]? false : undefined
             }
         }
 
@@ -348,16 +345,16 @@ export class AudioActivity {
             const channel = processed.get(cId)
             if (!channel) continue
 
-            if (channel.speaking !== undefined) this._speaking[cId] = channel.speaking
-            this._onAudio(this._speaking[cId], cId, channel.volume)
+            if (channel.speaking !== undefined) this._speaking[i] = channel.speaking
+            this._onAudio(this._speaking[i], cId, channel.volume)
         }
-
     }
 
     private tooManySpeakers(processed: ProcessedChannel): boolean {
         let speaking = 0
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = processed.get(this._channels[i])
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
             if (channel?.speaking || (channel?.speaking === undefined && this._speaking[i])) {
                 speaking++
             }
@@ -375,9 +372,11 @@ export class AudioActivity {
 
     private wasSpeaking(processed: ProcessedChannel): number {
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = processed.get(this._channels[i])
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
+            
             if ((channel?.speaking || channel?.speaking === undefined) && this._speaking[i]) {
-                return this._channels[i]
+                return cId
             }
         }
 
@@ -388,10 +387,11 @@ export class AudioActivity {
         let maxVolume = 0
         let maxChannel = 0
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = processed.get(this._channels[i])
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
             if (channel?.volume && channel.volume > maxVolume) {
                 maxVolume = channel.volume
-                maxChannel = this._channels[i]
+                maxChannel = cId
             }
         }
         return maxChannel
@@ -411,7 +411,7 @@ export class AudioActivity {
         return this._channels[index]
     }
 
-    private async processChannel(buffer: number[], channel: number, volume: number): Promise<boolean|undefined> {
+    private async processChannel(buffer: number[], cId: number, volume: number): Promise<boolean|undefined> {
         if (!this._sileroVad) return false
 
         if (buffer.length !== this._bufferLength){
@@ -419,24 +419,23 @@ export class AudioActivity {
         }
 
         let isSpeaking = false
+        const index = this.shortIndex(cId)
 
-        const channelIndex = this.shortIndex(channel)
-        const vadLastProbability = await this._sileroVad[channelIndex].process(buffer)
+        const vadLastProbability = await this._sileroVad[index].process(buffer)
         if (volume > 0 && vadLastProbability > this._vadThreshold) {
             isSpeaking = true
         }
 
-        if (isSpeaking) {
-            this._consecutiveSpeech[channel]++
-            this._consecutiveSilence[channel] = 0
-        } else {
-            this._consecutiveSilence[channel]++
-            this._consecutiveSpeech[channel] = 0
-        }
+        const toAdd = isSpeaking? 1 : -1
+    
+        if (this._consecutive[index] * toAdd < 0)
+        this._consecutive[index] = 0
+        
+        this._consecutive[index] += toAdd
 
-        if (!this._speaking[channel] && this._consecutiveSpeech[channel] > this._speakingThreshold) {
+        if (!this._speaking[index] && this._consecutive[index] > this._speakingThreshold) {
             return true
-        } else if (this._speaking[channel] && this._consecutiveSilence[channel] > this._silenceThreshold) {
+        } else if (this._speaking[index] && this._consecutive[index] < this._silenceThreshold*-1) {
             return false
         }
 
