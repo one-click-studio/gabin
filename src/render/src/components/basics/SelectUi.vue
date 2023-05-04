@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { watch, ref } from 'vue'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption, ListboxLabel } from '@headlessui/vue'
 
 import ChevronBottomIcon from '@src/components/icons/ChevronBottomIcon.vue'
@@ -13,8 +13,13 @@ const props = defineProps<{
     options: any[]
     value?: any
     keyvalue?: string
+    writable?: boolean
 }>()
 const $emit = defineEmits<Emits>()
+
+const filter_ = ref(props.value)
+const filtredOptions_ = ref<any[]>([])
+const open_ = ref(false)
 
 watch(() => props.options, (newO, oldO) => {
     if (newO.length !== oldO.length) {
@@ -46,13 +51,48 @@ const isSelected = (option: any) => {
 }
 
 const update = (select: any) => {
+    close(displayOption(select))
     $emit('update', select)
 }
+
+const updateInput = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    filter_.value = target.value
+    filterOptions()
+    // $emit('update', value)
+}
+
 
 const initOptions = () => {
     if (props.options.length === 1 && !props.value) {
         update(props.options[0])
     }
+    filterOptions()
+}
+
+const filterOptions = () => {
+    if (filter_.value) {
+        filtredOptions_.value = props.options.filter((option: any) => {
+            const displayed = displayOption(option)
+            return displayed.toLowerCase().includes(filter_.value.toLowerCase())
+        })
+    } else {
+        filtredOptions_.value = props.options
+    }
+}
+
+const handleFocusOut = ($el: any) => {
+    if (!$el.relatedTarget) close(props.value)
+}
+
+const open = () => {
+    open_.value = true
+    filter_.value = props.value
+}
+
+const close = (val: string) => {
+    open_.value = false
+    filter_.value = val
 }
 
 initOptions()
@@ -60,49 +100,60 @@ initOptions()
 </script>
 
 <template>
-    <Listbox
-        v-slot="{ open }"
-        @update:model-value="update"
+    <div
+        class="selectui"
+        @focusout="handleFocusOut"
+        tabindex="0"
     >
         <div
             class="selectui-container"
-            :class="open? 'z-12' :'z-0'"
+            :class="open_? 'z-12' :'z-0'"
         >
-            <ListboxLabel
+            <div
                 class="selectui-label"
-                :class="hasValue()? 'has-value':''"
+                :class="hasValue() || open_? 'has-value':''"
             >
                 {{ label }}
-            </ListboxLabel>
+            </div>
 
-            <ListboxButton class="selectui-btn">
-                <div>{{ value || '' }}</div>
+            <div
+                class="selectui-btn"
+                @click="open"
+            >
+                <input
+                    type="text"
+                    :value="filter_"
+                    @input="updateInput"
+                >
                 <ChevronBottomIcon
                     class="absolute right-0 top-1/4"
                 />
-            </ListboxButton>
-            <ListboxOptions class="selectui-opts scroll-bar">
-
-                <ListboxOption
-                    v-if="!options.length"
+            </div>
+            <div
+                class="selectui-opts scroll-bar"
+                v-if="open_"
+            >
+                <div
+                    v-if="!filtredOptions_.length"
                     class="selectui-opt empty"
                     value="Empty"
                 >
                     Empty
-                </ListboxOption>
+                </div>
 
-                <ListboxOption
-                    v-for="option in options"
+                <div
+                    v-for="option in filtredOptions_"
                     :key="option"
                     class="selectui-opt"
                     :class="isSelected(option)? 'selected' : ''"
                     :value="option"
+                    @click="() => update(option)"
                 >
                     {{ displayOption(option) }}
-                </ListboxOption>
-            </ListboxOptions>
+                </div>
+            </div>
         </div>
-    </Listbox>
+    </div>
 </template>
 
 <style scoped>
@@ -139,6 +190,10 @@ initOptions()
 }
 .selectui-opt.selected {
     @apply font-bold;
+}
+
+.selectui-btn > input {
+    @apply w-full bg-transparent outline-none z-10 h-full border-0 color-white p-0;
 }
 
 </style>
