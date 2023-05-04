@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { watch, ref } from 'vue'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption, ListboxLabel } from '@headlessui/vue'
 
 import ChevronBottomIcon from '@src/components/icons/ChevronBottomIcon.vue'
 
@@ -13,7 +12,6 @@ const props = defineProps<{
     options: any[]
     value?: any
     keyvalue?: string
-    writable?: boolean
 }>()
 const $emit = defineEmits<Emits>()
 
@@ -59,7 +57,6 @@ const updateInput = (e: Event) => {
     const target = e.target as HTMLInputElement
     filter_.value = target.value
     filterOptions()
-    // $emit('update', value)
 }
 
 
