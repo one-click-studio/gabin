@@ -384,7 +384,7 @@ export class App {
         this.gabin.timeline$.subscribe((micId) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleTimeline', micId)
         })
-        this.gabin.volumeMics$.pipe(auditTime(100)).subscribe((vm) => {
+        this.gabin.volumeMics$.pipe(auditTime(50)).subscribe((vm) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleVolumeMics', Object.fromEntries(vm))
         })
         this.gabin.availableMics$.subscribe((availableMics) => {
