@@ -4,7 +4,7 @@ import { watch, ref } from 'vue'
 import ChevronBottomIcon from '@src/components/icons/ChevronBottomIcon.vue'
 
 interface Emits {
-    (e: 'update', value: any): void
+    (e: 'update', value: any|string): void
 }
 
 const props = defineProps<{
@@ -12,6 +12,8 @@ const props = defineProps<{
     options: any[]
     value?: any
     keyvalue?: string
+    create?: boolean
+    noAutoselect?: boolean
 }>()
 const $emit = defineEmits<Emits>()
 
@@ -48,6 +50,11 @@ const isSelected = (option: any) => {
     return (displayed === props.value)
 }
 
+const createOption = () => {
+    close(filter_.value)
+    $emit('update', filter_.value)
+}
+
 const update = (select: any) => {
     close(displayOption(select))
     $emit('update', select)
@@ -59,22 +66,29 @@ const updateInput = (e: Event) => {
     filterOptions()
 }
 
+const prefilterOptions = () => {
+    return props.options.filter((option: any) => option)
+}
 
 const initOptions = () => {
-    if (props.options.length === 1 && !props.value) {
-        update(props.options[0])
+    const options = prefilterOptions()
+    console.log('initOptions', options)
+    if (!props.noAutoselect && options.length === 1 && !props.value) {
+        update(options[0])
     }
     filterOptions()
 }
 
 const filterOptions = () => {
+    const options = prefilterOptions()
+
     if (filter_.value) {
-        filtredOptions_.value = props.options.filter((option: any) => {
+        filtredOptions_.value = options.filter((option: any) => {
             const displayed = displayOption(option)
             return displayed.toLowerCase().includes(filter_.value.toLowerCase())
         })
     } else {
-        filtredOptions_.value = props.options
+        filtredOptions_.value = options
     }
 }
 
@@ -82,9 +96,21 @@ const handleFocusOut = ($el: any) => {
     if (!$el.relatedTarget) close(props.value)
 }
 
+const canCreate = (): boolean => {
+    if (!props.create || !filter_.value) return false
+
+    const options = prefilterOptions()
+
+    const opts = options.map((option: any) => displayOption(option).toLowerCase())
+    if (opts.indexOf(filter_.value.toLowerCase()) === -1) return true
+
+    return false
+}
+
 const open = () => {
     open_.value = true
     filter_.value = props.value
+    initOptions()    
 }
 
 const close = (val: string) => {
@@ -130,6 +156,13 @@ initOptions()
                 class="selectui-opts scroll-bar"
                 v-if="open_"
             >
+                <div
+                    v-if="canCreate()"
+                    class="selectui-opt create"
+                    @click="() => createOption()"
+                >
+                    Create "{{ filter_ }}"
+                </div>
                 <div
                     v-if="!filtredOptions_.length"
                     class="selectui-opt empty"

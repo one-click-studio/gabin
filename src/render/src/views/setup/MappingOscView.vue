@@ -5,6 +5,7 @@ import { ref, toRaw } from 'vue'
 import { store } from '@src/store/store'
 
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
+import SelectUi from '@src/components/basics/SelectUi.vue'
 import InputUi from '@src/components/basics/InputUi.vue'
 import ModalUi from '@src/components/basics/ModalUi.vue'
 
@@ -25,6 +26,7 @@ import type {
 
 const scenes_ = ref<Asset['scene'][]>(store.profiles.settings().containers)
 const containers_ = ref<Map<Asset['container']['name'], Asset['container']>>(new Map())
+const sources_ = ref<Map<Asset['source']['name'], Asset['source']>>(new Map())
 const tuto_ = ref<boolean>(store.profiles.editProfile? false : true)
 
 const testData = ref({
@@ -114,7 +116,7 @@ const removeScene = (i: number) => {
 const addContainer = (i: number) => {
     const scene = scenes_.value[i]
     scene.containers.push({
-        name: 'Container ' + (containers_.value.size + 1),
+        name: '',
         sources: [],
     })
     resetContainersMap()
@@ -129,14 +131,15 @@ const removeContainer = (i: number, j: number) => {
 }
 
 const addSource = (i: number, j: number) => {
-    const constainer = scenes_.value[i].containers[j]
-    constainer.sources.push({
-        name: 'Source ' + (constainer.sources.length + 1),
+    const container = scenes_.value[i].containers[j]
+    container.sources.push({
+        name: '',
         options: {
-            path: `/${constainer.name}/Source ${constainer.sources.length + 1}`.replace(/ /g, ''),
+            path: '/path/to/source',
         },
     })
 
+    resetSourcesMap()
     updateNextBtn()
 }
 
@@ -151,20 +154,60 @@ const updateSceneName = (index: number, name: string) => {
     updateNextBtn()
 }
 
-const updateContainerName = (i: number, j: number, name: string) => {
+const getContainerNameList = () => {
+    return Array.from(containers_.value).map(c => c[0])
+}
+
+const getSourceNameList = () => {
+    return Array.from(sources_.value).map(c => c[0])
+}
+
+const updateContainer = (i: number, j: number, name: string) => {
     const container = containers_.value.get(name)
     if (container) {
         scenes_.value[i].containers[j] = container
     } else {
-        scenes_.value[i].containers[j].name = name
+        const previousName = scenes_.value[i].containers[j].name
+        const containersNames = scenes_.value.reduce((p, c) => p = p.concat(c.containers.map(co => co.name)), <string[]>[])
+
+        const count = containersNames.filter(n => n === previousName).length
+        if (count > 1) {
+            scenes_.value[i].containers[j] = {
+                name: name,
+                sources: [],
+            }
+        } else {
+            scenes_.value[i].containers[j].name = name
+        }
     }
 
     resetContainersMap()
     updateNextBtn()
 }
 
-const updateSourceName = (i: number, j: number, k: number, name: string) => {
-    scenes_.value[i].containers[j].sources[k].name = name
+const updateSource = (i: number, j: number, k: number, name: string) => {
+    const source = sources_.value.get(name)
+    if (source) {
+        scenes_.value[i].containers[j].sources[k] = source
+    } else {
+        const previousName = scenes_.value[i].containers[j].sources[k].name
+        const sourcesNames = scenes_.value.reduce((p, s) => p = p.concat(s.containers.reduce((p, c) => p = p.concat(c.sources.map(so => so.name)), <string[]>[])), <string[]>[])
+        
+        const count = sourcesNames.filter(n => n === previousName).length
+        if (count > 1) {
+            const container = scenes_.value[i].containers[j]
+            scenes_.value[i].containers[j].sources[k] = {
+                name: name,
+                options: {
+                    path: '/path/to/source',
+                },
+            }
+        } else {
+            scenes_.value[i].containers[j].sources[k].name = name
+        }
+    }
+
+    resetContainersMap()
     updateNextBtn()
 }
 
@@ -202,6 +245,18 @@ const resetContainersMap = () => {
     for (const scene of scenes_.value) {
         for (const container of scene.containers) {
             containers_.value.set(container.name, container)
+        }
+    }
+}
+
+const resetSourcesMap = () => {
+    sources_.value = new Map()
+
+    for (const scene of scenes_.value) {
+        for (const container of scene.containers) {
+            for (const source of container.sources) {
+                sources_.value.set(source.name, source)
+            }
         }
     }
 }
@@ -332,12 +387,14 @@ updateNextBtn()
                 <div class="flex w-full justify-between items-center mt-4">
                     <div class="w-2/3 flex justify-end items-center">
                         <div class="w-8" />
-                        <InputUi
+                        <SelectUi
                             class="bg-bg-1 flex-1 mr-2"
                             label="Container name"
+                            :options="getContainerNameList()"
                             :value="scenes_[i].containers[j].name"
-                            :error="!scenes_[i].containers[j].name"
-                            @update="(value) => updateContainerName(i, j, value)"
+                            create
+                            noAutoselect
+                            @update="(value) => updateContainer(i, j, value)"
                         />
                     </div>
                     <div class="flex justify-end items-center">
@@ -366,12 +423,14 @@ updateNextBtn()
                     <div class="w-2/3 flex justify-end items-center">
                         <div class="w-8" />
                         <div class="w-8" />
-                        <InputUi
+                        <SelectUi
                             class="bg-bg-1 flex-1 mr-2"
                             label="Source name"
+                            :options="getSourceNameList()"
                             :value="scenes_[i].containers[j].sources[k].name"
-                            :error="!scenes_[i].containers[j].sources[k].name"
-                            @update="(value) => updateSourceName(i, j, k, value)"
+                            create
+                            noAutoselect
+                            @update="(value) => updateSource(i, j, k, value)"
                         />
                         <InputUi
                             class="bg-bg-1 flex-1 mr-2"
