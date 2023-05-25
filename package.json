@@ -44,13 +44,15 @@
     "serve-static": "^1.15.0",
     "simple-json-db": "^2.0.0",
     "socket.io": "^4.6.0",
-    "systray2": "github:one-click-studio/node-systray"
+    "systray2": "github:one-click-studio/node-systray",
+    "wav": "^1.0.2"
   },
   "devDependencies": {
     "@types/deep-eql": "^4.0.0",
     "@types/finalhandler": "^1.2.0",
     "@types/node": "^18.13.0",
     "@types/serve-static": "^1.15.0",
+    "@types/wav": "^1.0.1",
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",

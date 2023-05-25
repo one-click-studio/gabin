@@ -5,8 +5,11 @@ import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../utils/logger'
 import { Thresholds } from "@src/types/protocol"
+import { FileWriter } from 'wav'
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
+let audioFileStream1: undefined | FileWriter = undefined
+let audioFileStream2: undefined | FileWriter = undefined
 
 const logger = getLogger('audio Activity')
 
@@ -123,6 +126,7 @@ export class AudioActivity {
     private _framesPerBuffer: number
     private _sampleRate: number = 0
     private _isOpen: boolean
+    private _recorders: FileWriter[]
 
     private _channels: number[]
     private _onAudio: (speaking: boolean, channel: number, volume: number) => void
@@ -155,6 +159,7 @@ export class AudioActivity {
         this._speaking = Array(options.channels.length).fill(false)
         this._consecutive = Array(options.channels.length).fill(0)
         this._isOpen = false
+        this._recorders = []
 
         this.getDevice()
     }
@@ -222,6 +227,11 @@ export class AudioActivity {
             const sileroVad = new SileroVad()
             await sileroVad.load()
             this._sileroVad[i] = sileroVad
+
+            this._recorders[i] = new FileWriter(this.getFileName(i), {
+                sampleRate: this._sampleRate/2,
+                channels: 1
+            })
         }
     }
 
@@ -259,6 +269,8 @@ export class AudioActivity {
 
     public stop() {
         if (!this._rtAudio || !this._isOpen) return
+
+        for (let i in this._recorders) this._recorders[i].end()
 
         this._rtAudio.stop()
         this._rtAudio.closeStream()
@@ -304,6 +316,18 @@ export class AudioActivity {
         return volume
     }
 
+    private getFileName(channel: number): string {
+        if (!this._device) return ""
+
+        const deviceName = this._device.data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
+
+        let d = new Date()
+        let datestring = d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "-" + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2)
+
+        return path.join(__dirname, `../../../audio-${deviceName}-${this._channels[channel]}-${datestring}.wav`)
+    }
+
+
     async process(pcm: Buffer) {
         // make sure stream stays open
         this._rtAudio?.write(Buffer.from([]))
@@ -319,7 +343,13 @@ export class AudioActivity {
 
         for (let i = 0; i < buffers.length; i++) {
             if (!this._bufferLength) this.setBufferSize(buffers[i].length)
-            if (this._channels.indexOf(i) === -1) continue
+
+            const shortIndex = this.shortIndex(i)
+            if (shortIndex === -1) continue
+
+            if (this._recorders[shortIndex]) {
+                this._recorders[shortIndex].write(Buffer.from(buffers[i]))
+            }
 
             const volume = Math.round(this.getVolume(buffers[i])*100)/100
             const speaking = await this.processChannel(buffers[i], i, volume)
