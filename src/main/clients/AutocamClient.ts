@@ -716,12 +716,12 @@ class Container {
             return
         }
 
-        this.lock = true
         const shot = this.getShotFromName(shotName)
         if (!shot) {
             this.logger.error('problem with getShotFromName : no shot can be found')
             return
         }
+        if (this.currentShot !== shot) this.lock = true
         this.shoot(shot)
 
         this.timeouts.push(setTimeout(() => {
@@ -777,13 +777,15 @@ class Container {
             return
         }
 
-        this.lock = true
-
+        
         const shot = this.getShotFromName(shotName)
         if (!shot) {
             this.logger.error('problem with getShotFromName : no shot can be found')
             return
         }
+
+        if (this.currentShot !== shot) this.lock = true
+        this.toUnfocus = false
         this.shoot(shot)
 
         this.timeouts.push(setTimeout(() => {
