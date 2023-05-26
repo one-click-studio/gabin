@@ -114,7 +114,7 @@ export class AutocamClient extends Client {
         }
 
         if (!devicesData.length) {
-            this.logger.debug({ devices: getDevices().filter(d => d.data.inputChannels > 0) }, 'available devices list')
+            this.logger.info({ devices: getDevices().filter(d => d.data.inputChannels > 0) }, 'available devices list')
             return
         }
 
@@ -222,7 +222,7 @@ export class AutocamClient extends Client {
             }
         }
 
-        this.logger.debug(deviceMics)
+        this.logger.info(deviceMics)
 
         return {
             id: device.id,
@@ -369,20 +369,20 @@ export class AutocamClient extends Client {
                     if (micId === currentMic) return
 
                     if (!this.micIsAvailable(micId)) {
-                        this.logger.debug('mic is not available', micId)
+                        this.logger.info('mic is not available', micId)
                         return
                     }
 
-                    this.logger.debug(`${micId} started speaking`)
+                    this.logger.info(`${micId} started speaking`)
                     this.timeline$.next(micId)
                 } else if (micId === currentMic) {
                     this.lastSpeaker = micId
                     let nextMicId = micId
-                    this.logger.debug(`${nextMicId} stopped speaking`)
+                    this.logger.info(`${nextMicId} stopped speaking`)
 
                     nextMicId = this.otherSpeaker()
                     if (nextMicId) {
-                        this.logger.debug(`${nextMicId} is still speaking`)
+                        this.logger.info(`${nextMicId} is still speaking`)
                     }
                     this.timeline$.next(nextMicId)
                 }
@@ -408,7 +408,7 @@ export class AutocamClient extends Client {
             if (showing) {
                 if (this.lastSpeaker === micId && showing.toUnfocus) return showing.focus_()
                 
-                this.logger.debug('One container is already showing this mic')
+                this.logger.info('One container is already showing this mic')
                 showing.trigger$.next({ micId })
                 this.unfocusContainers(showing.name)
                 return
@@ -416,7 +416,7 @@ export class AutocamClient extends Client {
 
             const random = this.getRandomContainerByMic(micId)
             if (random) {
-                this.logger.debug('Get a random container')
+                this.logger.info('Get a random container')
                 random.trigger$.next({ micId })
                 this.unfocusContainers(random.name)
                 return
@@ -429,14 +429,14 @@ export class AutocamClient extends Client {
             const currentMic = this.timeline$.getValue()
             const focused = this.getFocusedContainer()
             if (focused && focused.hasShot(source, true)){
-                this.logger.debug('Focus container has been forced to shoot', source)
+                this.logger.info('Focus container has been forced to shoot', source)
                 focused.trigger$.next({ micId: currentMic, shotName: source.name })
                 return
             }
 
             const random = this.getRandomContainerByShot(source, true)
             if (random) {
-                this.logger.debug('Get a random container')
+                this.logger.info('Get a random container')
                 random.trigger$.next({ micId: currentMic, shotName: source.name })
                 this.unfocusContainers(random.name)
                 return
@@ -466,7 +466,9 @@ export class AutocamClient extends Client {
     }
 
     private filterShotMapContainers() {
+        this.logger.debug(`Filter shot maps (${this.containerMap.size})`)
         this.containerMap.forEach(container => {
+            this.logger.debug('container', container.name)
             container.filterShotMaps(this.availableMics)
         })
     }
@@ -494,6 +496,12 @@ export class AutocamClient extends Client {
     }
 
     setAvailableMics(availableMics: AvailableMicsMap) {
+        // [
+        //     ["Person 1", false],
+        //     ["Person 2", true],
+        //     ["Person 3", true]
+        // ]
+        this.logger.debug('setAvailableMics', availableMics)
         this.availableMics = availableMics
         this.filterShotMapContainers()
     }
@@ -865,9 +873,17 @@ class Container {
         this.currentMic = micId
     }
 
-    filterShotMaps(availableMicsMap: AvailableMicsMap) {
+    filterShotMaps(availableMicsMap: AvailableMicsMap) {        
+        const forbiddenShotsMap = this.shotsMap
+        .filter(m => !availableMicsMap.get(m.id))
+        const forbiddenShots = this.getShotsFromMap(forbiddenShotsMap)
+
         this.filteredShotsMap = this.shotsMap
         .filter(m => availableMicsMap.get(m.id))
+
+        this.filteredShotsMap.forEach(m => {
+            m.cams = m.cams.filter(c => forbiddenShots.indexOf(c.source.name) < 0)
+        })
 
         this.allShots = this.getShotsFromMap(this.filteredShotsMap, true)
         this.shots = this.getShotsFromMap(this.filteredShotsMap)
@@ -876,7 +892,6 @@ class Container {
 
     unfocus_() {
         if (this.focus) this.toUnfocus = true
-        // this.focus = false
     }
 
     focus_() {
