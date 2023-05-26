@@ -247,7 +247,7 @@ export class AudioActivity {
 
         this._rtAudio = new RtAudio(this._apiId)
 
-        logger.debug({
+        logger.info({
             deviceId: this._device.id,
             nChannels: this._device.data.inputChannels,
             firstChannel: 0
@@ -355,7 +355,7 @@ export class AudioActivity {
             const shortIndex = this.shortIndex(i)
             if (shortIndex === -1) continue
 
-            if (this._recorders[shortIndex]) {
+            if (this._recorders[shortIndex] && this._recorders[shortIndex].writable) {
                 this._recorders[shortIndex].write(Buffer.from(buffers[i]))
             }
 
