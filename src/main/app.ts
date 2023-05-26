@@ -275,7 +275,7 @@ export class App {
         })
 
         this.io.on('connection', socket => {
-            this.logger.debug('Client connected', socket.id)
+            this.logger.info('Client connected', socket.id)
             this.ioClients.set(socket.id, socket)
 
             // PROFILE
@@ -311,13 +311,13 @@ export class App {
             this.sendAppState()
 
             socket.on('disconnect', () => {
-                this.logger.debug('Client disconnected', socket.id)
+                this.logger.info('Client disconnected', socket.id)
                 this.ioClients.delete(socket.id)
             })
         })
 
         this.profiles.default$.subscribe((profile) => {
-            this.logger.debug('Default profile changed', profile)
+            this.logger.info('Default profile changed', profile)
             this.io?.emit('handleDefault', profile)
             this.osc?.register$.next({ type: 'defaultProfile', data: profile })
         })
@@ -356,7 +356,7 @@ export class App {
     }
 
     private joinSetup(socket: Socket) {
-        this.logger.debug('New setup client connected', socket.id)
+        this.logger.info('New setup client connected', socket.id)
 
         // OBS
         socket.on('connectObs', (c: Connection, callback) => callback(this.setup?.connectObs(c)))
@@ -402,7 +402,7 @@ export class App {
     }
 
     private joinGabin(socket: Socket) {
-        this.logger.debug('New gabin client connected')
+        this.logger.info('New gabin client connected')
 
         // SHOTS
         socket.on('triggerShot', (s: Asset['source'], callback) => callback(this.gabin?.triggeredShot$.next(s)))

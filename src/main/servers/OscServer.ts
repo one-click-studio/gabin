@@ -43,12 +43,12 @@ export class OscServer extends Server {
 
         this.server.on('open', () => {
             this.reachable$.next(true)
-            this.logger.debug("connection was established")
+            this.logger.info("connection was established")
         })
 
         this.server.on('close', () => {
             this.reachable$.next(false)
-            this.logger.debug("connection was closed")
+            this.logger.info("connection was closed")
         })
 
         this.server.on('error', (err: Error) => {
@@ -64,7 +64,7 @@ export class OscServer extends Server {
             this.sendRegister(type, data)
         })
 
-        this.logger.debug('listening on', this.config)
+        this.logger.info('listening on', this.config)
     }
 
     private addCommands() {
@@ -107,7 +107,7 @@ export class OscServer extends Server {
     }
 
     private command(type: CmdType, data: any, fromJson?: boolean) {
-        this.logger.debug('command', {type, data})
+        this.logger.info('command', {type, data})
         if (CMD_TYPES.indexOf(type) === -1) return
 
         if (data && fromJson) {
@@ -122,7 +122,7 @@ export class OscServer extends Server {
     }
 
     private request(type: RequestType, host: string, port: number, path: string, data?: any) {
-        this.logger.debug('request', {type, host, port, path})
+        this.logger.info('request', {type, host, port, path})
         if (REQUEST_TYPES.indexOf(type) === -1) return
 
         if (!this.register(type, host, port, path, true)) return
@@ -131,7 +131,7 @@ export class OscServer extends Server {
     }
 
     private register(type: RegisterType, host: string, port: number, path: string, once:boolean =false): boolean {
-        this.logger.debug('register', {type, host, port, path, once})
+        this.logger.info('register', {type, host, port, path, once})
         if (REGISTER_TYPES.indexOf(type) === -1) return false
         if (!host || !parseInt(port.toString()) || !path) return false
 
@@ -140,7 +140,7 @@ export class OscServer extends Server {
     }
 
     private unregister(type: RegisterType) {
-        this.logger.debug('unregister', {type})
+        this.logger.info('unregister', {type})
         if (REGISTER_TYPES.indexOf(type) === -1) return
 
         this.registerMap.delete(type)
@@ -155,7 +155,7 @@ export class OscServer extends Server {
         data = typeof data === 'string' ? data : JSON.stringify(data)
 
         const message = new OSC.Message(register.path, data)
-        this.logger.debug(`sending message: ${message.address}`)
+        this.logger.info(`sending message: ${message.address}`)
         this.server.send(message, { port: register.port, host: register.host })
 
         if (register.once) this.unregister(type)
@@ -180,7 +180,7 @@ export class OscServer extends Server {
         if (!this.server || !this.isReachable || !this.config) return
 
         const message = new OSC.Message(path)
-        this.logger.debug(`sending message: ${message.address}`)
+        this.logger.info(`sending message: ${message.address}`)
         this.server.send(message, { port })
     }
 
