@@ -88,6 +88,7 @@ export interface AudioDevice {
 }
 
 export interface Shoot {
+    sceneName: AssetScene['name']
     container: AssetContainer
     shot: AssetSource
     mode: 'focus' | 'illustration'

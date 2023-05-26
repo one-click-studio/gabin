@@ -346,7 +346,7 @@ export class AutocamClient extends Client {
         this.containerMap = new Map();
 
         for (const mContainer of this.currentMapping) {
-            const container = new Container(mContainer, this.shoot$, this.currentShots$)
+            const container = new Container(mContainer, this.shoot$, this.currentShots$, this.currentScene)
             this.containerMap.set(container.name, container)
         }
 
@@ -536,13 +536,16 @@ class Container {
     private currentShot: Asset['source'] = { name: '' }
     private timeouts: NodeJS.Timeout[] = []
 
-    constructor(container: AutocamContainer, shoot$: Subject<Shoot>, currentShots$: BehaviorSubject<CurrentShotsMap>) {
+    private currentScene: Asset['scene']['name']
+
+    constructor(container: AutocamContainer, shoot$: Subject<Shoot>, currentShots$: BehaviorSubject<CurrentShotsMap>, scene: Asset['scene']['name']) {
         this.logger = getLogger('Autocam Container (' + container.name + ')')
 
         this.container = container
         this.parseContainer(container)
         this.shoot$ = shoot$
         this.currentShots$ = currentShots$
+        this.currentScene = scene
 
         this.trigger$.subscribe(params => {
             if (!this.focus) this.focus = true
@@ -606,7 +609,8 @@ class Container {
         this.shoot$.next({
             mode: this.focus? 'focus' : 'illustration',
             container: this.container,
-            shot: shot
+            shot: shot,
+            sceneName: this.currentScene
         })
     }
 

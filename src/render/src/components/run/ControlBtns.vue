@@ -39,29 +39,29 @@ const getAllContainers = (): Asset['container'][] => {
     return Object.values(Object.fromEntries(containersMap))
 }
 
-const getAllSources = (): Asset['source'][] => {
-    const containers = getAllContainers()
-    const sources = containers.reduce((p, c) => p.concat(c.sources), <Asset['source'][]>[])
-    const sourcesMap = new Map(sources.map((v)=>([v.name, v])))
-    return Object.values(Object.fromEntries(sourcesMap))
-}
+// const getAllSources = (): Asset['source'][] => {
+//     const containers = getAllContainers()
+//     const sources = containers.reduce((p, c) => p.concat(c.sources), <Asset['source'][]>[])
+//     const sourcesMap = new Map(sources.map((v)=>([v.name, v])))
+//     return Object.values(Object.fromEntries(sourcesMap))
+// }
 
 
-defineProps<{
-    shoot: Shoot|undefined
+const props = defineProps<{
+    shoots: Map<Asset['container']['name'], Shoot>
 }>()
 
-const autocam = ref(true)
-const shots = ref(getAllSources())
-const availableMics = ref(getAvailableMics())
+const autocam_ = ref(true)
+const containers_ = ref(getAllContainers())
+const availableMics_ = ref(getAvailableMics())
 
 const init = () => {
 
     socketHandler(store.socket, 'handleAutocam', (ac: boolean) => {
-        autocam.value = ac
+        autocam_.value = ac
     })
     socketHandler(store.socket, 'handleAvailableMics', (am: any) => {
-        availableMics.value = new Map(Object.entries(am))
+        availableMics_.value = new Map(Object.entries(am))
     })
 
     onSpacePress(() => {
@@ -70,7 +70,7 @@ const init = () => {
 }
 
 const toggleAutocam = () => {
-    socketEmitter(store.socket, 'toggleAutocam', !autocam.value)
+    socketEmitter(store.socket, 'toggleAutocam', !autocam_.value)
 }
 
 const toggleMicAvailability = (mic: string) => {
@@ -79,6 +79,26 @@ const toggleMicAvailability = (mic: string) => {
 
 const triggerShot = (shot: Asset['source']) => {
     socketEmitter(store.socket, 'triggerShot', klona(shot))
+}
+
+const sceneHasContainer = (container: Asset['container']): boolean => {
+    const shoot = props.shoots.get(container.name)
+
+    return !!shoot
+}
+
+const isFocusedShot = (container: Asset['container'], shot: Asset['source']): boolean => {
+    const shoot = props.shoots.get(container.name)
+    if (!shoot) return false
+
+    return (shoot.shot.name === shot.name && shoot.mode === 'focus')
+}
+
+const isIllustrationShot = (container: Asset['container'], shot: Asset['source']): boolean => {
+    const shoot = props.shoots.get(container.name)
+    if (!shoot) return false
+
+    return (shoot.shot.name === shot.name && shoot.mode === 'illustration')
 }
 
 init()
@@ -92,7 +112,7 @@ init()
             <ButtonContainerUi
                 class="w-24"
                 :custom-width="true"
-                :active="!autocam"
+                :active="!autocam_"
                 :primary="true"
                 :keycode="'␣'"
             >
@@ -100,8 +120,8 @@ init()
                     class="control-btn"
                     @click="toggleAutocam"
                 >
-                    <PlayCircleIcon v-show="!autocam" />
-                    <PauseCircleIcon v-show="autocam" />
+                    <PlayCircleIcon v-show="!autocam_" />
+                    <PauseCircleIcon v-show="autocam_" />
                 </ButtonUi>
             </ButtonContainerUi>
             <ButtonContainerUi class="flex-1">
@@ -117,7 +137,7 @@ init()
 
         <div class="flex max-w-full flex-wrap">
             <ButtonContainerUi
-                v-for="[mic, a] in availableMics"
+                v-for="[mic, a] in availableMics_"
                 :key="'mic-'+mic"
                 :active="a"
                 class="h-20"
@@ -134,23 +154,33 @@ init()
                 </ButtonUi>
             </ButtonContainerUi>
         </div>
-        <div class="flex-1 flex items-stretch content-stretch flex-wrap w-full">
-            <ButtonContainerUi
-                v-for="(shot, i) in shots"
-                :key="'shot-'+shot"
-                :active="(shoot && shot.name === shoot.shot.name)"
-                :primary="true"
+
+        <template
+            v-for="(container, i) in containers_"
+            :key="'container-'+i"
+        >
+            <div
+                v-if="sceneHasContainer(container)"
+                class="flex-1 flex items-stretch content-stretch flex-wrap w-full"
             >
-                <ButtonUi
-                    class="flex flex-col items-center control-btn"
-                    :active="(shoot && shot.name === shoot.shot.name)"
-                    @click="() => triggerShot(shot)"
+                <ButtonContainerUi
+                    v-for="(source) in container.sources"
+                    :key="'container-'+i+'-source-'+source.name"
+                    :active="isFocusedShot(container, source) || isIllustrationShot(container, source)"
+                    :primary="isFocusedShot(container, source)"
                 >
-                    <CamIcon class="m-4" />
-                    <span class="text-base">{{ shot.name }}</span>
-                </ButtonUi>
-            </ButtonContainerUi>
-        </div>
+                    <ButtonUi
+                        class="flex flex-col items-center control-btn"
+                        :active="isFocusedShot(container, source) || isIllustrationShot(container, source)"
+                        @click="() => triggerShot(source)"
+                    >
+                        <CamIcon class="m-4" />
+                        <span class="text-m">{{ source.name }}</span>
+                        <span class="text-xs mt-2">{{ container.name }}</span>
+                    </ButtonUi>
+                </ButtonContainerUi>
+            </div>
+        </template>
     </div>
 </template>
 
