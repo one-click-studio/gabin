@@ -3,9 +3,8 @@ import type { Subscription } from 'rxjs'
 
 import { Client } from '../../main/clients/Client'
 import db from '../../main/utils/db'
-import type { Logger } from '../../main/utils/logger'
-import { getLogger } from '../../main/utils/logger'
-import { random } from '../../main/utils/utils'
+import { getLogger, type Logger } from '../../main/utils/logger'
+import { random, deepCopy } from '../../main/utils/utils'
 
 import { AudioActivity, getDevices } from '../../main/modules/audioActivity'
 import type { RtAudioApi } from 'audify'
@@ -466,9 +465,7 @@ export class AutocamClient extends Client {
     }
 
     private filterShotMapContainers() {
-        this.logger.debug(`Filter shot maps (${this.containerMap.size})`)
         this.containerMap.forEach(container => {
-            this.logger.debug('container', container.name)
             container.filterShotMaps(this.availableMics)
         })
     }
@@ -496,12 +493,6 @@ export class AutocamClient extends Client {
     }
 
     setAvailableMics(availableMics: AvailableMicsMap) {
-        // [
-        //     ["Person 1", false],
-        //     ["Person 2", true],
-        //     ["Person 3", true]
-        // ]
-        this.logger.debug('setAvailableMics', availableMics)
         this.availableMics = availableMics
         this.filterShotMapContainers()
     }
@@ -873,12 +864,61 @@ class Container {
         this.currentMic = micId
     }
 
-    filterShotMaps(availableMicsMap: AvailableMicsMap) {        
-        const forbiddenShotsMap = this.shotsMap
-        .filter(m => !availableMicsMap.get(m.id))
-        const forbiddenShots = this.getShotsFromMap(forbiddenShotsMap)
+    private shotIsMatching(matching: string[], availableMicsMap: AvailableMicsMap): boolean {
+        let resp = false
 
-        this.filteredShotsMap = this.shotsMap
+        for (let i in matching) {
+            const entry = matching[i].split('')
+            const availableMics = Array.from(availableMicsMap).map(m => m[1])
+
+            if (entry.length !== availableMics.length) continue
+
+            let good = true
+            for (let j in entry) {
+                if (entry[j] === '*') continue
+                if (!!+entry[j] !== availableMics[j]) {
+                    good = false
+                    break
+                }
+            }
+
+            if (good) {
+                resp = true
+                break
+            }
+        }
+
+        return resp
+    }
+
+    private getMatchingShots(availableMicsMap: AvailableMicsMap): Asset['source']['name'][] {
+        const shots: Asset['source']['name'][] = []
+
+        const shotsMap: typeof this.shotsMap = deepCopy(this.shotsMap)
+        for (let i in shotsMap) {
+            for (let j in shotsMap[i].cams) {
+                const cam = shotsMap[i].cams[j]
+                if (cam.source.options && cam.source.options.matching) {
+                    if (this.shotIsMatching(cam.source.options.matching, availableMicsMap)) {
+                        shots.push(cam.source.name)
+                    }
+                }
+            }
+        }
+
+        return shots
+    }
+
+    filterShotMaps(availableMicsMap: AvailableMicsMap) {
+        const shotsMap: typeof this.shotsMap = deepCopy(this.shotsMap)
+
+        const forbiddenShotsMap = shotsMap
+        .filter(m => !availableMicsMap.get(m.id))
+        const matchingShots = this.getMatchingShots(availableMicsMap)
+        const forbiddenShots = this.getShotsFromMap(forbiddenShotsMap)
+        .filter(s => matchingShots.indexOf(s) < 0)
+
+        this.filteredShotsMap = shotsMap
         .filter(m => availableMicsMap.get(m.id))
 
         this.filteredShotsMap.forEach(m => {
