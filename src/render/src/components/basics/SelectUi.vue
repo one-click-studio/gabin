@@ -72,7 +72,6 @@ const prefilterOptions = () => {
 
 const initOptions = () => {
     const options = prefilterOptions()
-    console.log('initOptions', options)
     if (!props.noAutoselect && options.length === 1 && !props.value) {
         update(options[0])
     }
