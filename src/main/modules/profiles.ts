@@ -143,6 +143,17 @@ export class Profiles {
         this.save(profiles)
     }
 
+    setRecord(id: Profile['id'], record: Profile['record']) {
+        const profiles = this.getProfiles()
+        const index = this.getIndex(id, profiles)
+
+        if (index > -1) {
+            profiles[index].record = record
+        }
+
+        this.save(profiles)
+    }
+
     setThresholds(id: Profile['id'], deviceName: AudioDevice['name'], thresholds: Thresholds) {
         const profiles = this.getProfiles()
         const index = this.getIndex(id, profiles)

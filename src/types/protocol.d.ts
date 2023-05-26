@@ -139,6 +139,7 @@ export interface Profile {
     settings: ProfileSettings
     connections: ConnectionsConfig
     autostart?: boolean
+    record?: string
 }
 export interface ProfileSettings {
     mics: AudioDeviceSettings[]

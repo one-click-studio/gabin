@@ -118,6 +118,8 @@ export class AutocamClient extends Client {
             return
         }
 
+        const record = db.getDefaultValue(['record'], true)
+
         this.recorders = []
         for (const i in devicesData){
             const recorder = new AudioActivity({
@@ -127,7 +129,8 @@ export class AutocamClient extends Client {
                 framesPerBuffer: 960,
                 onAudio: (speaking, channelId, volume) => {
                     devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking, volume)
-                }
+                },
+                record
             })
             recorder.start()
 

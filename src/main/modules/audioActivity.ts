@@ -4,12 +4,11 @@ import os from "os"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../utils/logger'
+import { formatDate } from '../utils/utils'
 import { Thresholds } from "@src/types/protocol"
 import { FileWriter } from 'wav'
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
-let audioFileStream1: undefined | FileWriter = undefined
-let audioFileStream2: undefined | FileWriter = undefined
 
 const logger = getLogger('audio Activity')
 
@@ -126,7 +125,9 @@ export class AudioActivity {
     private _framesPerBuffer: number
     private _sampleRate: number = 0
     private _isOpen: boolean
+
     private _recorders: FileWriter[]
+    private _record: string | undefined
 
     private _channels: number[]
     private _onAudio: (speaking: boolean, channel: number, volume: number) => void
@@ -142,7 +143,8 @@ export class AudioActivity {
             speaking?: number,
             silence?: number,
             vad?: number
-        }
+        },
+        record?: string
     }) {
 
         this._deviceName = options.deviceName
@@ -152,9 +154,10 @@ export class AudioActivity {
         if (options.sampleRate) this._sampleRate = options.sampleRate
         this._onAudio = options.onAudio
 
-        if (options?.thresholds?.speaking) this.setSpeakingThreshold(options.thresholds.speaking)
-        if (options?.thresholds?.silence) this.setSilenceThreshold(options.thresholds.silence)
-        if (options?.thresholds?.vad) this.setvadThreshold(options.thresholds.vad)
+        if (options.thresholds?.speaking) this.setSpeakingThreshold(options.thresholds.speaking)
+        if (options.thresholds?.silence) this.setSilenceThreshold(options.thresholds.silence)
+        if (options.thresholds?.vad) this.setVadThreshold(options.thresholds.vad)
+        if (options.record) this._record = options.record
 
         this._speaking = Array(options.channels.length).fill(false)
         this._consecutive = Array(options.channels.length).fill(0)
@@ -171,14 +174,14 @@ export class AudioActivity {
     public setThresholds(thresholds: Thresholds) {
         this.setSpeakingThreshold(thresholds.speaking)
         this.setSilenceThreshold(thresholds.silence)
-        this.setvadThreshold(thresholds.vad)
+        this.setVadThreshold(thresholds.vad)
     }
 
     public getThresholds(): Thresholds {
         return {
             speaking: this.getSpeakingThreshold(),
             silence: this.getSilenceThreshold(),
-            vad: this.getvadThreshold()   
+            vad: this.getVadThreshold()   
         }
     }
 
@@ -198,11 +201,11 @@ export class AudioActivity {
         this._silenceThreshold = value
     }
 
-    public getvadThreshold(): number {
+    public getVadThreshold(): number {
         return this._vadThreshold
     }
 
-    public setvadThreshold(value: number) {
+    public setVadThreshold(value: number) {
         this._vadThreshold = value
     }
 
@@ -228,10 +231,12 @@ export class AudioActivity {
             await sileroVad.load()
             this._sileroVad[i] = sileroVad
 
-            this._recorders[i] = new FileWriter(this.getFileName(i), {
-                sampleRate: this._sampleRate/2,
-                channels: 1
-            })
+            if (this._record) {
+                this._recorders[i] = new FileWriter(this.getFileName(i), {
+                    sampleRate: this._sampleRate/2,
+                    channels: 1
+                })
+            }
         }
     }
 
@@ -317,14 +322,17 @@ export class AudioActivity {
     }
 
     private getFileName(channel: number): string {
-        if (!this._device) return ""
+        if (!this._device || !this._record) return ""
 
         const deviceName = this._device.data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
 
         let d = new Date()
         let datestring = d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "-" + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2)
 
-        return path.join(__dirname, `../../../audio-${deviceName}-${this._channels[channel]}-${datestring}.wav`)
+        const dir = formatDate(this._record)
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir)
+
+        return path.join(dir, `audio-${datestring}-${deviceName}-${this._channels[channel]+1}.wav`)
     }
 
 

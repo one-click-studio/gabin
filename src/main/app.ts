@@ -30,18 +30,21 @@ const DEFAULT = require('./config.json')
 
 type IoRequest = { id: Profile['id'] }
 interface IoRequests {
-    thresholds : IoRequest & {
+    thresholds: IoRequest & {
         deviceName: AudioDevice['name']
         thresholds: Thresholds
     }
-    icon : IoRequest & {
+    icon: IoRequest & {
         icon: Profile['icon']
     }
-    name : IoRequest & {
+    name: IoRequest & {
         name: Profile['name']
     }
-    autostart : IoRequest & {
+    autostart: IoRequest & {
         autostart: Profile['autostart']
+    }
+    record: IoRequest & {
+        record: Profile['record']
     }
 }
 
@@ -283,6 +286,7 @@ export class App {
             socket.on('setProfileIcon', (p: IoRequests['icon'], callback) => callback(this.profiles.setIcon(p.id, p.icon)))
             socket.on('setProfileName', (p: IoRequests['name'], callback) => callback(this.profiles.setName(p.id, p.name)))
             socket.on('setAutostart', (p: IoRequests['autostart'], callback) => callback(this.profiles.setAutostart(p.id, p.autostart)))
+            socket.on('setRecord', (p: IoRequests['record'], callback) => callback(this.profiles.setRecord(p.id, p.record)))
 
             // UPDATE DEVICE OPTIONS
             socket.on('setThresholds', (p: IoRequests['thresholds'], callback) => {
