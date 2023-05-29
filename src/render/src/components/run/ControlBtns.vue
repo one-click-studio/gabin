@@ -181,6 +181,12 @@ init()
                 </ButtonContainerUi>
             </div>
         </template>
+        <div
+            v-if="shoots.size === 0"
+            class="w-full h-full flex items-center justify-center text-xl text-white"
+        >
+            No scene loaded
+        </div>
     </div>
 </template>
 
