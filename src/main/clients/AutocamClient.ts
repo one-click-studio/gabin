@@ -26,7 +26,7 @@ import type {
 type ContainerMap = Map<Asset['container']['name'], Container>
 
 type MicTrigger = { micId: MicId, shotName?: Asset['source']['name'] }
-type CurrentShotsMap = Map<Asset['container']['name'], Asset['source']['name']>
+type CurrentShotsMap = Map<Asset['container']['name'], {source: Asset['source']['name'], mics: MicId[]}>
 type MicsMap = Map<Asset['source']['name'], MicId[]>
 
 type Channel = {
@@ -270,12 +270,19 @@ export class AutocamClient extends Client {
         return container
     }
 
-    private getShowingContainer(micId: MicId): Container | null {
+    private getShowingShotContainer(shot: Asset['source']['name']): Container | null {
         let container: Container | null = null
         this.containerMap.forEach(c => {
-            if (c.isShowing(micId)) {
-                container = c
-            }
+            if (c.isShowingShot(shot)) container = c
+        })
+
+        return container
+    }
+
+    private getShowingMicContainer(micId: MicId): Container | null {
+        let container: Container | null = null
+        this.containerMap.forEach(c => {
+            if (c.isShowingMic(micId)) container = c
         })
 
         return container
@@ -403,7 +410,7 @@ export class AutocamClient extends Client {
 
             this.currentMicContainers()
 
-            const showing = this.getShowingContainer(micId)
+            const showing = this.getShowingMicContainer(micId)
             if (showing) {
                 if (this.lastSpeaker === micId && showing.toUnfocus) return showing.focus_()
                 
@@ -426,7 +433,17 @@ export class AutocamClient extends Client {
 
         this.subscriptions.forcedShot = this.forcedShot$.subscribe(source => {
             const currentMic = this.timeline$.getValue()
+
+            const isShowing = this.getShowingShotContainer(source.name)
+            if (isShowing) {
+                this.logger.warn('A container is already showing this shot', isShowing.name)
+                return
+            }
+
             const focused = this.getFocusedContainer()
+            this.logger.debug('Forced shot')
+            this.logger.debug('focused', focused?.name)
+            this.logger.debug('focused hasShot', focused?.hasShot(source, true))
             if (focused && focused.hasShot(source, true)){
                 this.logger.info('Focus container has been forced to shoot', source)
                 focused.trigger$.next({ micId: currentMic, shotName: source.name })
@@ -598,7 +615,7 @@ class Container {
         this.currentShot = shot
 
         const currentShots = new Map([...this.currentShots$.getValue()])
-        currentShots.set(this.name, shot.name)
+        currentShots.set(this.name, {source: shot.name, mics: this.micsMap.get(shot.name) || []})
         this.currentShots$.next(currentShots)
 
         if (!shot || !shot.name) {
@@ -648,14 +665,14 @@ class Container {
         const currentShots = this.currentShots$.getValue()
 
         // FILTER ONLY OTHER CONTAINERS SHOTS
-        const otherShots: Asset['source']['name'][] = [...currentShots]
+        const otherShots: {source: Asset['source']['name'], mics: MicId[]}[] = [...currentShots]
         .filter(([key]) => key !== this.name)
         .map(row => row[1])
 
         // GET MICS SHOWED BY THESE SHOTS
         let micsId: MicId[] = []
         otherShots.forEach(shot => {
-            const mIds = this.micsMap.get(shot) || []
+            const mIds: string[] = shot.mics
             micsId = micsId.concat(
                 mIds.filter(s => micsId.indexOf(s) < 0)
             )
@@ -665,7 +682,7 @@ class Container {
         let unallowedShots: Asset['source']['name'][] = []
         micsId.forEach(micId => {
             const shotMap = this.filteredShotsMap.find(m => m.id === micId)
-            const shots = shotMap?.cams.map(c => c.source.name) || []
+            const shots = shotMap?.cams.filter(c => c.weight > 0).map(c => c.source.name) || []
 
             unallowedShots = unallowedShots.concat(
                 shots.filter(s => unallowedShots.indexOf(s) < 0)
@@ -688,17 +705,12 @@ class Container {
     }
 
     private getIllustrationShot(micId?: MicId): Asset['source']['name']|undefined {
-        if (micId) {
-            return this.getFocusShot(micId)
-        }
-
+        if (micId) return this.getFocusShot(micId)
+        
         const allowedShots = this.getAllowedShots(this.shots)
         let shotName = this.getRandomShot(allowedShots)
 
-        if (!shotName) {
-            this.logger.error('problem with allowedShots probably')
-            shotName = this.getRandomShot(this.shots)
-        }
+        if (!shotName) shotName = this.getRandomShot(this.shots)
 
         return shotName
     }
@@ -839,7 +851,11 @@ class Container {
         })
     }
 
-    isShowing(micId: MicId): boolean {
+    isShowingShot(shot: Asset['source']['name']): boolean {
+        return (this.currentShot.name === shot)
+    }
+
+    isShowingMic(micId: MicId): boolean {
         const shots = this.getShotsForMic(micId)
         const shotsId = shots.filter(shot => shot.weight).map(shot => shot.source.name)
 
