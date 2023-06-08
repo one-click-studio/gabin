@@ -357,8 +357,8 @@ export class AutocamClient extends Client {
             this.containerMap.set(container.name, container)
         }
 
-        this.enableContainers()
         this.filterShotMapContainers()
+        this.enableContainers()
         this.currentMicContainers()
         this.setupTimeline()
     }
@@ -441,9 +441,6 @@ export class AutocamClient extends Client {
             }
 
             const focused = this.getFocusedContainer()
-            this.logger.debug('Forced shot')
-            this.logger.debug('focused', focused?.name)
-            this.logger.debug('focused hasShot', focused?.hasShot(source, true))
             if (focused && focused.hasShot(source, true)){
                 this.logger.info('Focus container has been forced to shoot', source)
                 focused.trigger$.next({ micId: currentMic, shotName: source.name })
@@ -514,12 +511,17 @@ export class AutocamClient extends Client {
         this.filterShotMapContainers()
     }
 
-    setCurrentScene(sceneName: Asset['scene']['name']) {
+    setCurrentScene(sceneName: Asset['scene']['name']='') {
         this.currentScene = sceneName
         this.currentMapping = this.autocamMapping.find(c => c.name === sceneName)?.containers || []
 
         if (!this.currentMapping.length) {
             this.logger.info('This scene does not exist in config or has no containers', sceneName)
+
+            this.currentShots$ = new BehaviorSubject(new Map())
+            this.clearTimeoutsContainers()
+            this.cleanSubscriptions()
+            this.containerMap = new Map()
             return
         }
 
@@ -707,9 +709,10 @@ class Container {
     private getIllustrationShot(micId?: MicId): Asset['source']['name']|undefined {
         if (micId) return this.getFocusShot(micId)
         
+        
         const allowedShots = this.getAllowedShots(this.shots)
         let shotName = this.getRandomShot(allowedShots)
-
+        
         if (!shotName) shotName = this.getRandomShot(this.shots)
 
         return shotName
@@ -945,8 +948,8 @@ class Container {
             m.cams = m.cams.filter(c => forbiddenShots.indexOf(c.source.name) < 0)
         })
 
-        this.allShots = this.getShotsFromMap(this.filteredShotsMap, true)
-        this.shots = this.getShotsFromMap(this.filteredShotsMap)
+        this.allShots = this.getShotsFromMap(this.filteredShotsMap)
+        this.shots = this.getShotsFromMap(this.filteredShotsMap, true)
         this.micsMap = this.getMicsMapFromShotMap(this.filteredShotsMap)
     }
 

@@ -243,13 +243,9 @@ export class Gabin {
 
     private setNewScene(sceneName: Asset['scene']['name']|undefined) {
         const scene = this.getScene(sceneName)
-        if (!scene) {
-            this.logger.error('cannot find scene 🤷‍♂️', sceneName)
-            return
-        }
 
-        this.logger.info('has received a new scene 🎬', scene.name)
-        if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene.name)
+        this.logger.info('has received a new scene 🎬', scene?.name)
+        if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene?.name)
     }
 
     private getScene(sceneName: Asset['scene']['name']|undefined): Asset['scene']|undefined {
