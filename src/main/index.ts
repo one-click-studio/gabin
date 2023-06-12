@@ -1,6 +1,7 @@
 import { App, openApp } from './app'
 const PackageJson = require('../../package.json')
-const DEFAULT = require('./config.json')
+const DEFAULT = require('../resources/json/config.json')
+
 
 // get args
 const args = process.argv.slice(2)

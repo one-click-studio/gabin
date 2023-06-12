@@ -26,7 +26,7 @@ import {
     Thresholds,
     AudioDevice
 } from '../types/protocol'
-const DEFAULT = require('./config.json')
+const DEFAULT = require('../resources/json/config.json')
 
 type IoRequest = { id: Profile['id'] }
 interface IoRequests {
