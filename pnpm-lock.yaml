@@ -1,9 +1,5 @@
 lockfileVersion: '6.1'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 dependencies:
   audify:
     specifier: ^1.8.1
