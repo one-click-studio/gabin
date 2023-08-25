@@ -6,25 +6,45 @@ import { Client } from '../../main/clients/Client'
 import db from '../../main/utils/db'
 
 import type {
-    Asset,
+    VideoDeviceSettings,
+    ObsAssetId,
+    ObsScene,
+    ObsSource,
 } from '../../types/protocol'
 
 export class ObsClient extends Client {
 
-    scenes$: BehaviorSubject<Asset['scene'][]>
-    mainScene$: BehaviorSubject<Asset['scene']['name']|undefined>
+    scenes$: BehaviorSubject<ObsScene[]>
+    mainScene$: BehaviorSubject<ObsAssetId['scene']>
 
     private obs: ObsServer
+    private containers: VideoDeviceSettings[]
+    private mainScenes: ObsAssetId['scene'][]
 
     constructor() {
         super('obs')
 
         this.obs = new ObsServer()
         this.scenes$ = this.obs.scenes$
-        this.mainScene$ = new BehaviorSubject<Asset['scene']['name']|undefined>(undefined)
+        this.mainScene$ = new BehaviorSubject('')
+        this.mainScenes = []
+        this.containers = []
     }
 
     init() {
+        const containers = db.getSpecificAndDefault(['settings', 'containers'], true)
+        this.containers = containers.defaultValue
+
+        this.mainScenes = this.getMainScenes()
+
+        this.addSubscription(
+            containers.configPart$.subscribe(() => {
+                if (this.isReachable) {
+                    this.mainScenes = this.getMainScenes()
+                }
+            })
+        )
+
         this.addSubscription(
             this.obs.reachable$.subscribe(r => {
                 if (r !== this.isReachable){
@@ -64,18 +84,38 @@ export class ObsClient extends Client {
     }
 
     private initWebsocket() {
+        this.manageRecording()
         this.manageTransitions()
     }
 
+    private manageRecording() {
+        // DO NOT REMOVE - Catching 'start recording' event
+        // DO NOT REMOVE - Catching 'stop recording' event
+        // this.obs.websocket.on('RecordingStarted', () => {
+        this.obs.websocket.on('RecordStateChanged', (data) => {
+            this.logger.info('Recording State Changed.')
+
+            // this.logger.info('Recording started.')
+            // this.logger.info('Recording stopped.')
+        })
+    }
+
     private manageTransitions() {
+        // this.obs.websocket.on('TransitionBegin', (data) => {
         this.obs.websocket.on('CurrentProgramSceneChanged', (data) => {
+            // this.logger.info(`scene transition from '${data['from-scene']}' to '${data['to-scene']}'`)
+            // this.sceneTransition(data['to-scene'])
             this.logger.info(`scene changed to '${data.sceneName}'`)
             this.sceneTransition(data.sceneName)
         })
     }
 
-    private sceneTransition(sceneName: Asset['scene']['name']) {
-        this.mainScene$.next(sceneName)
+    private sceneTransition(scene: ObsAssetId['scene']) {
+        if (this.mainScenes.indexOf(scene) !== -1) {
+            this.mainScene$.next(scene)
+        } else {
+            this.logger.info('obs is on a non-config scene', scene)
+        }
     }
 
     private onError(err: unknown) {
@@ -83,34 +123,56 @@ export class ObsClient extends Client {
         this.reachable$.next(false)
     }
 
-    shoot(container: Asset['container'], source: Asset['source']) {
+    private getMainScenes(): ObsAssetId['scene'][] {
+        return (this.containers.reduce((p, c) => p.concat([c.scene]), <ObsAssetId['scene'][]>[]))
+    }
+
+    private isValidScene(sceneId: ObsAssetId['scene']): boolean {
+        const scenes = this.scenes$.getValue()
+        return (scenes.find(s => s.id === sceneId)? true : false)
+    }
+
+    private getSourceFromScene(sceneId: string): ObsScene['sources'] {
+        const scenes = this.scenes$.getValue()
+        const scene = scenes.find(s => s.id === sceneId)
+
+        return (scene? scene.sources : [])
+    }
+
+    shoot(containerId: ObsAssetId['scene'], shotName: ObsSource['name']) {
         if (!this.isReachable) {
             this.logger.error('Can\'t shoot, ObsWebsocket not connected')
         }
 
-        const shots = container.sources
-        const shot = shots.find(s => s.name === source.name)
+        if (!this.isValidScene(containerId)){
+            this.logger.error('This container does not exist', { containerId } )
+            return
+        }
+
+        const shots = this.getSourceFromScene(containerId)
+        const shot = shots.find(s => s.name === shotName)
 
         if (!shot) {
-            this.logger.error('This shot does not exist', { source: source.name } )
+            this.logger.error('This shot does not exist', { shotName } )
             return
         }
 
         this.obs.websocket
+        // .call('SetSceneItemRender', {
         .call('SetSceneItemEnabled', {
-            sceneName: container.name,
-            sceneItemId: shot.options.id,
+            sceneName: containerId,
+            sceneItemId: shot.id,
             sceneItemEnabled: true
         })
         .catch((err) => this.onError(err))
 
         for (const shot_ of shots) {
-            if (shot_.name === source.name) continue
+            if (shot_.name === shotName) continue
 
             this.obs.websocket
             .call('SetSceneItemEnabled', {
-                sceneName: container.name,
-                sceneItemId: shot_.options.id,
+                sceneName: containerId,
+                sceneItemId: shot_.id,
                 sceneItemEnabled: false,
             })
             .catch((err) => this.onError(err))

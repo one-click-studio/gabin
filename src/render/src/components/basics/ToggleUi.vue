@@ -1,13 +1,15 @@
 <script setup lang="ts">
 
+interface Props {
+    label?: string
+    value: boolean
+}
+
 interface Emits {
     (e: 'update', value: boolean): void
 }
 
-const props = defineProps<{
-    label?: string
-    value: boolean
-}>()
+const props = defineProps<Props>()
 const $emit = defineEmits<Emits>()
 
 const hasValue = (): boolean => {

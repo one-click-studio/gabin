@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { Manager } from "socket.io-client"
+import { io, Manager } from "socket.io-client"
 
 import { store } from '@src/store/store'
 
@@ -18,12 +18,12 @@ import DisconnectView from '@src/views/DisconnectView.vue'
 import SetupView from '@src/views/setup/IndexView.vue'
 import SetupLandingView from '@src/views/setup/LandingView.vue'
 import SetupProfileView from '@src/views/setup/ProfileView.vue'
+import SetupTcpView from '@src/views/setup/TcpView.vue'
 import SetupVisionMixerView from '@src/views/setup/VideoMixerView.vue'
 import SetupObsView from '@src/views/setup/ObsView.vue'
-import SetupOscView from '@src/views/setup/OscView.vue'
 import SetupAudioView from '@src/views/setup/AudioView.vue'
-import SetupMappingObsView from '@src/views/setup/MappingObsView.vue'
-import SetupMappingOscView from '@src/views/setup/MappingOscView.vue'
+import SetupContainerView from '@src/views/setup/ContainerView.vue'
+import SetupMappingView from '@src/views/setup/MappingView.vue'
 import SetupSettingsView from '@src/views/setup/SettingsView.vue'
 import SetupSummaryView from '@src/views/setup/SummaryView.vue'
 
@@ -66,57 +66,47 @@ const routes = [
             {
                 path: 'profile',
                 component: SetupProfileView,
-                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, back: '/setup/landing', next: '/setup/audio' },
+                meta: { type: 3, order: 1, header: true, footer: true, timeline: true, back: '/setup/landing', next: '/setup/tcp' },
             },
             {
-                path: 'audio',
-                component: SetupAudioView,
+                path: 'tcp',
+                component: SetupTcpView,
                 meta: { type: 3, order: 2, header: true, footer: true, timeline: true, back: '/setup/profile', next: '/setup/video-mixer' },
             },
             {
                 path: 'video-mixer',
                 component: SetupVisionMixerView,
-                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/audio' },
-            },
-            {
-                path: 'vm-choice',
-                component: SplashView,
-                meta: { redirect: true },
+                meta: { type: 3, order: 3, header: true, footer: true, timeline: true, back: '/setup/tcp' },
             },
             {
                 path: 'obs',
                 component: SetupObsView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
+                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/audio' },
             },
             {
-                path: 'osc',
-                component: SetupOscView,
-                meta: { type: 3, order: 4, header: true, footer: true, timeline: true, back: '/setup/video-mixer', next: '/setup/mapping' },
+                path: 'audio',
+                component: SetupAudioView,
+                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/obs', next: '/setup/container' },
+            },
+            {
+                path: 'container',
+                component: SetupContainerView,
+                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/audio', next: '/setup/mapping' },
             },
             {
                 path: 'mapping',
-                component: SplashView,
-                meta: { redirect: true },
-            },
-            {
-                path: 'mapping-obs',
-                component: SetupMappingObsView,
-                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/settings' },
-            },
-            {
-                path: 'mapping-osc',
-                component: SetupMappingOscView,
-                meta: { type: 3, order: 5, header: true, footer: true, timeline: true, back: '/setup/vm-choice', next: '/setup/settings' },
+                component: SetupMappingView,
+                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/container', next: '/setup/settings' },
             },
             {
                 path: 'settings',
                 component: SetupSettingsView,
-                meta: { type: 3, order: 6, header: true, footer: true, timeline: true, back: '/setup/mapping', next: '/setup/summary' },
+                meta: { type: 3, order: 8, header: true, footer: true, timeline: true, back: '/setup/mapping', next: '/setup/summary' },
             },
             {
                 path: 'summary',
                 component: SetupSummaryView,
-                meta: { type: 3, order: 7, header: true, footer: true, timeline: true, back: '/setup/settings', next: '/loading' },
+                meta: { type: 3, order: 9, header: true, footer: true, timeline: true, back: '/setup/settings', next: '/loading' },
             },
         ],
     },
@@ -127,44 +117,17 @@ const router = createRouter({
     routes,
 })
 
-const redirection = (to: string) => {
-    const connections = store.profiles.connections()
-    const redirect = { path: to }
-
-    switch (to) {
-        case '/setup/vm-choice':
-            redirect.path = connections.type === 'osc' ? '/setup/osc' : '/setup/obs'
-            break
-        case '/setup/mapping':
-            redirect.path = connections.type === 'osc' ? '/setup/mapping-osc' : '/setup/mapping-obs'
-            break
-    }
-
-    return redirect
-}
-
 router.beforeEach(async (to, from) => {
     if (!from.matched.length && (to.meta.type as number) > 0) {
         store.redirect.path = to.path
         return { path: '/loading' }
     }
-
-    if (['/running', '/loading'].indexOf(to.path) === -1 && store.power) {
-        return { path: '/running' }
-    } else if (to.path === '/running' && !store.power) {
-        return { path: '/home' }
-    }
-
     store.layout.header.iconEdit = false
     store.layout.header.dotMenu = false
     store.layout.footer.back.url = undefined
     store.layout.footer.next.url = undefined
     store.layout.footer.back.callback = undefined
     store.layout.footer.next.callback = undefined
-
-    if (to.meta.redirect) {
-        return redirection(to.path)
-    }
 
     return true
 })
@@ -213,14 +176,13 @@ const socket = manager.socket("/")
 store.socket = socket
 
 socket.on("connect", () => {
-    if (store.redirect.path && router.currentRoute.value.path === '/disconnect') {
+    if (store.redirect.path) {
         router.push(store.redirect.path)
     }
 })
 
 socket.on("disconnect", (reason) => {
-    store.power = false
-    if (router.currentRoute.value.path !== '/disconnect') store.redirect.path = router.currentRoute.value.path
+    store.redirect.path = router.currentRoute.value.path
     router.push('/disconnect')
     if (reason === "io server disconnect") {
         socket.connect()

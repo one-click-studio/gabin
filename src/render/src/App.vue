@@ -1,38 +1,12 @@
 <script setup lang="ts">
 
-import { useRouter } from 'vue-router'
-
 import { store } from '@src/store/store'
 import { getOS, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
 import Background from '@src/layout/BackgroundLayout.vue'
 import Layout from '@src/layout/GlobalLayout.vue'
-import { Asset, Profile } from '../../types/protocol'
+import { ObsScene } from '../../types/protocol';
 
-const router = useRouter()
-
-socketHandler(store.socket, 'handlePower', (power) => {
-    store.power = power
-
-    const currentRoute = router.currentRoute.value.path
-
-    if (['/running', '/loading'].indexOf(currentRoute) === -1 && power) {
-        return router.push('/running')
-    } else if (currentRoute === '/running' && !power) {
-        return router.push('/home')
-    }
-})
-
-socketHandler(store.socket, 'handleOscConfig', (config: {host: string, port: number}) => {
-    store.osc = config
-})
-
-socketHandler(store.socket, 'handleDefault', (profileId: Profile['id']) => {
-    if (store.profiles.current !== profileId) {
-        store.redirect.path = router.currentRoute.value.path
-        router.push('loading')
-    }
-})
 
 socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
     if (store.connections.obs !== reachable) {
@@ -40,18 +14,14 @@ socketHandler(store.socket, 'handleObsConnected', (reachable: boolean) => {
     }
 })
 
-socketHandler(store.socket, 'handleOscConnected', (reachable: boolean) => {
-    if (store.connections.osc !== reachable) {
-        store.connections.osc = reachable
-    }
-})
-
-socketHandler(store.socket, 'handleObsScenes', (scenes: Asset['scene'][]) => {
+socketHandler(store.socket, 'handleObsScenes', (scenes: ObsScene[]) => {
     store.assets.scenes = scenes
 })
 
-socketHandler(store.socket, 'handleMainScene', (scene: Asset['scene']['name']) => {
-    store.assets.scene = scene
+socketHandler(store.socket, 'handleStreamdeckConnected', (reachable: boolean) => {
+    if (store.connections.companion !== reachable) {
+        store.connections.companion = reachable
+    }
 })
 
 socketHandler(store.socket, 'handleSimpleString', (data: string) => {

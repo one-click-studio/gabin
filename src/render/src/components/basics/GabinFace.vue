@@ -1,11 +1,13 @@
 <script lang="ts" setup>
 import gabin from '@src/assets/pictures/gabin.png'
 
-const props = defineProps<{
+interface Props {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   msg?: string
   mainMsg?: string
-}>()
+}
+
+const props = defineProps<Props>()
 
 const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
 

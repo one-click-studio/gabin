@@ -1,6 +1,6 @@
 {
   "name": "gabin",
-  "version": "0.2.5",
+  "version": "0.2.0",
   "packageManager": "pnpm@7.27.0",
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "OneClickStudio",
@@ -12,13 +12,12 @@
     "postinstall": "pnpm -C ./src/render install",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "dev": "cross-env GABIN_CLIENT_PORT=5999 concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
-    "dev:server": "npx nodemon --no-auto-open --debug",
+    "dev:server": "npx nodemon",
     "dev:client": "pnpm -C ./src/render dev",
     "build": "shx rm -rf ./build && concurrently \"pnpm run build:client\" \"pnpm run build:server\"",
     "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "pnpm -C ./src/render build && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
-    "preview": "pnpm run build && node build/main/index.js",
-    "test": "ts-node ./src/tests/audio.ts --no-auto-open --debug"
+    "preview": "pnpm run build && node build/main/index.js"
   },
   "pkg": {
     "assets": [
@@ -39,27 +38,25 @@
     "finalhandler": "^1.2.0",
     "obs-websocket-js": "^5.0.2",
     "onnxruntime-node": "^1.13.1",
-    "osc-js": "^2.4.0",
     "rxjs": "^7.8.0",
     "serve-static": "^1.15.0",
     "simple-json-db": "^2.0.0",
     "socket.io": "^4.6.0",
-    "systray2": "github:one-click-studio/node-systray",
-    "wav": "^1.0.2"
+    "systray2": "github:one-click-studio/node-systray"
   },
   "devDependencies": {
     "@types/deep-eql": "^4.0.0",
     "@types/finalhandler": "^1.2.0",
     "@types/node": "^18.13.0",
     "@types/serve-static": "^1.15.0",
-    "@types/wav": "^1.0.1",
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",
     "pkg": "^5.8.1",
+    "playwright": "^1.29.2",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.3",
+    "typescript": "^4.9.5",
     "yarn": "^1.22.19"
   }
 }

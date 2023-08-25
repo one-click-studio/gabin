@@ -22,8 +22,6 @@ const obsConnectionOk = ref(store.connections.obs ? true : false)
 const obsConnectionLoading = ref(false)
 const obsConnectionError = ref(false)
 
-store.profiles.connections().type = 'obs'
-
 const update = (c: Connection) => {
     resetObsConnection()
     obsConnectionError.value = false

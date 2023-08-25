@@ -1,25 +1,22 @@
 <script setup lang="ts">
-import { watch, ref } from 'vue'
+import { watch } from 'vue'
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption, ListboxLabel } from '@headlessui/vue'
 
 import ChevronBottomIcon from '@src/components/icons/ChevronBottomIcon.vue'
 
-interface Emits {
-    (e: 'update', value: any|string): void
-}
-
-const props = defineProps<{
+interface Props {
     label: string
     options: any[]
     value?: any
     keyvalue?: string
-    create?: boolean
-    noAutoselect?: boolean
-}>()
-const $emit = defineEmits<Emits>()
+}
 
-const filter_ = ref(props.value)
-const filtredOptions_ = ref<any[]>([])
-const open_ = ref(false)
+interface Emits {
+    (e: 'update', value: any): void
+}
+
+const props = defineProps<Props>()
+const $emit = defineEmits<Emits>()
 
 watch(() => props.options, (newO, oldO) => {
     if (newO.length !== oldO.length) {
@@ -50,71 +47,14 @@ const isSelected = (option: any) => {
     return (displayed === props.value)
 }
 
-const createOption = () => {
-    close(filter_.value)
-    $emit('update', filter_.value)
-}
-
 const update = (select: any) => {
-    close(displayOption(select))
     $emit('update', select)
 }
 
-const updateInput = (e: Event) => {
-    const target = e.target as HTMLInputElement
-    filter_.value = target.value
-    filterOptions()
-}
-
-const prefilterOptions = () => {
-    return props.options.filter((option: any) => option)
-}
-
 const initOptions = () => {
-    const options = prefilterOptions()
-    if (!props.noAutoselect && options.length === 1 && !props.value) {
-        update(options[0])
+    if (props.options.length === 1 && !props.value) {
+        update(props.options[0])
     }
-    filterOptions()
-}
-
-const filterOptions = () => {
-    const options = prefilterOptions()
-
-    if (filter_.value) {
-        filtredOptions_.value = options.filter((option: any) => {
-            const displayed = displayOption(option)
-            return displayed.toLowerCase().includes(filter_.value.toLowerCase())
-        })
-    } else {
-        filtredOptions_.value = options
-    }
-}
-
-const handleFocusOut = ($el: any) => {
-    if (!$el.relatedTarget) close(props.value)
-}
-
-const canCreate = (): boolean => {
-    if (!props.create || !filter_.value) return false
-
-    const options = prefilterOptions()
-
-    const opts = options.map((option: any) => displayOption(option).toLowerCase())
-    if (opts.indexOf(filter_.value.toLowerCase()) === -1) return true
-
-    return false
-}
-
-const open = () => {
-    open_.value = true
-    filter_.value = props.value
-    initOptions()    
-}
-
-const close = (val: string) => {
-    open_.value = false
-    filter_.value = val
 }
 
 initOptions()
@@ -122,67 +62,49 @@ initOptions()
 </script>
 
 <template>
-    <div
-        class="selectui"
-        @focusout="handleFocusOut"
-        tabindex="0"
+    <Listbox
+        v-slot="{ open }"
+        @update:model-value="update"
     >
         <div
             class="selectui-container"
-            :class="open_? 'z-12' :'z-0'"
+            :class="open? 'z-12' :'z-0'"
         >
-            <div
+            <ListboxLabel
                 class="selectui-label"
-                :class="hasValue() || open_? 'has-value':''"
+                :class="hasValue()? 'has-value':''"
             >
                 {{ label }}
-            </div>
+            </ListboxLabel>
 
-            <div
-                class="selectui-btn"
-                @click="open"
-            >
-                <input
-                    type="text"
-                    :value="filter_"
-                    @input="updateInput"
-                >
+            <ListboxButton class="selectui-btn">
+                <div>{{ value || '' }}</div>
                 <ChevronBottomIcon
                     class="absolute right-0 top-1/4"
                 />
-            </div>
-            <div
-                class="selectui-opts scroll-bar"
-                v-if="open_"
-            >
-                <div
-                    v-if="canCreate()"
-                    class="selectui-opt create"
-                    @click="() => createOption()"
-                >
-                    Create "{{ filter_ }}"
-                </div>
-                <div
-                    v-if="!filtredOptions_.length"
+            </ListboxButton>
+            <ListboxOptions class="selectui-opts scroll-bar">
+
+                <ListboxOption
+                    v-if="!options.length"
                     class="selectui-opt empty"
                     value="Empty"
                 >
                     Empty
-                </div>
+                </ListboxOption>
 
-                <div
-                    v-for="option in filtredOptions_"
+                <ListboxOption
+                    v-for="option in options"
                     :key="option"
                     class="selectui-opt"
                     :class="isSelected(option)? 'selected' : ''"
                     :value="option"
-                    @click="() => update(option)"
                 >
                     {{ displayOption(option) }}
-                </div>
-            </div>
+                </ListboxOption>
+            </ListboxOptions>
         </div>
-    </div>
+    </Listbox>
 </template>
 
 <style scoped>
@@ -219,10 +141,6 @@ initOptions()
 }
 .selectui-opt.selected {
     @apply font-bold;
-}
-
-.selectui-btn > input {
-    @apply w-full bg-transparent outline-none z-10 h-full border-0 color-white p-0;
 }
 
 </style>
