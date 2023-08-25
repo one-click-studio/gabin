@@ -21,7 +21,8 @@ const props = defineProps<{
 const DEFAULT_THRESHOLDS = {
     speaking: 10,
     silence: 3,
-    vad: 0.05
+    vad: 0.05,
+    minVolume: 0.5
 }
 
 const deviceName = ref<SpeakingMic['device']|false>(false)
@@ -37,17 +38,37 @@ const settings = (mic: SpeakingMic) => {
 }
 
 const updateThresholds = (key: keyof Thresholds, value: number) => {
-    if (!value) {
+    if (!value && key !== 'minVolume') {
         thresholds.value[key] = 0
         return
     }
-    thresholds.value[key] = (key === 'vad')? Math.round(value)/100 : value
+    thresholds.value[key] = value
 }
 
-const saveSettings = async () => {
+const getMinVolume = (mic: SpeakingMic): number => {
+    const mics = store.profiles.settings().mics
+    if (mics.length > 0){
+        return mics[0].thresholds?.minVolume || DEFAULT_THRESHOLDS.minVolume
+    }
+
+    return DEFAULT_THRESHOLDS.minVolume
+}
+
+const updateMinVolume = (mic: SpeakingMic, value: number) => {
+    store.profiles.settings().mics.forEach((m) => {
+        if (m.name === mic.device && m.thresholds) {
+            thresholds.value = m.thresholds
+        }
+    })
+    thresholds.value.minVolume = value
+
+    saveSettings(mic.device)
+}
+
+const saveSettings = async (dName?: string) => {
     await socketEmitter(store.socket, 'setThresholds', {
         id: store.profiles.current,
-        deviceName: deviceName.value,
+        deviceName: dName? dName : deviceName.value,
         thresholds: thresholds.value
     })
 
@@ -102,7 +123,7 @@ const resetAll = async () => {
                             label="Speaking"
                             class="threshold-input"
                             :value="thresholds.speaking + ''"
-                            @update="(v) => updateThresholds('speaking', parseInt(v))"
+                            @update="(v) => updateThresholds('speaking', Math.round(parseInt(v))/100)"
                         />
                     </div>
                     <div class="threshold">
@@ -130,6 +151,20 @@ const resetAll = async () => {
                             :value="thresholds.vad*100 + ''"
                             unit="%"
                             @update="(v) => updateThresholds('vad', parseInt(v))"
+                        />
+                    </div>
+                    <div class="threshold">
+                        <p class="threshold-description">
+                            Minimum required volume to trigger mic.
+                            <p class="threshold-info">lower: CPU goes brrrrrr</p>
+                            <p class="threshold-info">higher: mic may never be triggered</p>
+                        </p>
+                        <InputUi
+                            label="Min. vol."
+                            class="threshold-input"
+                            :value="thresholds.minVolume*100/2 + ''"
+                            unit="%"
+                            @update="(v) => updateThresholds('minVolume', parseInt(v)/100*2)"
                         />
                     </div>
                 </div>
@@ -167,11 +202,21 @@ const resetAll = async () => {
                 />
                 <span>{{ mic.name }}</span>
 
-                <div class="volume-meter w-full h-1 rounded bg-bg-2 overflow-hidden">
-                    <div
-                        class="volume-meter-bar bg-white h-full transition-all duration-100"
-                        :style="{ width: (mic.volume*100/2) + '%' }"
-                    />
+                <div class="w-full relative mt-3">
+                    <input
+                        type="range"
+                        class="slider-range"
+                        min="0"
+                        max="100"
+                        :value="getMinVolume(mic)*100/2"
+                        @change="(v: any) => updateMinVolume(mic, v.target?.value/100*2 )"
+                    >
+                    <div class="volume-meter w-full h-1 rounded bg-bg-2 overflow-hidden">
+                        <div
+                            class="volume-meter-bar bg-white h-full transition-all duration-100"
+                            :style="{ width: (mic.volume*100/2) + '%' }"
+                        />
+                    </div>
                 </div>
             </div>
         </template>
@@ -207,6 +252,15 @@ const resetAll = async () => {
 }
 .speaker:hover > .settings-icon {
     @apply block;
+}
+.slider-range {
+    @apply appearance-none h-0 absolute left-0 right-0 cursor-pointer;
+}
+.slider-range::-webkit-slider-thumb {
+    @apply appearance-none bg-gray-700 h-3 w-1 rounded;
+}
+.speaker:hover .slider-range::-webkit-slider-thumb {
+    @apply bg-gray-400;
 }
 
 </style>
