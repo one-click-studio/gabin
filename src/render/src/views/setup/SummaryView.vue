@@ -10,6 +10,7 @@ store.layout.footer.next.callback = async () => {
     await store.profiles.save()
     store.profiles.newProfileId = 0
     socketEmitter(store.socket, 'disconnectObs')
+    socketEmitter(store.socket, 'disconnectOsc')
 
     store.redirect.path = '/home'
 }

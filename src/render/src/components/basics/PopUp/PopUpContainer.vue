@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 
-interface Props {
-    open: boolean
-}
 interface Emits {
     (e: 'close'): void
 }
 
-defineProps<Props>()
+defineProps<{
+    open: boolean
+}>()
 const $emit = defineEmits<Emits>()
 
 const close = () => {

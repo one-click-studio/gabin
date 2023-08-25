@@ -1,25 +1,29 @@
+
 import { ObsServer } from '../../main/servers/ObsServer'
-import { Connections } from '../../main/servers/Connections';
+import { OscClient } from '../../main/clients/OSCClient'
+import { Connections } from '../../main/servers/Connections'
 
 import { getDevices } from '../../main/modules/audioActivity'
 
 import db from '../../main/utils/db'
-import type { SpecificAndDefault } from '../../main/utils/db'
 
+import type { OscServer } from '../../main/servers/OscServer'
+import type { SpecificAndDefault } from '../../main/utils/db'
 import type {
     Connection,
     AudioDevice,
-    Profile,
 } from '../../types/protocol'
 
-export class ProfileSetup {
+export class Setup {
 
     obs: ObsServer
+    osc: OscClient
     connections: Connections
 
     private profiles: SpecificAndDefault
 
-    constructor() {
+    constructor(oscServer: OscServer) {
+        this.osc = new OscClient(oscServer, false)
         this.obs = new ObsServer(false)
         this.connections = new Connections()
 
@@ -28,6 +32,14 @@ export class ProfileSetup {
         this.profiles.configPart$.subscribe(v => {
             this.profiles.defaultValue = v
         })
+    }
+
+    clean() {
+        this.disconnectObs()
+        this.disconnectOsc()
+
+        this.obs.clean()
+        this.osc.clean()
     }
 
     connectObs(connection: Connection) {
@@ -42,121 +54,40 @@ export class ProfileSetup {
         }
     }
 
-    getAllAudioDevices(): AudioDevice[] {
-        const aDevices: AudioDevice[] = []
-
-        const devices = getDevices()
-        for (const d of devices) {
-            if (!d.data.inputChannels) continue
-
-            aDevices.push({
-                id: d.id,
-                name: d.data.name,
-                sampleRate: d.data.preferredSampleRate,
-                nChannels: d.data.inputChannels,
-                api: d.apiId,
-                apiName: d.apiName,
-            })
-        }
-
-        return aDevices
-    }
-
-    getProfiles(): Profile[] {
-        return this.profiles.defaultValue
-    }
-
-    setProfile(profile: Profile) {
-
-        const profiles: Profile[] = this.profiles.defaultValue
-        const ids = profiles.map(p => p.id)
-
-        // new profile
-        const index = ids.indexOf(profile.id)
-        if (index === -1) {
-            profiles.push(profile)
-        } else {
-            profiles[index] = profile
-        }
-
-        this.profiles.edit(profiles)
-        this.setDefault(profile.id)
-    }
-
-    deleteProfile(id: Profile['id']) {
-
-        const profiles: Profile[] = this.profiles.defaultValue
-        const ids = profiles.map(p => p.id)
-
-        const index = ids.indexOf(id)
-        if (index > -1) {
-            profiles.splice(index, 1)
-        }
-
-        this.profiles.edit(profiles)
-        if (profiles.length > 0){
-            this.setDefault(profiles[0].id)
+    connectOsc(connection: Connection) {
+        if (!this.osc.isReachable) {
+            this.osc.connect(connection)
         }
     }
 
-    setDefault(id: Profile['id']) {
-        const profiles: Profile[] = this.profiles.defaultValue
-
-        for (const i in profiles) {
-            profiles[i].active = (profiles[i].id === id)
+    disconnectOsc() {
+        if (this.osc.isReachable) {
+            this.osc.clean()
         }
-
-        this.profiles.edit(profiles)
     }
 
-    setName(id: Profile['id'], name: Profile['name']) {
-        const profiles: Profile[] = this.profiles.defaultValue
+    sendOsc(path: string) {
+        if (!this.osc.isReachable) return
+        this.osc.send(path)
+    }
+}
 
-        const ids = profiles.map(p => p.id)
-        const index = ids.indexOf(id)
+export const getAllAudioDevices = (): AudioDevice[] => {
+    const aDevices: AudioDevice[] = []
 
-        if (index > -1) {
-            profiles[index].name = name
-        }
+    const devices = getDevices()
+    for (const d of devices) {
+        if (!d.data.inputChannels) continue
 
-        this.profiles.edit(profiles)
+        aDevices.push({
+            id: d.id,
+            name: d.data.name,
+            sampleRate: d.data.preferredSampleRate,
+            nChannels: d.data.inputChannels,
+            api: d.apiId,
+            apiName: d.apiName,
+        })
     }
 
-    setIcon(id: Profile['id'], icon: Profile['icon']) {
-        const profiles: Profile[] = this.profiles.defaultValue
-
-        const ids = profiles.map(p => p.id)
-        const index = ids.indexOf(id)
-
-        if (index > -1) {
-            profiles[index].icon = icon
-        }
-
-        this.profiles.edit(profiles)
-    }
-
-    setAutostart(id: Profile['id'], autostart: Profile['autostart']) {
-        const profiles: Profile[] = this.profiles.defaultValue
-
-        const ids = profiles.map(p => p.id)
-        const index = ids.indexOf(id)
-
-        if (index > -1) {
-            profiles[index].autostart = autostart
-        }
-
-        this.profiles.edit(profiles)
-    }
-    setStartMinimized(id: Profile['id'], minimized: Profile['startminimized']) {
-        const profiles: Profile[] = this.profiles.defaultValue
-
-        const ids = profiles.map(p => p.id)
-        const index = ids.indexOf(id)
-
-        if (index > -1) {
-            profiles[index].startminimized = minimized
-        }
-
-        this.profiles.edit(profiles)
-    }
+    return aDevices
 }

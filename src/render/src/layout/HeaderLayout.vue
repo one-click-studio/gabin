@@ -12,15 +12,14 @@ import { PopUpContainer, PopUpBackground } from '@src/components/basics/PopUp/Po
 import DotsIcon from '@src/components/icons/DotsIcon.vue'
 import EditIcon from '@src/components/home/EditIcon.vue'
 
-interface Props {
+const props = defineProps<{
     title: string
     subtitle?: string
     iconEdit: boolean
     dotMenu: boolean
-}
+}>()
 
 const open = ref<boolean>(false)
-const props = defineProps<Props>()
 const eTitle = ref(props.title)
 
 watch(() => props.title, (v) => {
@@ -112,7 +111,7 @@ const submitProfileId = async () => {
             <PopUpContainer
                 id="header-dotmenu-slot"
                 :open="open"
-                class="top-12 right-0 w-40"
+                class="top-12 right-0 w-50"
                 @close="close"
             />
         </div>

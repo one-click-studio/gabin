@@ -3,15 +3,15 @@ import type { Subscription } from 'rxjs'
 
 import { Client } from '../../main/clients/Client'
 import db from '../../main/utils/db'
-import type { Logger } from '../../main/utils/logger'
-import { getLogger } from '../../main/utils/logger'
+import { getLogger, type Logger } from '../../main/utils/logger'
+import { random, deepCopy } from '../../main/utils/utils'
 
 import { AudioActivity, getDevices } from '../../main/modules/audioActivity'
 import type { RtAudioApi } from 'audify'
 
 import type {
     AudioDevice,
-    ObsAssetId,
+    Asset,
     Durations,
     MicId,
     AutocamSource,
@@ -19,18 +19,20 @@ import type {
     AudioDeviceSettings,
     AutocamSettings,
     Shoot,
+    Thresholds,
+    AutocamContainer,
 } from '../../types/protocol'
 
-type ContainerMap = Map<ObsAssetId['scene'], Container>
+type ContainerMap = Map<Asset['container']['name'], Container>
 
-type MicTrigger = { micId: MicId, shotId?: ObsAssetId['source'] }
-type CurrentShotsMap = Map<ObsAssetId['scene'], ObsAssetId['source']>
-type MicsMap = Map<ObsAssetId['source'], MicId[]>
+type MicTrigger = { micId: MicId, shotName?: Asset['source']['name'] }
+type CurrentShotsMap = Map<Asset['container']['name'], {source: Asset['source']['name'], mics: MicId[]}>
+type MicsMap = Map<Asset['source']['name'], MicId[]>
 
 type Channel = {
     id: MicId
     channelId: number
-    onToggleSpeaking: (speaking: boolean) => void
+    onToggleSpeaking: (speaking: boolean, volume: number) => void
 }
 type AudioRecord = AudioDevice & { channels: Channel[] }
 
@@ -47,48 +49,48 @@ type Subscriptions = {
 export class AutocamClient extends Client {
 
     shoot$ = new Subject<Shoot>()
-    forcedShot$ = new Subject<ObsAssetId['source']>()
+    forcedShot$ = new Subject<Asset['source']>()
     timeline$: BehaviorSubject<MicId>
+    volumeMics$: BehaviorSubject<Map<string, number>>
     private currentShots$: BehaviorSubject<CurrentShotsMap>
 
     private enable = false
-    private currentScene: ObsAssetId['scene'] = ''
+    private currentScene: Asset['scene']['name'] = ''
     private containerMap: ContainerMap = new Map()
     private availableMics: AvailableMicsMap = new Map()
     private recorders: AudioActivity[] = []
     private micsSpeaking: Map<string, BehaviorSubject<boolean>>
+    private micsVolume: Map<string, number>
     private subscriptions: Subscriptions = { timeline: null, forcedShot: null }
 
     private audioDevices: AudioDeviceSettings[] = []
     private autocamMapping: AutocamSettings[] = []
-    private currentMapping: AutocamSettings[] = []
+    private currentMapping: AutocamContainer[] = []
 
+    private lastSpeaker: MicId = ''
 
     constructor() {
         super('autocam')
 
         this.micsSpeaking = new Map()
+        this.micsVolume = new Map()
         this.autocamMapping = []
 
         this.currentShots$ = new BehaviorSubject(new Map())
         this.timeline$ = new BehaviorSubject('')
+        this.volumeMics$ = new BehaviorSubject(this.micsVolume)
     }
 
     init() {
         const audioDevices = db.getSpecificAndDefault(['settings', 'mics'], true)
         this.audioDevices = audioDevices.defaultValue
         this.micsSpeaking = this.getMicsMap(this.audioDevices)
+        this.micsVolume = this.getMicsVolumeMap(this.audioDevices)
+        this.volumeMics$.next(this.micsVolume)
 
         const autocamMapping = db.getSpecificAndDefault(['settings', 'autocam'], true)
         this.autocamMapping = autocamMapping.defaultValue
 
-        this.addSubscription(
-            audioDevices.configPart$.subscribe((aDevices: AudioDeviceSettings[]) => {
-                this.audioDevices = aDevices
-                this.micsSpeaking = this.getMicsMap(this.audioDevices)
-            })
-        )
-            
         this.addSubscription(
             autocamMapping.configPart$.subscribe((mapping: AutocamSettings[]) => {
                 this.autocamMapping = mapping
@@ -99,7 +101,7 @@ export class AutocamClient extends Client {
     override async connect() {
         super.connect()
         this.init()
-        
+
         this.enable = true
 
         const devicesData = this.getDevicesData()
@@ -111,9 +113,11 @@ export class AutocamClient extends Client {
         }
 
         if (!devicesData.length) {
-            this.logger.debug({ devices: getDevices().filter(d => d.data.inputChannels > 0) }, 'available devices list')
+            this.logger.info({ devices: getDevices().filter(d => d.data.inputChannels > 0) }, 'available devices list')
             return
         }
+
+        const record = db.getDefaultValue(['record'], true)
 
         this.recorders = []
         for (const i in devicesData){
@@ -122,9 +126,10 @@ export class AutocamClient extends Client {
                 apiId: devicesData[i].api as RtAudioApi,
                 channels: devicesData[i].channels.map(c => c.channelId),
                 framesPerBuffer: 960,
-                onAudio: (speaking, channelId) => {
-                    devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking)
-                }
+                onAudio: (speaking, channelId, volume) => {
+                    devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking, volume)
+                },
+                record
             })
             recorder.start()
 
@@ -152,9 +157,43 @@ export class AutocamClient extends Client {
 
     // HELPERS
 
+    updateAudioDevices(devices: AudioDeviceSettings[]) {
+        if (this.recorders.length){
+            
+            for (const i in this.recorders){
+                const recorder = this.recorders[i]
+                const rname = recorder.getName()
+                
+                const device = devices.find(d => d.name === rname)
+                if (!device) continue
+
+                if (device.thresholds) this.recorders[i].setThresholds(device.thresholds)
+            }
+
+            return
+        }
+
+        this.audioDevices = devices
+
+        this.micsSpeaking = this.getMicsMap(this.audioDevices)
+        this.micsVolume = this.getMicsVolumeMap(this.audioDevices)
+        this.volumeMics$.next(this.micsVolume)
+    }
+
     private getMicsMap(devices: AudioDeviceSettings[]): Map<string, BehaviorSubject<boolean>> {
         const micIds = devices.reduce((p, d) => p.concat(d.micsName.filter((_m,i) => d.mics[i])), <string[]>[])
         return new Map(micIds.map((m) => [m, new BehaviorSubject(<boolean>false)]))
+    }
+
+    private getMicsVolumeMap(devices: AudioDeviceSettings[]): Map<string, number> {
+        const micIds = devices.reduce((p, d) => p.concat(d.micsName.filter((_m,i) => d.mics[i])), <string[]>[])
+        return new Map(micIds.map((m) => [m, 0]))
+    }
+
+    private setMicVolume(micId: MicId, volume: number) {
+        if (!this.micsVolume.has(micId)) return
+        this.micsVolume.set(micId, volume)
+        this.volumeMics$.next(this.micsVolume)
     }
 
     private getDevicesData(): AudioRecord[] {
@@ -182,7 +221,7 @@ export class AutocamClient extends Client {
             }
         }
 
-        this.logger.debug(deviceMics)
+        this.logger.info(deviceMics)
 
         return {
             id: device.id,
@@ -192,6 +231,7 @@ export class AutocamClient extends Client {
             sampleRate: device.sampleRate,
             nChannels: device.nChannels,
             channels: this.getChannels(deviceMics),
+            thresholds: device.thresholds
         }
     }
 
@@ -201,7 +241,10 @@ export class AutocamClient extends Client {
         for (const i in mics){
             channels.push({
                 ...mics[i],
-                onToggleSpeaking: (speaking) => this.micsSpeaking.get(mics[i].id)?.next(speaking)
+                onToggleSpeaking: (speaking, volume) => {
+                    this.micsSpeaking.get(mics[i].id)?.next(speaking)
+                    this.setMicVolume(mics[i].id, volume)
+                }
             })
         }
 
@@ -227,12 +270,19 @@ export class AutocamClient extends Client {
         return container
     }
 
-    private getShowingContainer(micId: MicId): Container | null {
+    private getShowingShotContainer(shot: Asset['source']['name']): Container | null {
         let container: Container | null = null
         this.containerMap.forEach(c => {
-            if (c.isShowing(micId)) {
-                container = c
-            }
+            if (c.isShowingShot(shot)) container = c
+        })
+
+        return container
+    }
+
+    private getShowingMicContainer(micId: MicId): Container | null {
+        let container: Container | null = null
+        this.containerMap.forEach(c => {
+            if (c.isShowingMic(micId)) container = c
         })
 
         return container
@@ -247,22 +297,22 @@ export class AutocamClient extends Client {
         })
 
         if (containers.length > 0) {
-            return containers[Math.floor(Math.random() * containers.length)]
+            return containers[Math.floor(random() * containers.length)]
         }
 
         return null
     }
 
-    private getRandomContainerByShot(shotId: ObsAssetId['source'], forced: boolean = false): Container | null {
+    private getRandomContainerByShot(source: Asset['source'], forced: boolean = false): Container | null {
         const containers: Container[] = []
         this.containerMap.forEach(c => {
-            if (c.hasShot(shotId, forced)) {
+            if (c.hasShot(source, forced)) {
                 containers.push(c)
             }
         })
 
         if (containers.length > 0) {
-            return containers[Math.floor(Math.random() * containers.length)]
+            return containers[Math.floor(random() * containers.length)]
         }
 
         return null
@@ -303,44 +353,42 @@ export class AutocamClient extends Client {
         this.containerMap = new Map();
 
         for (const mContainer of this.currentMapping) {
-            const container = new Container(mContainer, this.shoot$, this.currentShots$)
-            this.containerMap.set(container.id, container)
+            const container = new Container(mContainer, this.shoot$, this.currentShots$, this.currentScene)
+            this.containerMap.set(container.name, container)
         }
 
-        this.enableContainers()
         this.filterShotMapContainers()
+        this.enableContainers()
         this.currentMicContainers()
         this.setupTimeline()
     }
 
     private setupMicRecorder() {
         this.micsSpeaking.forEach((speaking$, micId) => {
-            speaking$.subscribe((speaking: boolean) => {
+            speaking$.subscribe((speaking) => {
                 const currentMic = this.timeline$.getValue()
                 if (speaking) {
                     if (!this.enable) {
                         return
                     }
 
-                    if (micId === currentMic) {
-                        this.logger.debug('same mic speaking')
-                        return
-                    }
+                    if (micId === currentMic) return
 
                     if (!this.micIsAvailable(micId)) {
-                        this.logger.debug('mic is not available', micId)
+                        this.logger.info('mic is not available', micId)
                         return
                     }
 
-                    this.logger.debug(`${micId} started speaking`)
+                    this.logger.info(`${micId} started speaking`)
                     this.timeline$.next(micId)
                 } else if (micId === currentMic) {
+                    this.lastSpeaker = micId
                     let nextMicId = micId
-                    this.logger.debug(`${nextMicId} stopped speaking`)
+                    this.logger.info(`${nextMicId} stopped speaking`)
 
                     nextMicId = this.otherSpeaker()
                     if (nextMicId) {
-                        this.logger.debug(`${nextMicId} is still speaking`)
+                        this.logger.info(`${nextMicId} is still speaking`)
                     }
                     this.timeline$.next(nextMicId)
                 }
@@ -362,43 +410,52 @@ export class AutocamClient extends Client {
 
             this.currentMicContainers()
 
-            const showing = this.getShowingContainer(micId)
+            const showing = this.getShowingMicContainer(micId)
             if (showing) {
-                this.logger.debug('One container is already showing this mic')
+                if (this.lastSpeaker === micId && showing.toUnfocus) return showing.focus_()
+                
+                this.logger.info('One container is already showing this mic')
                 showing.trigger$.next({ micId })
-                this.unfocusContainers(showing.id)
+                this.unfocusContainers(showing.name)
                 return
             }
 
             const random = this.getRandomContainerByMic(micId)
             if (random) {
-                this.logger.debug('Get a random container')
+                this.logger.info('Get a random container')
                 random.trigger$.next({ micId })
-                this.unfocusContainers(random.id)
+                this.unfocusContainers(random.name)
                 return
             }
 
             this.logger.error('Cannot find a container for this mic on this scene', { micId, scene: this.currentScene })
         })
 
-        this.subscriptions.forcedShot = this.forcedShot$.subscribe(shotId => {
+        this.subscriptions.forcedShot = this.forcedShot$.subscribe(source => {
             const currentMic = this.timeline$.getValue()
+
+            const isShowing = this.getShowingShotContainer(source.name)
+            if (isShowing) {
+                this.logger.warn('A container is already showing this shot', isShowing.name)
+                return
+            }
+
             const focused = this.getFocusedContainer()
-            if (focused && focused.hasShot(shotId, true)){
-                this.logger.debug('Focus container has been forced to shoot', shotId)
-                focused.trigger$.next({ micId: currentMic, shotId: shotId })
+            if (focused && focused.hasShot(source, true)){
+                this.logger.info('Focus container has been forced to shoot', source)
+                focused.trigger$.next({ micId: currentMic, shotName: source.name })
                 return
             }
 
-            const random = this.getRandomContainerByShot(shotId, true)
+            const random = this.getRandomContainerByShot(source, true)
             if (random) {
-                this.logger.debug('Get a random container')
-                random.trigger$.next({ micId: currentMic, shotId: shotId })
-                this.unfocusContainers(random.id)
+                this.logger.info('Get a random container')
+                random.trigger$.next({ micId: currentMic, shotName: source.name })
+                this.unfocusContainers(random.name)
                 return
             }
 
-            this.logger.error('Cannot find a container for this shot on this scene', { shotId, scene: this.currentScene })
+            this.logger.error('Cannot find a container for this shot on this scene', { source, scene: this.currentScene })
         })
 
     }
@@ -434,10 +491,10 @@ export class AutocamClient extends Client {
         })
     }
 
-    private unfocusContainers(containerId?: Container['id']) {
+    private unfocusContainers(containerId?: Container['name']) {
         this.containerMap.forEach(container => {
-            if (container.id !== containerId){
-                container.unfocus()
+            if (container.name !== containerId){
+                container.unfocus_()
             }
         })
     }
@@ -454,33 +511,39 @@ export class AutocamClient extends Client {
         this.filterShotMapContainers()
     }
 
-    setCurrentScene(sceneId: ObsAssetId['scene']) {
-        this.currentScene = sceneId
-        this.currentMapping = this.autocamMapping.filter(c => c.scene === sceneId)
+    setCurrentScene(sceneName: Asset['scene']['name']='') {
+        this.currentScene = sceneName
+        this.currentMapping = this.autocamMapping.find(c => c.name === sceneName)?.containers || []
 
         if (!this.currentMapping.length) {
-            this.logger.info('This scene does not exist in config or has no containers', sceneId)
+            this.logger.info('This scene does not exist in config or has no containers', sceneName)
+
+            this.currentShots$ = new BehaviorSubject(new Map())
+            this.clearTimeoutsContainers()
+            this.cleanSubscriptions()
+            this.containerMap = new Map()
             return
         }
 
         this.manageContainers()
     }
-
 }
 
 class Container {
 
     enable = false
     focus = false
+    toUnfocus = false
     lock = false
     trigger$ = new Subject<MicTrigger>()
 
-    id: ObsAssetId['scene'] = ''
-    private shots: ObsAssetId['source'][] = []
-    private allShots: ObsAssetId['source'][] = []
+    name: Asset['container']['name'] = ''
+    private container: Asset['container']
+    private shots: Asset['source']['name'][] = []
+    private allShots: Asset['source']['name'][] = []
 
-    private shotsMap: AutocamSettings['mics'] = []
-    private filteredShotsMap: AutocamSettings['mics'] = []
+    private shotsMap: AutocamContainer['mics'] = []
+    private filteredShotsMap: AutocamContainer['mics'] = []
     private micsMap: MicsMap = new Map()
 
     private durations: Durations = { min: 0, max: 0 }
@@ -489,25 +552,29 @@ class Container {
     private logger: Logger
 
     private currentMic: MicId = ''
-    private currentShot: ObsAssetId['source'] = { id: -1, name: '' }
+    private currentShot: Asset['source'] = { name: '' }
     private timeouts: NodeJS.Timeout[] = []
 
-    constructor(container: AutocamSettings, shoot$: Subject<Shoot>, currentShots$: BehaviorSubject<CurrentShotsMap>) {
-        this.logger = getLogger('Autocam Container (' + container.source.name + ')')
+    private currentScene: Asset['scene']['name']
 
+    constructor(container: AutocamContainer, shoot$: Subject<Shoot>, currentShots$: BehaviorSubject<CurrentShotsMap>, scene: Asset['scene']['name']) {
+        this.logger = getLogger('Autocam Container (' + container.name + ')')
+
+        this.container = container
         this.parseContainer(container)
         this.shoot$ = shoot$
         this.currentShots$ = currentShots$
+        this.currentScene = scene
 
         this.trigger$.subscribe(params => {
             if (!this.focus) this.focus = true
-            this.focusMode(params.micId, params.shotId)
+            this.logger.warn('FOCUS MODE (triggered)', params)
+            this.focusMode(params.micId, params.shotName)
         })
-
     }
 
-    private parseContainer(container: AutocamSettings) {
-        this.id = container.source.name
+    private parseContainer(container: AutocamContainer) {
+        this.name = container.name
         this.shotsMap = container.mics
         this.filteredShotsMap = container.mics
         this.durations = container.durations
@@ -515,28 +582,28 @@ class Container {
         this.micsMap = this.getMicsMapFromShotMap(container.mics)
     }
 
-    private getShotsFromMap(mics: AutocamSettings['mics'], noWeight?: boolean): ObsAssetId['source'][] {
-        let shots: ObsAssetId['source'][] = []
+    private getShotsFromMap(mics: AutocamContainer['mics'], noWeight?: boolean): Asset['source']['name'][] {
+        let shots: Asset['source']['name'][] = []
 
         const minW = noWeight? -1 : 0
 
         mics.forEach(m =>
             shots = shots.concat(m.cams.reduce((p,c) => 
-               p.concat(c.weight>minW? [c.source] : [])
-            , <ObsAssetId['source'][]>[]))
+               p.concat(c.weight>minW? [c.source.name] : [])
+            , <Asset['source']['name'][]>[]))
         )
 
         return shots.filter((s, i) => shots.indexOf(s) === i)
     }
 
-    private getMicsMapFromShotMap(mics: AutocamSettings['mics']): MicsMap {
+    private getMicsMapFromShotMap(mics: AutocamContainer['mics']): MicsMap {
         const micsMap: MicsMap = new Map()
 
         mics.forEach(m => {
             m.cams.forEach(c => {
                 if (c.weight > 0) {
-                    const micdId: MicId[] = micsMap.get(c.source) || []
-                    micsMap.set(c.source, micdId.concat([m.id]))
+                    const micdId: MicId[] = micsMap.get(c.source.name) || []
+                    micsMap.set(c.source.name, micdId.concat([m.id]))
                 }
             })
         })
@@ -546,22 +613,23 @@ class Container {
 
     // SHOOT
 
-    private shoot(shotId: ObsAssetId['source']) {
-        this.currentShot = shotId
+    private shoot(shot: Asset['source']) {
+        this.currentShot = shot
 
         const currentShots = new Map([...this.currentShots$.getValue()])
-        currentShots.set(this.id, shotId)
+        currentShots.set(this.name, {source: shot.name, mics: this.micsMap.get(shot.name) || []})
         this.currentShots$.next(currentShots)
 
-        if (!shotId) {
-            this.logger.error('No shotId selected')
+        if (!shot || !shot.name) {
+            this.logger.error('No shot selected')
             return
         }
 
         this.shoot$.next({
             mode: this.focus? 'focus' : 'illustration',
-            containerId: this.id,
-            shotId: shotId
+            container: this.container,
+            shot: shot,
+            sceneName: this.currentScene
         })
     }
 
@@ -576,47 +644,47 @@ class Container {
         return []
     }
 
-    private getRandomShot(shots: ObsAssetId['source'][]): ObsAssetId['source']|undefined {
-        const index = Math.floor(Math.random() * shots.length)
+    private getRandomShot(shots: Asset['source']['name'][]): Asset['source']['name']|undefined {
+        const index = Math.floor(random() * shots.length)
 
         return shots[index]
     }
 
-    private pickShot(shots: AutocamSource[]): ObsAssetId['source'] | undefined {
+    private pickShot(shots: AutocamSource[]): Asset['source']['name'] | undefined {
         const totalWeight = shots.reduce((res, shot) => res + shot.weight, 0)
-        const rand = Math.random() * totalWeight
+        const rand = random() * totalWeight
         let sum = 0
         for (const shot of shots) {
             sum += shot.weight
-            if (rand <= sum) return shot.source
+            if (rand <= sum) return shot.source.name
         }
 
         return undefined
     }
 
-    private getUnallowedShots(): ObsAssetId['source'][] {
+    private getUnallowedShots(): Asset['source']['name'][] {
         // GET ALL CURRENTS SHOTS
         const currentShots = this.currentShots$.getValue()
 
         // FILTER ONLY OTHER CONTAINERS SHOTS
-        const otherShots: ObsAssetId['source'][] = [...currentShots]
-        .filter(([key]) => key !== this.id)
+        const otherShots: {source: Asset['source']['name'], mics: MicId[]}[] = [...currentShots]
+        .filter(([key]) => key !== this.name)
         .map(row => row[1])
 
         // GET MICS SHOWED BY THESE SHOTS
         let micsId: MicId[] = []
         otherShots.forEach(shot => {
-            const mIds = this.micsMap.get(shot) || []
+            const mIds: string[] = shot.mics
             micsId = micsId.concat(
                 mIds.filter(s => micsId.indexOf(s) < 0)
             )
         })
 
         // GET ALL SHOTS SHOWING THESE MICS
-        let unallowedShots: ObsAssetId['source'][] = []
+        let unallowedShots: Asset['source']['name'][] = []
         micsId.forEach(micId => {
             const shotMap = this.filteredShotsMap.find(m => m.id === micId)
-            const shots = shotMap?.cams.map(c => c.source) || []
+            const shots = shotMap?.cams.filter(c => c.weight > 0).map(c => c.source.name) || []
 
             unallowedShots = unallowedShots.concat(
                 shots.filter(s => unallowedShots.indexOf(s) < 0)
@@ -626,7 +694,7 @@ class Container {
         return unallowedShots
     }
 
-    private getAllowedShots(shots: ObsAssetId['source'][]): ObsAssetId['source'][] {
+    private getAllowedShots(shots: Asset['source']['name'][]): Asset['source']['name'][] {
         const unallowedShots = this.getUnallowedShots()
 
         return shots.filter(s => unallowedShots.indexOf(s) < 0)
@@ -638,23 +706,23 @@ class Container {
         return (this.durations.max + this.durations.min) / 2
     }
 
-    private getIllustrationShot(micId?: MicId): ObsAssetId['source']|undefined {
-        if (micId) {
-            return this.getFocusShot(micId)
-        }
-
+    private getIllustrationShot(micId?: MicId): Asset['source']['name']|undefined {
+        if (micId) return this.getFocusShot(micId)
+        
+        
         const allowedShots = this.getAllowedShots(this.shots)
-        let shotId = this.getRandomShot(allowedShots)
+        let shotName = this.getRandomShot(allowedShots)
+        
+        if (!shotName) shotName = this.getRandomShot(this.shots)
 
-        if (!shotId) {
-            this.logger.error('problem with allowedShots probably')
-            shotId = this.getRandomShot(this.shots)
-        }
-
-        return shotId
+        return shotName
     }
 
-    private illustrationMode(micId?: MicId, shotId?: ObsAssetId['source']) {
+    private getShotFromName(shotName: Asset['source']['name']): Asset['source']|undefined {
+        return this.container.sources.find(s => s.name === shotName)
+    }
+
+    private illustrationMode(micId?: MicId, shotName?: Asset['source']['name']) {
         if (!this.enable){
             return
         }
@@ -662,15 +730,20 @@ class Container {
         this.clearTimeouts()
         const duration = this.getIllustrationDuration()
 
-        shotId = shotId? shotId : this.getIllustrationShot(micId)
+        shotName = shotName? shotName : this.getIllustrationShot(micId)
 
-        if (!shotId) {
+        if (!shotName) {
             this.logger.error('problem with getIllustrationShot : no shot can be found')
             return
         }
 
-        this.lock = true
-        this.shoot(shotId)
+        const shot = this.getShotFromName(shotName)
+        if (!shot) {
+            this.logger.error('problem with getShotFromName : no shot can be found')
+            return
+        }
+        if (this.currentShot !== shot) this.lock = true
+        this.shoot(shot)
 
         this.timeouts.push(setTimeout(() => {
             this.lock = false
@@ -687,63 +760,84 @@ class Container {
 
     // FOCUS MODE
 
-    private getFocusShot(micId: MicId): ObsAssetId['source'] | undefined {
+    private getFocusShot(micId: MicId): Asset['source']['name'] | undefined {
         const shots = this.getShotsForMic(micId)
 
         const unallowedShots = this.getUnallowedShots()
-        const allowedShots = shots.filter(s => unallowedShots.indexOf(s.source) < 0)
+        const allowedShots = shots.filter(s => unallowedShots.indexOf(s.source.name) < 0)
 
-        let shotId = this.pickShot(allowedShots)
+        let shotName = this.pickShot(allowedShots)
 
-        if (!shotId) {
+        if (!shotName) {
             this.logger.error('problem with pickShot and this mic\'s shots', micId)
-            let allowedShotsId = this.getAllowedShots(shots.map(s => s.source))
-            shotId = this.getRandomShot(allowedShotsId)
+            let allowedShotsId = this.getAllowedShots(shots.map(s => s.source.name))
+            shotName = this.getRandomShot(allowedShotsId)
 
-            if (!shotId) {
+            if (!shotName) {
                 this.logger.error('problem with randomShot and this mic\'s shots', micId)
                 allowedShotsId = this.getAllowedShots(this.shots)
-                shotId = this.getRandomShot(allowedShotsId)
+                shotName = this.getRandomShot(allowedShotsId)
             }
         }
 
-        return shotId
+        return shotName
     }
 
-    private focusMode(micId: MicId, shotId?: ObsAssetId['source']) {
-        if ((!this.enable || this.lock) && !shotId) {
+    private focusMode(micId: MicId, shotName?: Asset['source']['name']) {
+        if ((!this.enable || this.lock) && !shotName) {
             return
         }
-        const forced = shotId? true : false
+        const forced = shotName? true : false
         const duration = forced? this.getIllustrationDuration() : this.durations.min
 
         this.clearTimeouts()
 
-        shotId = shotId? shotId : this.getFocusShot(micId)
-        if (!shotId) {
+        shotName = shotName? shotName : this.getFocusShot(micId)
+        if (!shotName) {
             this.logger.error('problem with getFocusShot : no shot can be found')
             return
         }
 
-        this.lock = true
+        
+        const shot = this.getShotFromName(shotName)
+        if (!shot) {
+            this.logger.error('problem with getShotFromName : no shot can be found')
+            return
+        }
 
-        this.shoot(shotId)
+        if (this.currentShot !== shot) this.lock = true
+        this.toUnfocus = false
+        this.shoot(shot)
 
         this.timeouts.push(setTimeout(() => {
+            this.logger.warn('unlock (focus)')
             this.lock = false
 
             if (this.currentMic && this.currentMic !== micId) {
+                this.logger.warn('FOCUS MODE (currentMic changed)', {currentMic:this.currentMic, micId})
                 this.focusMode(this.currentMic)
             } else if (forced) {
-                this.unfocus()
+                this.logger.warn('ILLUSTRATION MODE (focusMode forced)', {forced})
+                this.unfocus_()
                 this.illustrationMode()
-            } else if (!this.focus) {
-                this.illustrationMode(this.currentMic)
             }
         }, duration * 1000))
 
         this.timeouts.push(setTimeout(() => {
-            this.focusMode(this.currentMic)
+            this.logger.warn('end (focus)')
+            if (!this.focus || this.toUnfocus || !this.currentMic) {
+                this.logger.warn('ILLUSTRATION MODE (after max duration && !focus)')
+
+                this.toUnfocus = false
+                this.focus = false
+
+                this.illustrationMode(this.currentMic)
+            } else {
+
+                this.logger.warn('FOCUS MODE (after max duration)', {currentMic:this.currentMic})
+                this.focusMode(this.currentMic)
+            }
+
         }, this.durations.max * 1000))
     }
 
@@ -760,7 +854,11 @@ class Container {
         })
     }
 
-    isShowing(micId: MicId): boolean {
+    isShowingShot(shot: Asset['source']['name']): boolean {
+        return (this.currentShot.name === shot)
+    }
+
+    isShowingMic(micId: MicId): boolean {
         const shots = this.getShotsForMic(micId)
         const shotsId = shots.filter(shot => shot.weight).map(shot => shot.source.name)
 
@@ -771,9 +869,9 @@ class Container {
         return false
     }
 
-    hasShot(shotId: ObsAssetId['source'], forced?: boolean): boolean {
+    hasShot(source: Asset['source'], forced?: boolean): boolean {
         const list = forced? this.allShots : this.shots
-        return (list.map(s => s.id).indexOf(shotId.id) !== -1)
+        return (list.indexOf(source.name) !== -1)
     }
 
     hasShotForMic(micId: MicId): boolean {
@@ -789,16 +887,78 @@ class Container {
         this.currentMic = micId
     }
 
+    private shotIsMatching(matching: string[], availableMicsMap: AvailableMicsMap): boolean {
+        let resp = false
+
+        for (let i in matching) {
+            const entry = matching[i].split('')
+            const availableMics = Array.from(availableMicsMap).map(m => m[1])
+
+            if (entry.length !== availableMics.length) continue
+
+            let good = true
+            for (let j in entry) {
+                if (entry[j] === '*') continue
+                if (!!+entry[j] !== availableMics[j]) {
+                    good = false
+                    break
+                }
+            }
+
+            if (good) {
+                resp = true
+                break
+            }
+        }
+
+        return resp
+    }
+
+    private getMatchingShots(availableMicsMap: AvailableMicsMap): Asset['source']['name'][] {
+        const shots: Asset['source']['name'][] = []
+
+        const shotsMap: typeof this.shotsMap = deepCopy(this.shotsMap)
+        for (let i in shotsMap) {
+            for (let j in shotsMap[i].cams) {
+                const cam = shotsMap[i].cams[j]
+                if (cam.source.options && cam.source.options.matching) {
+                    if (this.shotIsMatching(cam.source.options.matching, availableMicsMap)) {
+                        shots.push(cam.source.name)
+                    }
+                }
+            }
+        }
+
+        return shots
+    }
+
     filterShotMaps(availableMicsMap: AvailableMicsMap) {
-        this.filteredShotsMap = this.shotsMap
+        const shotsMap: typeof this.shotsMap = deepCopy(this.shotsMap)
+
+        const forbiddenShotsMap = shotsMap
+        .filter(m => !availableMicsMap.get(m.id))
+        const matchingShots = this.getMatchingShots(availableMicsMap)
+        const forbiddenShots = this.getShotsFromMap(forbiddenShotsMap)
+        .filter(s => matchingShots.indexOf(s) < 0)
+
+        this.filteredShotsMap = shotsMap
         .filter(m => availableMicsMap.get(m.id))
 
-        this.allShots = this.getShotsFromMap(this.filteredShotsMap, true)
-        this.shots = this.getShotsFromMap(this.filteredShotsMap)
+        this.filteredShotsMap.forEach(m => {
+            m.cams = m.cams.filter(c => forbiddenShots.indexOf(c.source.name) < 0)
+        })
+
+        this.allShots = this.getShotsFromMap(this.filteredShotsMap)
+        this.shots = this.getShotsFromMap(this.filteredShotsMap, true)
         this.micsMap = this.getMicsMapFromShotMap(this.filteredShotsMap)
     }
 
-    unfocus() {
-        this.focus = false
+    unfocus_() {
+        if (this.focus) this.toUnfocus = true
     }
+
+    focus_() {
+        this.focus = true
+    }
+
 }

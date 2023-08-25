@@ -7,8 +7,7 @@ import { Server } from '../../main/servers/Server'
 
 import type {
     Connection,
-    ObsAssetId,
-    ObsScene,
+    Asset,
     ResponseObsScene,
     ResponseObsItem,
 } from '../../types/protocol'
@@ -19,8 +18,8 @@ import { expoAttempt } from '../../main/utils/utils'
 
 export class ObsServer extends Server {
     websocket: ObsWebSocket
-    scenes$: BehaviorSubject<ObsScene[]>
-    initScene: ObsAssetId['scene'] = ''
+    scenes$: BehaviorSubject<Asset['scene'][]>
+    initScene: Asset['scene']['name'] = ''
 
     private obsConfig: Connection | undefined
     private _expo = new expoAttempt()
@@ -35,7 +34,7 @@ export class ObsServer extends Server {
         }
 
         this.websocket = new ObsWebSocket()
-        this.scenes$ = new BehaviorSubject<ObsScene[]>([])
+        this.scenes$ = new BehaviorSubject<Asset['scene'][]>([])
     }
 
     async connect(connection?: Connection, once: boolean = false) {
@@ -115,7 +114,6 @@ export class ObsServer extends Server {
     private async manageSceneList() {
 
         const getSceneList = async () => {
-            // return await this.websocket.send('GetSceneList')
             return await this.websocket.call('GetSceneList')
         }
 
@@ -124,20 +122,18 @@ export class ObsServer extends Server {
             return this.parseScenes(data.scenes)
         }
 
-        const updateSceneList = (scenes: ObsScene[]) => {
+        const updateSceneList = (scenes: Asset['scene'][]) => {
             const oldScenes = this.scenes$.getValue()
             if (!deepEqual(oldScenes, scenes)) {
                 this.scenes$.next(scenes)
             }
         }
 
-        // this.websocket.on('SceneCollectionChanged', async () => {
         this.websocket.on('SceneCollectionListChanged', async () => {
             this.logger.info('scene collection changed')
             const scenes = await getParsedSceneList()
             updateSceneList(scenes)
         })
-        // this.websocket.on('SceneItemAdded', async () => {
         this.websocket.on('SceneItemCreated', async () => {
             this.logger.info('source added')
             const scenes = await getParsedSceneList()
@@ -148,7 +144,6 @@ export class ObsServer extends Server {
             const scenes = await getParsedSceneList()
             updateSceneList(scenes)
         })
-        // this.websocket.on('ScenesChanged', async (data) => {
         this.websocket.on('SceneListChanged', async (data) => {
             this.logger.info('scenes changed')
             const scenes = await this.parseScenes(data.scenes)
@@ -156,31 +151,37 @@ export class ObsServer extends Server {
         })
 
         const data = await getSceneList()
-        // this.initScene = data['current-scene']
         this.initScene = data['currentProgramSceneName']
         const scenes = await this.parseScenes(data.scenes)
         updateSceneList(scenes)
     }
 
-    private async getSceneItemList(sceneName: ObsAssetId['scene']) {
+    private async getSceneItemList(sceneName: Asset['scene']['name']) {
         return await this.websocket.call('GetSceneItemList', { sceneName })
     }
 
-    private async parseScenes(scenes: OBSResponseTypes['GetSceneList']['scenes']): Promise<ObsScene[]> {
-        const data: ObsScene[] = []
+    private async parseScenes(scenes: OBSResponseTypes['GetSceneList']['scenes']): Promise<Asset['scene'][]> {
+        const data: Asset['scene'][] = []
 
         for (const scene of scenes as ResponseObsScene[]){
             scene.sceneIndex
             const items = await this.getSceneItemList(scene.sceneName)
             const sceneItems = items.sceneItems as ResponseObsItem[]
             data.push({
-                id: scene.sceneName,
-                sources: sceneItems.map(si => ({
-                    id: si.sceneItemId,
-                    name: si.sourceName
-                }))
+                name: scene.sceneName,
+                containers: [{
+                    name: 'root',
+                    sources: sceneItems.map(si => ({
+                        name: si.sourceName,
+                        options: {
+                            id: si.sceneItemId,
+                        }
+                    }))
+                }]
             })
         }
+
+        // this.logger.info('scenes', data)
 
         return data
     }

@@ -1,20 +1,15 @@
 <script setup lang="ts">
 
-import { store } from '@src/store/store'
-import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
-
-interface Props {
-    disabled?: boolean
-    active?: boolean
-    loading?: boolean
-    href?: string
-}
-
 interface Emits {
     (e: 'click'): void
 }
 
-const props = defineProps<Props>()
+const props = defineProps<{
+    disabled?: boolean
+    active?: boolean
+    loading?: boolean
+    href?: string
+}>()
 const $emit = defineEmits<Emits>()
 
 const onClick = () => {
@@ -22,7 +17,7 @@ const onClick = () => {
         $emit('click')
     }
     if (props.href) {
-        socketEmitter(store.socket, 'openLink', props.href)
+        window.open(props.href, "_blank")
     }
 }
 </script>

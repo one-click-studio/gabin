@@ -6,18 +6,30 @@ import type { Toast } from '../../../../types/protocol'
 
 
 const message = ref<Toast|undefined>()
+const timeout = ref<ReturnType<typeof setTimeout>>()
 
 const close = () => {
+    if (timeout.value) clearTimeout(timeout.value)
+
     message.value = undefined
+    timeout.value = undefined
 }
 
 watch(() => store.toast.data, () => {
-    if (store.toast.data && store.toast.data.title)
-    message.value = store.toast.data
+    let delay = 0
+    if (message.value) {
+        close()
+        delay = 250
+    }
 
     setTimeout(() => {
-        close()
-    }, 5000)
+        if (store.toast.data && store.toast.data.title)
+        message.value = store.toast.data
+    
+        timeout.value = setTimeout(() => {
+            close()
+        }, store.toast.data?.duration || 5000)
+    }, delay)
 })
 
 </script>

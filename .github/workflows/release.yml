@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - pre-release
 
 jobs:
   build-executables:
@@ -101,7 +102,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          draft: true
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
              ./dist/*
@@ -167,9 +169,7 @@ jobs:
         run: mkdir ./dist
 
       - name: edit exe file
-        run: |
-          npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64-debug.exe --icon .\src\resources\icons\icon-64.ico
-          npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
+        run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
 
       - name: Upload executables to asset
         id: upload-release-asset
@@ -177,11 +177,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          draft: true
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
               ./dist/gabin-win-x64.exe
-              ./dist/gabin-win-x64-debug.exe
 
   sign-mac-executables:
     runs-on: macos-latest
@@ -271,7 +271,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          draft: true
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
               ./mac-dist/gabin-mac-x64.zip

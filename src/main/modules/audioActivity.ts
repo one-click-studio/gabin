@@ -1,8 +1,12 @@
 import path from "path"
 import fs from "fs"
+import os from "os"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
-import { getLogger } from '../../main/utils/logger'
+import { getLogger } from '../utils/logger'
+import { formatDate } from '../utils/utils'
+import { Thresholds } from "@src/types/protocol"
+import { FileWriter } from 'wav'
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
 
@@ -15,7 +19,20 @@ interface Device {
     apiName: string
 }
 
-type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined}>
+type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined, consecutive: number}>
+
+const AudioApiByPlateform = {
+    LINUX_ALSA: ['linux'],
+    LINUX_OSS: ['linux'],
+    LINUX_PULSE: ['linux'],
+    MACOSX_CORE: ['darwin'],
+    RTAUDIO_DUMMY: [],
+    UNIX_JACK: ['darwin', 'linux'],
+    UNSPECIFIED: [],
+    WINDOWS_ASIO: ['win32'],
+    WINDOWS_DS: ['win32'],
+    WINDOWS_WASAPI: ['win32']
+}
 
 class SileroVad {
     private loaded = false;
@@ -87,32 +104,15 @@ const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] 
     return buffers
 }
 
-// const joinBuffers = (buffers: number[][], size: number): Buffer => {
-//     const length = buffers[0].length
-//     const channels = buffers.length
-
-//     let array: number[] = []
-
-//     for (let i = 0; i < length; i+=size) {
-//         for (let j = 0; j < channels; j++) {
-//             for (let k = 0; k < size; k++) {
-//                 array.push(buffers[j][i+k])
-//             }
-//         }
-//     }
-
-//     return Buffer.from(array)
-// }
-
 export class AudioActivity {
     private _speaking: boolean[]
-    private _consecutiveSilence: number[]
-    private _consecutiveSpeech: number[]
+    private _consecutive: number[]
 
     private _speakingThreshold = 3
     private _silenceThreshold = 10
 
-    private _speechThreshold = 0.05
+    private _vadThreshold = 0.05
+    private _minVolume = 0.5
  
     private _bufferLength: number = 0
  
@@ -121,14 +121,17 @@ export class AudioActivity {
 
     private _deviceName: string
     private _device : Device | undefined
-        
+
     private _apiId: RtAudioApi | undefined
     private _framesPerBuffer: number
     private _sampleRate: number = 0
     private _isOpen: boolean
 
+    private _recorders: FileWriter[]
+    private _record: string | undefined
+
     private _channels: number[]
-    private _onAudio: (speaking: boolean, channel: number) => void
+    private _onAudio: (speaking: boolean, channel: number, volume: number) => void
 
     constructor(options: {
         deviceName: string
@@ -136,7 +139,13 @@ export class AudioActivity {
         channels: number[]
         framesPerBuffer: number
         sampleRate?: number
-        onAudio: (speaking: boolean, channel: number) => void
+        onAudio: (speaking: boolean, channel: number, volume: number) => void,
+        thresholds?: {
+            speaking?: number,
+            silence?: number,
+            vad?: number
+        },
+        record?: string
     }) {
 
         this._deviceName = options.deviceName
@@ -146,12 +155,69 @@ export class AudioActivity {
         if (options.sampleRate) this._sampleRate = options.sampleRate
         this._onAudio = options.onAudio
 
+        if (options.thresholds?.speaking) this.setSpeakingThreshold(options.thresholds.speaking)
+        if (options.thresholds?.silence) this.setSilenceThreshold(options.thresholds.silence)
+        if (options.thresholds?.vad) this.setVadThreshold(options.thresholds.vad)
+        if (options.record) this._record = options.record
+
         this._speaking = Array(options.channels.length).fill(false)
-        this._consecutiveSilence = Array(options.channels.length).fill(0)
-        this._consecutiveSpeech = Array(options.channels.length).fill(0)
+        this._consecutive = Array(options.channels.length).fill(0)
         this._isOpen = false
+        this._recorders = []
 
         this.getDevice()
+    }
+
+    public getName(): string {
+        return this._deviceName
+    }
+
+    public setThresholds(thresholds: Thresholds) {
+        this.setSpeakingThreshold(thresholds.speaking)
+        this.setSilenceThreshold(thresholds.silence)
+        this.setVadThreshold(thresholds.vad)
+        this.setMinVolume(thresholds.minVolume)
+    }
+
+    public getThresholds(): Thresholds {
+        return {
+            speaking: this.getSpeakingThreshold(),
+            silence: this.getSilenceThreshold(),
+            vad: this.getVadThreshold(),
+            minVolume: this.getMinVolume()
+        }
+    }
+
+    public getSpeakingThreshold(): number {
+        return this._speakingThreshold
+    }
+
+    public setSpeakingThreshold(value: number) {
+        this._speakingThreshold = value
+    }
+
+    public getSilenceThreshold(): number {
+        return this._silenceThreshold
+    }
+
+    public setSilenceThreshold(value: number) {
+        this._silenceThreshold = value
+    }
+
+    public getVadThreshold(): number {
+        return this._vadThreshold
+    }
+
+    public setVadThreshold(value: number) {
+        this._vadThreshold = value
+    }
+
+    public getMinVolume(): number {
+        return this._minVolume
+    }
+
+    public setMinVolume(value: number) {
+        this._minVolume = value
     }
 
     public isReady(): boolean {
@@ -164,7 +230,7 @@ export class AudioActivity {
         return true
     }
 
-    public async start() {
+    public async init() {
         if (!this._device) return
 
         this._sileroVad = []
@@ -175,9 +241,28 @@ export class AudioActivity {
             const sileroVad = new SileroVad()
             await sileroVad.load()
             this._sileroVad[i] = sileroVad
+
+            if (this._record) {
+                this._recorders[i] = new FileWriter(this.getFileName(i), {
+                    sampleRate: this._sampleRate/2,
+                    channels: 1
+                })
+            }
         }
+    }
+
+    public async start() {
+        if (!this._device) return
+
+        this.init()
 
         this._rtAudio = new RtAudio(this._apiId)
+
+        logger.info({
+            deviceId: this._device.id,
+            nChannels: this._device.data.inputChannels,
+            firstChannel: 0
+        })
 
         this._rtAudio.openStream(
             null,
@@ -200,6 +285,8 @@ export class AudioActivity {
 
     public stop() {
         if (!this._rtAudio || !this._isOpen) return
+
+        for (let i in this._recorders) this._recorders[i].end()
 
         this._rtAudio.stop()
         this._rtAudio.closeStream()
@@ -245,14 +332,27 @@ export class AudioActivity {
         return volume
     }
 
-    private async process(pcm: Buffer) {
+    private getFileName(channel: number): string {
+        if (!this._device || !this._record) return ""
+
+        const deviceName = this._device.data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
+
+        let d = new Date()
+        let datestring = d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "-" + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2)
+
+        const dir = formatDate(this._record)
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir)
+
+        return path.join(dir, `audio-${datestring}-${deviceName}-${this._channels[channel]+1}.wav`)
+    }
+
+
+    async process(pcm: Buffer) {
+        // make sure stream stays open
+        this._rtAudio?.write(Buffer.from([]))
+
         if (!this._device) return
         const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
-    
-        // STEREO (COPY LEFT (0) TO RIGHT (1))
-        // buffers[1] = JSON.parse(JSON.stringify(buffers[0]))
-        // MUTE LEFT (0) OR RIGHT (1)
-        // buffers[0].fill(0)
 
         if (!this.isReady()) {
             await this.load()
@@ -262,41 +362,48 @@ export class AudioActivity {
 
         for (let i = 0; i < buffers.length; i++) {
             if (!this._bufferLength) this.setBufferSize(buffers[i].length)
-            if (this._channels.indexOf(i) === -1) continue
+
+            const shortIndex = this.shortIndex(i)
+            if (shortIndex === -1) continue
+
+            if (this._recorders[shortIndex] && this._recorders[shortIndex].writable) {
+                this._recorders[shortIndex].write(Buffer.from(buffers[i]))
+            }
 
             const volume = Math.round(this.getVolume(buffers[i])*100)/100
-            const speaking = await this.processChannel(buffers[i], i)
-
-            processed.set(i, {volume, speaking})
+            const speaking = await this.processChannel(buffers[i], i, volume)
+            
+            processed.set(i, {volume, speaking, consecutive: 0})
         }
 
         if (this.tooManySpeakers(processed)){
             const channelId = this.chooseSpeaker(processed)
 
             for (let i = 0; i < this._channels.length; i++) {
-                const channel = processed.get(i)
-                if (!channel || i === channelId) continue
+                const cId = this.longIndex(i)
+                const channel = processed.get(cId)
+                if (!channel || cId === channelId) continue
                 if (channel.speaking !== true && !this._speaking[i]) continue
 
-                const speaking = this._speaking[i]? false : undefined
-                processed.set(i, {speaking, volume: channel.volume})
+                channel.speaking = this._speaking[i]? false : undefined
             }
         }
 
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = processed.get(i)
-            if (!channel || channel.speaking === undefined) continue
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
+            if (!channel) continue
 
-            this._speaking[i] = channel.speaking
-            this._onAudio(this._speaking[i], i)
+            if (channel.speaking !== undefined) this._speaking[i] = channel.speaking
+            this._onAudio(this._speaking[i], cId, channel.volume)
         }
-
     }
-    
+
     private tooManySpeakers(processed: ProcessedChannel): boolean {
         let speaking = 0
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = processed.get(this._channels[i])
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
             if (channel?.speaking || (channel?.speaking === undefined && this._speaking[i])) {
                 speaking++
             }
@@ -306,21 +413,54 @@ export class AudioActivity {
     }
 
     private chooseSpeaker(processed: ProcessedChannel): number {
-        let maxVolume = 0
-        let maxChannel = 0
+        const wasSpeaking = this.wasSpeaking(processed)
+        if (wasSpeaking !== -1) return wasSpeaking
+
+        return this.getLoudestChannel(processed)
+    }
+
+    private wasSpeaking(processed: ProcessedChannel): number {
         for (let i = 0; i < this._channels.length; i++) {
-            const channel = this._channels[i]
-            const volume = processed.get(channel)?.volume
-            if (volume && volume > maxVolume) {
-                maxVolume = volume
-                maxChannel = channel
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
+            
+            if ((channel?.speaking || channel?.speaking === undefined) && this._speaking[i]) {
+                return cId
             }
         }
 
+        return -1
+    }
+    
+    private getLoudestChannel(processed: ProcessedChannel): number {
+        let maxVolume = 0
+        let maxChannel = 0
+        for (let i = 0; i < this._channels.length; i++) {
+            const cId = this.longIndex(i)
+            const channel = processed.get(cId)
+            if (channel?.volume && channel.volume > maxVolume) {
+                maxVolume = channel.volume
+                maxChannel = cId
+            }
+        }
         return maxChannel
     }
 
-    private async processChannel(buffer: number[], channel: number): Promise<boolean|undefined> {
+    // channels : [1, 2, 4]
+    // inputChannels :  6
+    // buffers : [null, buf, buf, null, buf, null]
+
+    // index 1 -> 0
+    private shortIndex(index: number): number {
+        return this._channels.indexOf(index)
+    }
+
+    // index 0 -> 1
+    private longIndex(index: number): number {
+        return this._channels[index]
+    }
+
+    private async processChannel(buffer: number[], cId: number, volume: number): Promise<boolean|undefined> {
         if (!this._sileroVad) return false
 
         if (buffer.length !== this._bufferLength){
@@ -328,22 +468,25 @@ export class AudioActivity {
         }
 
         let isSpeaking = false
-        const vadLastProbability = await this._sileroVad[channel].process(buffer)
-        if (vadLastProbability > this._speechThreshold) {
-            isSpeaking = true
+        const index = this.shortIndex(cId)
+
+        if (volume > this._minVolume) {
+            const vadLastProbability = await this._sileroVad[index].process(buffer)
+            if (vadLastProbability > this._vadThreshold) {
+                isSpeaking = true
+            }
         }
 
-        if (isSpeaking) {
-            this._consecutiveSpeech[channel]++
-            this._consecutiveSilence[channel] = 0
-        } else {
-            this._consecutiveSilence[channel]++
-            this._consecutiveSpeech[channel] = 0
-        }
+        const toAdd = isSpeaking? 1 : -1
+    
+        if (this._consecutive[index] * toAdd < 0)
+        this._consecutive[index] = 0
+        
+        this._consecutive[index] += toAdd
 
-        if (!this._speaking[channel] && this._consecutiveSpeech[channel] > this._speakingThreshold) {
+        if (!this._speaking[index] && this._consecutive[index] > this._speakingThreshold) {
             return true
-        } else if (this._speaking[channel] && this._consecutiveSilence[channel] > this._silenceThreshold) {
+        } else if (this._speaking[index] && this._consecutive[index] < this._silenceThreshold*-1) {
             return false
         }
 
@@ -360,8 +503,13 @@ export class AudioActivity {
             }
         }
 
+
+        const plateform = os.platform()
         // @ts-ignore
         for (let i in RtAudioApi) {
+            // @ts-ignore
+            if (AudioApiByPlateform[i].indexOf(plateform) === -1) continue
+
             // @ts-ignore
             const api: unknown = RtAudioApi[i]
 
@@ -388,9 +536,12 @@ export class AudioActivity {
 
 export const getDevices = (): Device[] => {
     const devices: Device[] = []
+    const plateform = os.platform()
 
     // @ts-ignore
     for (let i in RtAudioApi) {
+        // @ts-ignore
+        if (AudioApiByPlateform[i].indexOf(plateform) === -1) continue
         // @ts-ignore
         const api: RtAudioApi = RtAudioApi[i]
 

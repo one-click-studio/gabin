@@ -1,7 +1,7 @@
 import { reactive } from 'vue'
 import { Subject } from 'rxjs'
 import { klona } from 'klona'
-import { Socket } from "socket.io-client"
+
 // @ts-ignore I DON'T KNOW WHY IT DOESN'T WORK
 import { socketEmitter } from '@src/components/utils/UtilsTools.vue'
 
@@ -10,7 +10,7 @@ import type {
     Profile,
     ProfileSettings,
     NavBtn,
-    ObsScene,
+    Asset,
     AudioDevice,
     ConnectionsConfig,
     Toast
@@ -25,9 +25,7 @@ const DEFAULT_SETTINGS = (): ProfileSettings => {
 }
 
 const DEFAULT_CONNECTIONS = (): ConnectionsConfig => {
-    return {
-        tcp: { ip:'127.0.0.1:6481' },
-    }
+    return {}
 }
 
 const generateId = (): number => {
@@ -35,21 +33,21 @@ const generateId = (): number => {
 }
 
 export const store = reactive({
-    socket: <Socket|undefined>undefined,
+    socket: <any>undefined,
     keyPress$: new Subject<string>(),
     isFirstRun: true,
     toast: {
-        show: (title: string, description: string='', type: Toast['type']='') => {
-            store.toast.data = { title, description, type }
+        show: (data: Toast) => {
+            store.toast.data = data
         },
-        success: (title: string, description: string='') => {
-            store.toast.data = { title, description, type:'success' }
+        success: (title: string, description: string='', duration?: number) => {
+            store.toast.data = { title, description, type:'success', duration }
         },
-        info: (title: string, description: string='') => {
-            store.toast.data = { title, description, type:'info' }
+        info: (title: string, description: string='', duration?: number) => {
+            store.toast.data = { title, description, type:'info', duration }
         },
-        error: (title: string, description: string='') => {
-            store.toast.data = { title, description, type:'error' }
+        error: (title: string, description: string='', duration?: number) => {
+            store.toast.data = { title, description, type:'error', duration }
         },
         data: <Toast|undefined>undefined,
     },
@@ -97,6 +95,7 @@ export const store = reactive({
                 icon:'folder',
                 settings: DEFAULT_SETTINGS(),
                 connections: DEFAULT_CONNECTIONS(),
+                active: true
             })
             store.profiles.current = id
         },
@@ -164,15 +163,31 @@ export const store = reactive({
             if (!current) return
             const currentClone = klona(current)
             await socketEmitter(store.socket, 'saveProfile', currentClone)
+        },
+        isComplete: (current?: Profile): boolean => {
+            if (!current) current = store.profiles.getCurrent()
+
+            if (!current) return false
+            const settings = current.settings
+            return (
+                settings.mics.length > 0 &&
+                settings.containers.length > 0 &&
+                settings.autocam.length > 0
+            )
         }
     },
+    osc: {
+        host: '',
+        port: 0,
+    },
     assets: {
-        scenes: <ObsScene[]>[],
+        scenes: <Asset['scene'][]>[],
         audios: <AudioDevice[]>[],
+        scene: <Asset['scene']['name']>'',
     },
     connections: {
-        obs: false,
-        companion: false,
+        osc: false,
+        obs: false
     },
     redirect: {
         path: '',
