@@ -1,6 +1,7 @@
 
 import { ObsServer } from '../../main/servers/ObsServer'
 import { OscClient } from '../../main/clients/OSCClient'
+import { VmixClient } from '../../main/clients/VMIXClient'
 import { Connections } from '../../main/servers/Connections'
 
 import { getDevices } from '../../main/modules/audioActivity'
@@ -18,6 +19,7 @@ export class Setup {
 
     obs: ObsServer
     osc: OscClient
+    vmix: VmixClient
     connections: Connections
 
     private profiles: SpecificAndDefault
@@ -25,6 +27,7 @@ export class Setup {
     constructor(oscServer: OscServer) {
         this.osc = new OscClient(oscServer, false)
         this.obs = new ObsServer(false)
+        this.vmix = new VmixClient(true)
         this.connections = new Connections()
 
         this.profiles = db.getSpecificAndDefault(['profiles'], false)
@@ -37,9 +40,11 @@ export class Setup {
     clean() {
         this.disconnectObs()
         this.disconnectOsc()
+        this.disconnectVmix()
 
         this.obs.clean()
         this.osc.clean()
+        this.vmix.clean()
     }
 
     connectObs(connection: Connection) {
@@ -70,6 +75,19 @@ export class Setup {
         if (!this.osc.isReachable) return
         this.osc.send(path)
     }
+
+    connectVmix(connection: Connection) {
+        if (!this.vmix.isReachable) {
+            this.vmix.connect(connection)
+        }
+    }
+
+    disconnectVmix() {
+        if (this.vmix.isReachable) {
+            this.vmix.clean()
+        }
+    }
+
 }
 
 export const getAllAudioDevices = (): AudioDevice[] => {

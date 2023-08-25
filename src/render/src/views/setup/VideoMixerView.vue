@@ -15,8 +15,10 @@ const goNext = (route: string) => {
     connections.type = undefined
     connections.obs = undefined
     connections.osc = undefined
+    connections.vmix = undefined
     store.connections.obs = false
     store.connections.osc = false
+    store.connections.vmix = false
 
     router.push('/setup/'+route)
 }
@@ -51,35 +53,17 @@ onEnterPress(() => {
                 </ButtonUi>
                 <ButtonUi
                     class="w-full my-2"
+                    @click="goNext('vmix')"
+                >
+                    Vmix <ArrowRightIcon />
+                </ButtonUi>
+                <ButtonUi
+                    class="w-full my-2"
                     @click="goNext('osc')"
                 >
                     OSC <ArrowRightIcon />
                 </ButtonUi>
-                <ButtonUi
-                    class="w-full my-2"
-                    :disabled="true"
-                    @click="goNext('obs')"
-                >
-                    ATEM <ArrowRightIcon />
-                </ButtonUi>
-                <ButtonUi
-                    class="w-full my-2"
-                    :disabled="true"
-                    @click="goNext('obs')"
-                >
-                    Other <ArrowRightIcon />
-                </ButtonUi>
             </div>
-
-            <!-- <div class="mt-5 w-full flex justify-between">
-                <ButtonUi
-                    class="w-full "
-                    @click="goBack"
-                >
-                    <ArrowLeftIcon />
-                    Back
-                </ButtonUi>
-            </div> -->
         </div>
     </div>
 </template>

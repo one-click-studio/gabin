@@ -187,7 +187,8 @@ export const store = reactive({
     },
     connections: {
         osc: false,
-        obs: false
+        obs: false,
+        vmix: false,
     },
     redirect: {
         path: '',

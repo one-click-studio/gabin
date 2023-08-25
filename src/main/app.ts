@@ -331,7 +331,15 @@ export class App {
         })
 
         this.setup.obs.scenes$.subscribe((scenes) => {
-            this.io?.to(IO_ROOMS.SETUP).emit('handleObsScenes', scenes)
+            this.io?.to(IO_ROOMS.SETUP).emit('handleMixerScenes', scenes)
+        })
+
+        this.setup.vmix.reachable$.subscribe((reachable) => {
+            this.io?.to(IO_ROOMS.SETUP).emit('handleVmixConnected', reachable)
+        })
+
+        this.setup.vmix.scenes$.subscribe((scenes) => {
+            this.io?.to(IO_ROOMS.SETUP).emit('handleMixerScenes', scenes)
         })
 
         this.setup.osc.reachable$.subscribe((reachable) => {
@@ -367,6 +375,10 @@ export class App {
         socket.on('disconnectOsc', (_data, callback) => callback(this.setup?.disconnectOsc()))
         socket.on('sendOsc', (path: string, callback) => callback(this.setup?.sendOsc(path)))
 
+        // VMIX
+        socket.on('connectVmix', (c: Connection, callback) => callback(this.setup?.connectVmix(c)))
+        socket.on('disconnectVmix', (_data, callback) => callback(this.setup?.disconnectVmix()))
+
         // AUDIO
         socket.on('getAudioDevices', (_data, callback) => callback(getAllAudioDevices()))
     }
@@ -396,8 +408,8 @@ export class App {
         })
         this.gabin.connections$.subscribe((c) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleObsConnected', c.obs)
-            this.io?.to(IO_ROOMS.GABIN).emit('handleStreamdeckConnected', c.streamdeck)
             this.io?.to(IO_ROOMS.GABIN).emit('handleOscConnected', c.osc)
+            this.io?.to(IO_ROOMS.GABIN).emit('handleVmixConnected', c.vmix)
         })
     }
 
@@ -422,7 +434,7 @@ export class App {
         this.io.emit('handlePower', this.gabin? true : false)
         this.io.emit('handleObsConnected', this.gabin?.connections$.getValue().obs || this.setup?.obs.isReachable)
         this.io.emit('handleOscConnected', this.gabin?.connections$.getValue().osc || this.setup?.osc.isReachable)
-        this.io.emit('handleStreamdeckConnected', this.gabin?.connections$.getValue().streamdeck)
+        this.io.emit('handleVmixConnected', this.gabin?.connections$.getValue().vmix || this.setup?.vmix.isReachable)
 
         this.io.emit('handleOscConfig', this.osc?.getConfig())
     }
