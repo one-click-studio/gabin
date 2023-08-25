@@ -118,9 +118,7 @@ export const getLogger = (name: string) => {
 
         if (process.env.DEBUG !== 'true' && type === 'debug') return
 
-        if (process.env.SILENT !== 'true') {
-            process.stdout.write(`\n${getTypeColor(log.type)}${log.time}${COLORS.Bright} [${log.context}]${COLORS.Reset} ${log.value}`)
-        }
+        process.stdout.write(`\n${getTypeColor(log.type)}${log.time}${COLORS.Bright} [${log.context}]${COLORS.Reset} ${log.value}`)
         fs.appendFileSync(LOG_FILE, `\n${log.time} [${log.context}] : ${log.value}`)
     }
 

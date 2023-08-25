@@ -9,54 +9,37 @@ import Gabin from '@src/components/basics/GabinFace.vue'
 import ControlBtns from '@src/components/run/ControlBtns.vue'
 import Speakers from '@src/components/run/Speakers.vue'
 
-import type { SpeakingMic, Shoot, Asset } from '../../../types/protocol'
+import type { SpeakingMic } from '../../../types/protocol'
 
 const INIT_MSG = 'Not showing any camera.'
 
 const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
-const speakingMics = ref(<SpeakingMic[]>[])
-const shoot_ = ref<Shoot>()
-const shoots_ = ref<Map<Asset['container']['name'], Shoot>>(new Map())
-const currentScene_ = ref<Asset['scene']['name']>()
+const speakingMics = ref([] as SpeakingMic[])
 
-const powerOn = async () => {
+const togglePower = async () => {
     if (!loading.value){
         loading.value = true
-        await socketEmitter(store.socket, 'togglePower', true)
+        await socketEmitter(store.socket, 'togglePower', !store.power)
         loading.value = false
     }
 }
 
-const initNewScene = (shoot: Shoot) => {
-    currentScene_.value = shoot.sceneName
-    shoots_.value = new Map()
-
-    shoots_.value.set(shoot.container.name, shoot)
-    msg.value.default = 'I\'m now showing'
-    msg.value.main = currentScene_.value
-}
-
-socketHandler(store.socket, 'handleNewShot', (shoot: Shoot) => {
-    shoot_.value = shoot
-    
-    if (shoot.sceneName !== currentScene_.value) initNewScene(shoot)
-    else shoots_.value.set(shoot.container.name, shoot)
-})
-
-socketHandler(store.socket, 'handleTimeline', (data: string) => {
-    for (const i in  speakingMics.value){
-        speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
+socketHandler(store.socket, 'handlePower', (power) => {
+    store.power = power
+    if (!power) {
+        msg.value = { default: INIT_MSG, main: '' }
     }
 })
 
-socketHandler(store.socket, 'handleVolumeMics', (data: {[k: string]: number}) => {
-    let deviceName: keyof typeof data
-    for (deviceName in data) {
-        for (const i in speakingMics.value){
-            if (speakingMics.value[i].name !== deviceName) continue
-            speakingMics.value[i].volume = data[deviceName]
-        }
+socketHandler(store.socket, 'handleNewShot', (shoot) => {
+    msg.value.default = 'I\'m now showing'
+    msg.value.main = `${shoot.shotId.name}`
+})
+
+socketHandler(store.socket, 'handleTimeline', (data) => {
+    for (const i in  speakingMics.value){
+        speakingMics.value[i].speaking = speakingMics.value[i].name === data? true : false
     }
 })
 
@@ -68,16 +51,17 @@ const init = () => {
         for (const i in device.mics){
             if (!device.mics[i]) continue
             speakingMics.value.push({
-                device: device.name,
                 name: device.micsName[i],
                 speaking: false,
-                volume: 0
             })
         }
     })
 }
 
-powerOn()
+if (!store.power) {
+    togglePower()
+}
+
 init()
 
 
@@ -99,24 +83,20 @@ init()
 
             <div class="flex justify-between items-center w-full">
                 <div class="flex flex-col items-start">
-                    <template
+                    <div
                         v-for="(m, index) in store.connections"
                         :key="'module-'+index"
+                        class="connected-module"
+                        :class="m? 'is-connected' : ''"
                     >
-                        <div
-                            v-if="store.profiles.connections()[index]"
-                            class="connected-module"
-                            :class="m? 'is-connected' : ''"
-                        >
-                            <span class="uppercase">{{ index }}</span>
-                        </div>
-                    </template>
+                        <span class="uppercase">{{ index }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="flex flex-col items-center flex-1 bg-bg-2">
-            <ControlBtns :shoots="shoots_"/>
+            <ControlBtns />
         </div>
     </div>
 </template>

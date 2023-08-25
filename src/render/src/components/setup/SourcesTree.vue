@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 
-defineProps<{
+interface Props {
     list: string[]
-}>()
+}
+
+defineProps<Props>()
 </script>
 
 <template>

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { onEscapePress } from '@src/components/utils/KeyPress.vue'
 
+interface Props {
+    open: boolean
+}
 interface Emits {
     (e: 'close'): void
 }
 
-defineProps<{
-    open: boolean
-}>()
+defineProps<Props>()
 const $emit = defineEmits<Emits>()
 
 const close = () => {

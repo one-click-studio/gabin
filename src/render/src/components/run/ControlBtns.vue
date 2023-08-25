@@ -2,12 +2,13 @@
 import { ref } from 'vue'
 import { klona } from 'klona'
 import { store } from '@src/store/store'
+import { useRouter } from 'vue-router'
 
 import ToggleUi from '@src/components/basics/ToggleUi.vue'
 import ButtonUi from '@src/components/basics/ButtonUi.vue'
 import ButtonContainerUi from '@src/components/basics/ButtonContainerUi.vue'
 
-import { onSpacePress } from '@src/components/utils/KeyPress.vue'
+import { onAlphaNumPress, onSpacePress } from '@src/components/utils/KeyPress.vue'
 import { socketEmitter, socketHandler } from '@src/components/utils/UtilsTools.vue'
 
 import PlayCircleIcon from '@src/components/icons/PlayCircleIcon.vue'
@@ -15,10 +16,15 @@ import PauseCircleIcon from '@src/components/icons/PauseCircleIcon.vue'
 import StopIcon from '@src/components/icons/StopIcon.vue'
 import CamIcon from '@src/components/icons/CamIcon.vue'
 
-import type { Shoot, AvailableMicsMap, Asset } from '../../../../types/protocol'
+import type { Shoot, AvailableMicsMap, ObsAssetId, ObsSource } from '../../../../types/protocol'
 
-const powerOff = async () => {
-    await socketEmitter(store.socket, 'togglePower', false)
+const ALPHA_NUM = '0123456789abcdefghijklmnopqrstuvwxyz'
+
+const router = useRouter()
+
+const togglePower = async () => {
+    await socketEmitter(store.socket, 'togglePower', !store.power)
+    router.push('/home')
 }
 
 const getAvailableMics = (): AvailableMicsMap => {
@@ -27,78 +33,102 @@ const getAvailableMics = (): AvailableMicsMap => {
     return micsMap
 }
 
-const getAllScenes = (): Asset['scene'][] => {
-    return store.profiles.settings().containers
+const getAllShots = (containerIds: string[]): ObsSource[][] => {
+    const shots_: ObsSource[][] = []
+    const containers = store.profiles.settings().containers
+    for (const cId of containerIds) {
+        for (const c of containers) {
+            if (c.source.name === cId) {
+                shots_.push(c.cams)
+                break
+            }
+        }
+    }
+
+    return shots_
 }
 
-const getAllContainers = (): Asset['container'][] => {
-    const scenes = getAllScenes()
-    const containers = scenes.reduce((p, scene) => p.concat(scene.containers), <Asset['container'][]>[])
-    const containersMap = new Map(containers.map((v)=>([v.name, v])))
-
-    return Object.values(Object.fromEntries(containersMap))
-}
-
-// const getAllSources = (): Asset['source'][] => {
-//     const containers = getAllContainers()
-//     const sources = containers.reduce((p, c) => p.concat(c.sources), <Asset['source'][]>[])
-//     const sourcesMap = new Map(sources.map((v)=>([v.name, v])))
-//     return Object.values(Object.fromEntries(sourcesMap))
-// }
-
-
-const props = defineProps<{
-    shoots: Map<Asset['container']['name'], Shoot>
-}>()
-
-const autocam_ = ref(true)
-const containers_ = ref(getAllContainers())
-const availableMics_ = ref(getAvailableMics())
+const autocam = ref(true)
+const currentContainers = ref(<ObsAssetId['scene'][]>[])
+const availableMics = ref(getAvailableMics())
+const shots = ref<ObsSource[][]>([])
+const currentShots = ref<ObsSource[]>([])
 
 const init = () => {
+    currentContainers.value = store.profiles.settings().containers.map(c => c.source.name).filter((c, i, a) => a.indexOf(c) === i)
+    shots.value = getAllShots(currentContainers.value)
 
+    socketHandler(store.socket, 'handleNewShot', (shot: Shoot) => {
+        setCurrentShot(shot)
+    })
     socketHandler(store.socket, 'handleAutocam', (ac: boolean) => {
-        autocam_.value = ac
+        autocam.value = ac
     })
     socketHandler(store.socket, 'handleAvailableMics', (am: any) => {
-        availableMics_.value = new Map(Object.entries(am))
+        availableMics.value = new Map(Object.entries(am))
     })
 
+    onAlphaNumPress((key) => {
+        const coords = shortcutToShot(key)
+        if (coords && coords.j < shots.value[coords.i].length) {
+            triggerShot(coords.i, coords.j)
+        }
+    })
     onSpacePress(() => {
         toggleAutocam()
     })
 }
 
+const setCurrentShot = (shot: Shoot) => {
+    for (const i in currentContainers.value) {
+        if (currentContainers.value[i] === shot.containerId) {
+            currentShots.value[i] = shot.shotId
+        }
+    }
+}
+
 const toggleAutocam = () => {
-    socketEmitter(store.socket, 'toggleAutocam', !autocam_.value)
+    socketEmitter(store.socket, 'toggleAutocam', !autocam.value)
 }
 
 const toggleMicAvailability = (mic: string) => {
     socketEmitter(store.socket, 'toggleAvailableMic', mic)
 }
 
-const triggerShot = (shot: Asset['source']) => {
-    socketEmitter(store.socket, 'triggerShot', klona(shot))
+const triggerShot = (i: number, j: number) => {
+    socketEmitter(store.socket, 'triggerShot', klona(shots.value[i][j]))
 }
 
-const sceneHasContainer = (container: Asset['container']): boolean => {
-    const shoot = props.shoots.get(container.name)
+const shotToShortcut = (i: number, j: number): string => {
+    let count = j
+    for (let k=0; k<i; k++) {
+        count += shots.value[k].length
+    }
 
-    return !!shoot
+    return ALPHA_NUM[count]
 }
 
-const isFocusedShot = (container: Asset['container'], shot: Asset['source']): boolean => {
-    const shoot = props.shoots.get(container.name)
-    if (!shoot) return false
+const shortcutToShot = (key: string): {i: number, j: number}|undefined => {
+    const index = ALPHA_NUM.indexOf(key)
+    if (index < 0) {
+        return undefined
+    }
 
-    return (shoot.shot.name === shot.name && shoot.mode === 'focus')
-}
+    let i = 0
+    let count = 0
+    for (i; i<shots.value.length; i++) {
+        if (count + shots.value[i].length > index) {
+            break
+        }
+        count += shots.value[i].length
+    }
 
-const isIllustrationShot = (container: Asset['container'], shot: Asset['source']): boolean => {
-    const shoot = props.shoots.get(container.name)
-    if (!shoot) return false
+    if (i >= shots.value.length) {
+        return undefined
+    }
 
-    return (shoot.shot.name === shot.name && shoot.mode === 'illustration')
+    const j = index - count
+    return { i, j }
 }
 
 init()
@@ -112,7 +142,7 @@ init()
             <ButtonContainerUi
                 class="w-24"
                 :custom-width="true"
-                :active="!autocam_"
+                :active="!autocam"
                 :primary="true"
                 :keycode="'␣'"
             >
@@ -120,14 +150,14 @@ init()
                     class="control-btn"
                     @click="toggleAutocam"
                 >
-                    <PlayCircleIcon v-show="!autocam_" />
-                    <PauseCircleIcon v-show="autocam_" />
+                    <PlayCircleIcon v-show="!autocam" />
+                    <PauseCircleIcon v-show="autocam" />
                 </ButtonUi>
             </ButtonContainerUi>
             <ButtonContainerUi class="flex-1">
                 <ButtonUi
                     class="i-first danger w-full h-full !justify-center"
-                    @click="powerOff"
+                    @click="togglePower"
                 >
                     <StopIcon />
                     Stop Gabin
@@ -137,7 +167,7 @@ init()
 
         <div class="flex max-w-full flex-wrap">
             <ButtonContainerUi
-                v-for="[mic, a] in availableMics_"
+                v-for="[mic, a] in availableMics"
                 :key="'mic-'+mic"
                 :active="a"
                 class="h-20"
@@ -149,43 +179,36 @@ init()
                     <ToggleUi
                         :label="mic"
                         :value="a"
-                        @update="() => toggleMicAvailability(mic)"
                     />
                 </ButtonUi>
             </ButtonContainerUi>
         </div>
-
-        <template
-            v-for="(container, i) in containers_"
-            :key="'container-'+i"
-        >
+        <div class="flex-1 flex flex-col">
             <div
-                v-if="sceneHasContainer(container)"
-                class="flex-1 flex items-stretch content-stretch flex-wrap w-full"
+                v-for="(_v, i) in shots"
+                :key="i"
+                class="flex flex-col flex-1 w-full"
             >
-                <ButtonContainerUi
-                    v-for="(source) in container.sources"
-                    :key="'container-'+i+'-source-'+source.name"
-                    :active="isFocusedShot(container, source) || isIllustrationShot(container, source)"
-                    :primary="isFocusedShot(container, source)"
-                >
-                    <ButtonUi
-                        class="flex flex-col items-center control-btn"
-                        :active="isFocusedShot(container, source) || isIllustrationShot(container, source)"
-                        @click="() => triggerShot(source)"
+                <div class="flex-1 flex items-stretch content-stretch flex-wrap w-full">
+                    <ButtonContainerUi
+                        v-for="(shot, j) in shots[i]"
+                        :key="'shot-'+shot"
+                        :active="(shot?.name === currentShots[i]?.name)"
+                        :primary="true"
+                        :keycode="shotToShortcut(i, j)"
                     >
-                        <CamIcon class="m-4" />
-                        <span class="text-m">{{ source.name }}</span>
-                        <span class="text-xs mt-2">{{ container.name }}</span>
-                    </ButtonUi>
-                </ButtonContainerUi>
+                        <ButtonUi
+                            class="flex flex-col items-center control-btn"
+                            :active="(shot?.name === currentShots[i]?.name)"
+                            @click="() => triggerShot(i, j)"
+                        >
+                            <CamIcon class="m-4" />
+                            <span class="text-content-2 text-sm">Container {{ i+1 }}</span>
+                            <span class="text-base">{{ shot.name }}</span>
+                        </ButtonUi>
+                    </ButtonContainerUi>
+                </div>
             </div>
-        </template>
-        <div
-            v-if="shoots.size === 0"
-            class="w-full h-full flex items-center justify-center text-xl text-white"
-        >
-            No scene loaded
         </div>
     </div>
 </template>

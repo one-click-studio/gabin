@@ -1,17 +1,20 @@
 <script setup lang="ts">
 
-interface Emits {
-    (e: 'click'): void
-}
 
-const props = defineProps<{
+interface Props {
     disabled?: boolean
     active?: boolean
     primary?: boolean
     error?: boolean
     keycode?: string
     customWidth?: boolean
-}>()
+}
+
+interface Emits {
+    (e: 'click'): void
+}
+
+const props = defineProps<Props>()
 const $emit = defineEmits<Emits>()
 
 const onClick = () => {

@@ -8,11 +8,3 @@ database.json
 test.sh
 certificate.p12
 .DS_Store
-/test-results/
-/playwright-report/
-/playwright/.cache/
-/tests
-/tests-examples
-playwright.config.ts
-* copy.*
-*.wav

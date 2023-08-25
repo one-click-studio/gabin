@@ -9,9 +9,10 @@ import { fetchProfiles } from '@src/components//setup/FetchProfile.vue';
 const router = useRouter()
 
 fetchProfiles(() => {
-    const route = store.redirect.path && store.redirect.path !== '/disconnect' ? store.redirect.path : '/home'
+    const route = store.redirect.path? store.redirect.path : '/home'
     router.push(route)
 })
+
 
 </script>
 

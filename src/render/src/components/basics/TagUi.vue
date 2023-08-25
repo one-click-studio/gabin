@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import PlusIcon from '@src/components/icons/PlusIcon.vue'
 
+interface Props {
+    label: string
+    value?: boolean
+}
+
 interface Emits {
     (e: 'update', value: boolean): void
 }
 
-const props = defineProps<{
-    label: string
-    value?: boolean
-}>()
+const props = defineProps<Props>()
 const $emit = defineEmits<Emits>()
 
 const update = () => {

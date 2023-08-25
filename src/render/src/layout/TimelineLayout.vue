@@ -4,11 +4,13 @@ import { store } from '@src/store/store'
 
 import { TimelineSteps } from '@src/components/setup/TimelineSteps.vue'
 
+interface Props {
+    currentStep: number
+}
+
 // store.profiles.editProfile
 
-defineProps<{
-    currentStep: number
-}>()
+defineProps<Props>()
 
 </script>
 

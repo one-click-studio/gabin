@@ -13,6 +13,11 @@ import ReturnIcon from '@src/components/icons/ReturnIcon.vue'
 
 import type { NavBtn } from '../../../types/protocol'
 
+interface Props {
+    back?: NavBtn,
+    next?: NavBtn,
+}
+
 const icons = {
     'ArrowLeft': ArrowLeftIcon,
     'ArrowRight': ArrowRightIcon,
@@ -21,10 +26,7 @@ const icons = {
     'Return': ReturnIcon,
 }
 
-const props = defineProps<{
-    back?: NavBtn,
-    next?: NavBtn,
-}>()
+const props = defineProps<Props>()
 const router = useRouter()
 
 const DEFAULT = {
