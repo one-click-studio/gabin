@@ -255,6 +255,8 @@ export class App {
                 this.osc?.register$.next({type: request.type, data: this.profiles.getAll()})
             } else if (request.type === 'devices') {
                 this.osc?.register$.next({type: request.type, data: getAllAudioDevices()})
+            } else if (request.type === 'isReady') {
+                this.osc?.register$.next({type: request.type, data: true})
             }
         })
 
