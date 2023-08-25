@@ -6,7 +6,7 @@ import { Server } from '../../main/servers/Server'
 const CMD_TYPES = ['on', 'off', 'config', 'profile'] as const
 type CmdType = typeof CMD_TYPES[number]
 
-const REQUEST_TYPES = ['profiles', 'devices'] as const
+const REQUEST_TYPES = ['profiles', 'devices', 'isReady'] as const
 type RequestType = typeof REQUEST_TYPES[number]
 
 const REGISTER_TYPES = [...REQUEST_TYPES, 'shot', 'autocam', 'defaultProfile'] as const
@@ -86,6 +86,10 @@ export class OscServer extends Server {
             this.command('profile', message.args[0])
         })
 
+        this.server.on('/gabin/is-ready', (message: any) => {
+            if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
+            this.request('isReady', message.args[0], message.args[1], message.args[2])
+        })
         this.server.on('/gabin/profiles', (message: any) => {
             if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             this.request('profiles', message.args[0], message.args[1], message.args[2])
