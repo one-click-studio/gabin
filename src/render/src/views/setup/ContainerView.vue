@@ -47,7 +47,7 @@ store.layout.footer.next.disable = false
                     Step 1
                 </h3>
                 <p class="text-sm text-content-2 my-5">
-                    Go to OBS and create an scene in which you will overlay all your camera sources on top of each other.<br>
+                    Go to OBS and create a scene in which you will overlay all your camera sources on top of each other.<br>
                     Gabin will <span class="text-white font-bold">automatically</span> toggle their visibility.
                 </p>
                 <div class="flex flex-wrap justify-between items-stretch">
