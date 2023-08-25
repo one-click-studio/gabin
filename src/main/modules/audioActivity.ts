@@ -116,7 +116,7 @@ export class AudioActivity {
  
     private _bufferLength: number = 0
  
-    private _sileroVad: SileroVad[] | undefined
+    private _sileroVad: SileroVad | undefined
     private _rtAudio: RtAudio | undefined
 
     private _deviceName: string
@@ -221,27 +221,18 @@ export class AudioActivity {
     }
 
     public isReady(): boolean {
-        if (!this._sileroVad) return false
-
-        for (let i = 0; i < this._channels.length; i++){
-            if (!this._sileroVad[i].ready) return false
-        }
-        
-        return true
+        return this._sileroVad?.ready || false
     }
 
     public async init() {
         if (!this._device) return
 
-        this._sileroVad = []
-
         this._sampleRate = this.getSampleRate(this._device.data)
 
-        for (let i = 0; i < this._channels.length; i++) {
-            const sileroVad = new SileroVad()
-            await sileroVad.load()
-            this._sileroVad[i] = sileroVad
+        this._sileroVad = new SileroVad()
+        await this._sileroVad.load()
 
+        for (let i = 0; i < this._channels.length; i++) {
             if (this._record) {
                 this._recorders[i] = new FileWriter(this.getFileName(i), {
                     sampleRate: this._sampleRate/2,
@@ -294,7 +285,7 @@ export class AudioActivity {
 
     private async load() {
         if (!this._sileroVad) return
-        for (let i = 0; i < this._channels.length; i++) await this._sileroVad[i].load()
+        for (let i = 0; i < this._channels.length; i++) await this._sileroVad.load()
     }
 
     private getSampleRate(data: RtAudioDeviceInfo): number {
@@ -471,7 +462,7 @@ export class AudioActivity {
         const index = this.shortIndex(cId)
 
         if (volume > this._minVolume) {
-            const vadLastProbability = await this._sileroVad[index].process(buffer)
+            const vadLastProbability = await this._sileroVad.process(buffer)
             if (vadLastProbability > this._vadThreshold) {
                 isSpeaking = true
             }
