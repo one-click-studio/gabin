@@ -15,6 +15,7 @@ export type Thresholds = {
     speaking: number
     silence: number
     vad: number
+    minVolume: number
 }
 
 export type SpeakingMic = {

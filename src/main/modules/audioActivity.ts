@@ -112,6 +112,7 @@ export class AudioActivity {
     private _silenceThreshold = 10
 
     private _vadThreshold = 0.05
+    private _minVolume = 0.5
  
     private _bufferLength: number = 0
  
@@ -175,13 +176,15 @@ export class AudioActivity {
         this.setSpeakingThreshold(thresholds.speaking)
         this.setSilenceThreshold(thresholds.silence)
         this.setVadThreshold(thresholds.vad)
+        this.setMinVolume(thresholds.minVolume)
     }
 
     public getThresholds(): Thresholds {
         return {
             speaking: this.getSpeakingThreshold(),
             silence: this.getSilenceThreshold(),
-            vad: this.getVadThreshold()   
+            vad: this.getVadThreshold(),
+            minVolume: this.getMinVolume()
         }
     }
 
@@ -207,6 +210,14 @@ export class AudioActivity {
 
     public setVadThreshold(value: number) {
         this._vadThreshold = value
+    }
+
+    public getMinVolume(): number {
+        return this._minVolume
+    }
+
+    public setMinVolume(value: number) {
+        this._minVolume = value
     }
 
     public isReady(): boolean {
@@ -459,9 +470,11 @@ export class AudioActivity {
         let isSpeaking = false
         const index = this.shortIndex(cId)
 
-        const vadLastProbability = await this._sileroVad[index].process(buffer)
-        if (volume > 0 && vadLastProbability > this._vadThreshold) {
-            isSpeaking = true
+        if (volume > this._minVolume) {
+            const vadLastProbability = await this._sileroVad[index].process(buffer)
+            if (vadLastProbability > this._vadThreshold) {
+                isSpeaking = true
+            }
         }
 
         const toAdd = isSpeaking? 1 : -1
