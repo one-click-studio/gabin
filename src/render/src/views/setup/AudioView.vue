@@ -33,7 +33,8 @@ const addDevice = () => {
         thresholds: {
             speaking: 3,
             silence: 10,
-            vad: 0.05
+            vad: 0.05,
+            minVolume: 0.5
         }
     })
 
