@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - pre-release
+      - 62-gabin-is-ready-osc
 
 jobs:
   build-executables:
