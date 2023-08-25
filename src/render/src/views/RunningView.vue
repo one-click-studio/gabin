@@ -9,7 +9,7 @@ import Gabin from '@src/components/basics/GabinFace.vue'
 import ControlBtns from '@src/components/run/ControlBtns.vue'
 import Speakers from '@src/components/run/Speakers.vue'
 
-import type { SpeakingMic, Shoot } from '../../../types/protocol'
+import type { SpeakingMic, Shoot, Asset } from '../../../types/protocol'
 
 const INIT_MSG = 'Not showing any camera.'
 
@@ -17,6 +17,8 @@ const loading = ref(false)
 const msg = ref({ default: INIT_MSG, main: '' })
 const speakingMics = ref(<SpeakingMic[]>[])
 const shoot_ = ref<Shoot>()
+const shoots_ = ref<Map<Asset['container']['name'], Shoot>>(new Map())
+const currentScene_ = ref<Asset['scene']['name']>()
 
 const powerOn = async () => {
     if (!loading.value){
@@ -26,10 +28,20 @@ const powerOn = async () => {
     }
 }
 
+const initNewScene = (shoot: Shoot) => {
+    currentScene_.value = shoot.sceneName
+    shoots_.value = new Map()
+
+    shoots_.value.set(shoot.container.name, shoot)
+    msg.value.default = 'I\'m now showing'
+    msg.value.main = currentScene_.value
+}
+
 socketHandler(store.socket, 'handleNewShot', (shoot: Shoot) => {
     shoot_.value = shoot
-    msg.value.default = 'I\'m now showing'
-    msg.value.main = `${shoot.shot.name}`
+    
+    if (shoot.sceneName !== currentScene_.value) initNewScene(shoot)
+    else shoots_.value.set(shoot.container.name, shoot)
 })
 
 socketHandler(store.socket, 'handleTimeline', (data: string) => {
@@ -104,7 +116,7 @@ init()
         </div>
 
         <div class="flex flex-col items-center flex-1 bg-bg-2">
-            <ControlBtns :shoot="shoot_"/>
+            <ControlBtns :shoots="shoots_"/>
         </div>
     </div>
 </template>

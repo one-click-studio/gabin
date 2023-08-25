@@ -26,22 +26,25 @@ import {
     Thresholds,
     AudioDevice
 } from '../types/protocol'
-const DEFAULT = require('./config.json')
+const DEFAULT = require('../resources/json/config.json')
 
 type IoRequest = { id: Profile['id'] }
 interface IoRequests {
-    thresholds : IoRequest & {
+    thresholds: IoRequest & {
         deviceName: AudioDevice['name']
         thresholds: Thresholds
     }
-    icon : IoRequest & {
+    icon: IoRequest & {
         icon: Profile['icon']
     }
-    name : IoRequest & {
+    name: IoRequest & {
         name: Profile['name']
     }
-    autostart : IoRequest & {
+    autostart: IoRequest & {
         autostart: Profile['autostart']
+    }
+    record: IoRequest & {
+        record: Profile['record']
     }
 }
 
@@ -272,7 +275,7 @@ export class App {
         })
 
         this.io.on('connection', socket => {
-            this.logger.debug('Client connected', socket.id)
+            this.logger.info('Client connected', socket.id)
             this.ioClients.set(socket.id, socket)
 
             // PROFILE
@@ -283,7 +286,17 @@ export class App {
             socket.on('setProfileIcon', (p: IoRequests['icon'], callback) => callback(this.profiles.setIcon(p.id, p.icon)))
             socket.on('setProfileName', (p: IoRequests['name'], callback) => callback(this.profiles.setName(p.id, p.name)))
             socket.on('setAutostart', (p: IoRequests['autostart'], callback) => callback(this.profiles.setAutostart(p.id, p.autostart)))
-            socket.on('setThresholds', (p: IoRequests['thresholds'], callback) => callback(this.profiles.setThresholds(p.id, p.deviceName, p.thresholds)))
+            socket.on('setRecord', (p: IoRequests['record'], callback) => callback(this.profiles.setRecord(p.id, p.record)))
+
+            // UPDATE DEVICE OPTIONS
+            socket.on('setThresholds', (p: IoRequests['thresholds'], callback) => {
+                this.profiles.setThresholds(p.id, p.deviceName, p.thresholds)
+                if (this.gabin) {
+                    const audioDevices = db.getDefaultValue(['settings', 'mics'], true)
+                    this.gabin.updateDeviceOptions(audioDevices)
+                }
+                callback()
+            })
 
             // SETUP
             socket.on('setup', (p: boolean, callback) => {
@@ -298,13 +311,13 @@ export class App {
             this.sendAppState()
 
             socket.on('disconnect', () => {
-                this.logger.debug('Client disconnected', socket.id)
+                this.logger.info('Client disconnected', socket.id)
                 this.ioClients.delete(socket.id)
             })
         })
 
         this.profiles.default$.subscribe((profile) => {
-            this.logger.debug('Default profile changed', profile)
+            this.logger.info('Default profile changed', profile)
             this.io?.emit('handleDefault', profile)
             this.osc?.register$.next({ type: 'defaultProfile', data: profile })
         })
@@ -351,7 +364,7 @@ export class App {
     }
 
     private joinSetup(socket: Socket) {
-        this.logger.debug('New setup client connected', socket.id)
+        this.logger.info('New setup client connected', socket.id)
 
         // OBS
         socket.on('connectObs', (c: Connection, callback) => callback(this.setup?.connectObs(c)))
@@ -387,7 +400,7 @@ export class App {
         this.gabin.timeline$.subscribe((micId) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleTimeline', micId)
         })
-        this.gabin.volumeMics$.pipe(auditTime(100)).subscribe((vm) => {
+        this.gabin.volumeMics$.pipe(auditTime(50)).subscribe((vm) => {
             this.io?.to(IO_ROOMS.GABIN).emit('handleVolumeMics', Object.fromEntries(vm))
         })
         this.gabin.availableMics$.subscribe((availableMics) => {
@@ -401,7 +414,7 @@ export class App {
     }
 
     private joinGabin(socket: Socket) {
-        this.logger.debug('New gabin client connected')
+        this.logger.info('New gabin client connected')
 
         // SHOTS
         socket.on('triggerShot', (s: Asset['source'], callback) => callback(this.gabin?.triggeredShot$.next(s)))

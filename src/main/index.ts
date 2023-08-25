@@ -1,6 +1,7 @@
 import { App, openApp } from './app'
 const PackageJson = require('../../package.json')
-const DEFAULT = require('./config.json')
+const DEFAULT = require('../resources/json/config.json')
+
 
 // get args
 const args = process.argv.slice(2)
@@ -10,9 +11,10 @@ if (args.includes('--help') || args.includes('-h')) {
     Usage: gabin [options]
     Options:
       -h, --help        Display this message
-      -d, --debug     Enable debug mode
-      -v, --version    Display version
-      --no-auto-open  Disable auto open
+      -d, --debug       Enable debug mode
+      -v, --version     Display version
+      -s, --silent      Hide logs (except errors & logs from plugins)
+      --no-auto-open    Disable auto open
 
     Environment variables:
       GABIN_HOST              Hostname to use (default: ${DEFAULT.HOST})
@@ -23,6 +25,10 @@ if (args.includes('--help') || args.includes('-h')) {
       GABIN_CONFIG_FOLDER     Folder to store config (default: $appdata/gabin/database.json)
     `)
     process.exit(0)
+}
+
+if (args.includes('--silent') || args.includes('-s')) {
+    process.env.SILENT = 'true'
 }
 
 if (args.includes('--debug') || args.includes('-d')) {

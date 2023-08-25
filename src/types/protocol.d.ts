@@ -90,6 +90,7 @@ export interface AudioDevice {
 }
 
 export interface Shoot {
+    sceneName: AssetScene['name']
     container: AssetContainer
     shot: AssetSource
     mode: 'focus' | 'illustration'
@@ -142,6 +143,7 @@ export interface Profile {
     settings: ProfileSettings
     connections: ConnectionsConfig
     autostart?: boolean
+    record?: string
 }
 export interface ProfileSettings {
     mics: AudioDeviceSettings[]

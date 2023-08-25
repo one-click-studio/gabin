@@ -160,6 +160,38 @@ export function openUrl(url: string): void {
     require('child_process').exec(start + ' ' + url)
 }
 
+export function formatDate(format: string): string {
+    const date = new Date()
+    let str = format
+
+    str = str.replace('%X', date.getTime().toString().slice(0, -3))
+    str = str.replace('%x', date.getTime().toString())
+
+    str = str.replace('%MM', (date.getMonth()+1).toString().padStart(2, '0'))
+    str = str.replace('%M', (date.getMonth()+1).toString())
+
+    str = str.replace('%DD', date.getDate().toString().padStart(2, '0'))
+    str = str.replace('%D', date.getDate().toString())
+
+    str = str.replace('%YYYY', date.getFullYear().toString())
+    str = str.replace('%YY', date.getFullYear().toString().slice(-2))
+
+    str = str.replace('%HH', date.getHours().toString().padStart(2, '0'))
+    str = str.replace('%H', date.getHours().toString())
+
+    str = str.replace('%hh', (date.getHours() % 12).toString().padStart(2, '0'))
+    str = str.replace('%h', (date.getHours() % 12).toString())
+
+    str = str.replace('%mm', date.getMinutes().toString().padStart(2, '0'))
+    str = str.replace('%m', date.getMinutes().toString())
+
+    str = str.replace('%ss', date.getSeconds().toString().padStart(2, '0'))
+    str = str.replace('%s', date.getSeconds().toString())
+
+    return str
+}
+
+
 const mulberry32 = () => {
     let a = 1337 ^ 0xDEADBEEF
 

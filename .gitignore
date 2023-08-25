@@ -15,3 +15,4 @@ certificate.p12
 /tests-examples
 playwright.config.ts
 * copy.*
+*.wav
