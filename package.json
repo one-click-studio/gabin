@@ -36,6 +36,7 @@
     "deep-eql": "^4.1.3",
     "dotenv": "^16.0.3",
     "finalhandler": "^1.2.0",
+    "easymidi": "^3.0.1",
     "obs-websocket-js": "^5.0.2",
     "onnxruntime-node": "^1.13.1",
     "rxjs": "^7.8.0",

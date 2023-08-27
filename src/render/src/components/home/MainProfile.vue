@@ -18,7 +18,7 @@ import SettingsTable from '@src/components/setup/SettingsTable.vue'
                             Mic name
                         </th>
                         <th>
-                            Mic channel
+                            Assignation
                         </th>
                     </tr>
                 </thead>
@@ -33,13 +33,13 @@ import SettingsTable from '@src/components/setup/SettingsTable.vue'
                                     v-if="!j"
                                     :rowspan="device.mics.reduce((p,c) => p += c?1:0, 0)"
                                 >
-                                    {{ device.name }}
+                                    {{ device.name }} - {{ device.apiName }}
                                 </td>
                                 <td>
                                     {{ mic }}
                                 </td>
                                 <td>
-                                    Channel {{ j + 1 }}
+                                    {{ device.apiName === 'MIDI' ? 'Note ' + device.micsName.indexOf(mic) : 'Channel ' + device.micsName.indexOf(mic) + 1 }}
                                 </td>
                             </tr>
                         </template>

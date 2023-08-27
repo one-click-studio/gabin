@@ -6,7 +6,10 @@ import db from '../../main/utils/db'
 import type { Logger } from '../../main/utils/logger'
 import { getLogger } from '../../main/utils/logger'
 
+import { ActivityInterface } from '../modules/activityInterface'
 import { AudioActivity, getDevices } from '../../main/modules/audioActivity'
+import { MIDIActivity } from '../modules/midiActivity'
+
 import type { RtAudioApi } from 'audify'
 
 import type {
@@ -55,7 +58,7 @@ export class AutocamClient extends Client {
     private currentScene: ObsAssetId['scene'] = ''
     private containerMap: ContainerMap = new Map()
     private availableMics: AvailableMicsMap = new Map()
-    private recorders: AudioActivity[] = []
+    private recorders: ActivityInterface[] = []
     private micsSpeaking: Map<string, BehaviorSubject<boolean>>
     private subscriptions: Subscriptions = { timeline: null, forcedShot: null }
 
@@ -117,15 +120,29 @@ export class AutocamClient extends Client {
 
         this.recorders = []
         for (const i in devicesData){
-            const recorder = new AudioActivity({
-                deviceName: devicesData[i].name,
-                apiId: devicesData[i].api as RtAudioApi,
-                channels: devicesData[i].channels.map(c => c.channelId),
-                framesPerBuffer: 960,
-                onAudio: (speaking, channelId) => {
-                    devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking)
-                }
-            })
+            let recorder: ActivityInterface
+            if (devicesData[i].apiName === 'MIDI') {
+                // @ts-ignore
+                const [ , midiChannel ] = devicesData[i].api.split(':')
+                recorder = new MIDIActivity({
+                    deviceName: devicesData[i].name,
+                    midiChannel,
+                    channels: devicesData[i].channels.map(c => c.channelId),
+                    onAudio: (speaking, channelId) => {
+                        devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking)
+                    }
+                })
+            } else {
+                recorder = new AudioActivity({
+                    deviceName: devicesData[i].name,
+                    apiId: devicesData[i].api as RtAudioApi,
+                    channels: devicesData[i].channels.map(c => c.channelId),
+                    framesPerBuffer: 960,
+                    onAudio: (speaking, channelId) => {
+                        devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking)
+                    }
+                })
+            }
             recorder.start()
 
             this.recorders.push(recorder)

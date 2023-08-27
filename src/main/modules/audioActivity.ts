@@ -3,6 +3,8 @@ import fs from "fs"
 import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../../main/utils/logger'
+import easymidi from 'easymidi'
+import { ActivityInterface } from "./activityInterface"
 
 const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
 
@@ -11,7 +13,7 @@ const logger = getLogger('audio Activity')
 interface Device {
     id: number
     data: RtAudioDeviceInfo
-    apiId: RtAudioApi
+    apiId: RtAudioApi | string
     apiName: string
 }
 
@@ -104,7 +106,7 @@ const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] 
 //     return Buffer.from(array)
 // }
 
-export class AudioActivity {
+export class AudioActivity implements ActivityInterface {
     private _speaking: boolean[]
     private _consecutiveSilence: number[]
     private _consecutiveSpeech: number[]
@@ -403,6 +405,30 @@ export const getDevices = (): Device[] => {
                 data: d[j],
                 apiId: api,
                 apiName: i
+            })
+        }
+    }
+
+    let index = 10000
+    for (let port of easymidi.getInputs()) {
+        for (let channel = 0; channel < 16; ++channel) {
+            const id = index++
+            devices.push({
+                id: id,
+                data: {
+                    id,
+                    name: port + ' [Channel ' + ('' + (channel + 1)).padStart(2, '0') + ']',
+                    outputChannels: 0,
+                    inputChannels: 128,
+                    duplexChannels: 0,
+                    isDefaultOutput: 0,
+                    isDefaultInput: 0,
+                    sampleRates: [ ],
+                    preferredSampleRate: 0,
+                    nativeFormats: 0
+                },
+                apiId: 'MIDI:' + channel,
+                apiName: 'MIDI'
             })
         }
     }
