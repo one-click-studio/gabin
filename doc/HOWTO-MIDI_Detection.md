@@ -112,9 +112,9 @@ First, when you talk in your microphone, you will see a vu-meter moving on the l
 - A threshold too high will not detect some words pronounced at a low level
 - A threshold too low will detect some noises as a valid vocal activity
 
-You may adjust the reactivity of the plugin by adjusting attack and release values. Other sliders may be useful, but please refer to the documentation to adjust it.
+You may adjust the reactivity of the plugin by adjusting attack and release values. Other sliders may be useful, but please refer to the documentation to adjust it. Just saying, Lowpass and Highpass may be respectively adjusted to values about 1000-2000Hz and 50-150Hz. These sliders will make the gate more accurate to detect only voice frequencies.
 
-Just saying, Lowpass and Highpass may be respectively adjusted to values about 1000-2000Hz and 50-150Hz. These sliders will make the gate more accurate to detect only voice frequencies.
+Ensure that the "Wet" slider is at the "-inf" value, and the "Dry" to "+0.0" (it's not an error, it has to be the opposite of the default settings for these two sliders).
 
 Please note that here, we concentrate on vocal detection. We will see how to redirect microphones sounds to OBS at the end of this documentation. But you may use Reaper to process microphone sounds with effects like compressors, equalizers, etc. But if you know how to use these effects, I guess you already know how a gate works. So we won't see how to process the microphone sounds in this documentation 🙂
 
