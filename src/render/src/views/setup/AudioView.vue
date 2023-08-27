@@ -204,7 +204,7 @@ updateNextBtn()
                         class="bg-bg-1 flex-1"
                         :options="audioDevices"
                         label="Audio device"
-                        :value="device.name? device.name + ' - ' + device.apiName :  ''"
+                        :value="device.name ? device.name + ' - ' + (device.apiName) :  ''"
                         keyvalue="name,apiName"
                         @update="(d: AudioDevice) => updateDevice(d, index)"
                     />
@@ -229,7 +229,7 @@ updateNextBtn()
                         <!-- <TooltipUi :value="device.mics[mic]? 'Remove this channel as a Mic.':'Add this channel as a Mic.'"> -->
                         <TagUi
                             class="mr-2 mt-2"
-                            :label="'Channel ' + (mic+1)"
+                            :label="device.apiName === 'MIDI' ? 'Note ' + (mic) : 'Channel ' + (mic+1)"
                             :value="device.mics[mic]"
                             @update="(v: boolean) => updateMic(index, mic, v)"
                         />
@@ -245,7 +245,7 @@ updateNextBtn()
                         <InputUi
                             v-if="device.mics[mic]"
                             class="min-w-full mt-2"
-                            :label="'Channel ' + (mic+1) + ' name'"
+                            :label="device.apiName === 'MIDI' ? 'Note ' + (mic) : 'Channel ' + (mic+1) + ' name'"
                             :error="duplicate[index][mic]"
                             :value="device.micsName[mic]"
                             @update="(v: string) => updateMicName(index, mic, v)"
