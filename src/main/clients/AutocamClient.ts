@@ -46,6 +46,11 @@ type Subscriptions = {
     forcedShot: Subscription | null
 }
 
+type MatchingShots = {
+    matching: Asset['source']['name'][]
+    unmatching: Asset['source']['name'][]
+}
+
 export class AutocamClient extends Client {
 
     shoot$ = new Subject<Shoot>()
@@ -914,8 +919,11 @@ class Container {
         return resp
     }
 
-    private getMatchingShots(availableMicsMap: AvailableMicsMap): Asset['source']['name'][] {
-        const shots: Asset['source']['name'][] = []
+    private getMatchingShots(availableMicsMap: AvailableMicsMap): MatchingShots {
+        const shots: MatchingShots = {
+            matching: [],
+            unmatching: []
+        }
 
         const shotsMap: typeof this.shotsMap = deepCopy(this.shotsMap)
         for (let i in shotsMap) {
@@ -923,7 +931,9 @@ class Container {
                 const cam = shotsMap[i].cams[j]
                 if (cam.source.options && cam.source.options.matching) {
                     if (this.shotIsMatching(cam.source.options.matching, availableMicsMap)) {
-                        shots.push(cam.source.name)
+                        shots.matching.push(cam.source.name)
+                    } else {
+                        shots.unmatching.push(cam.source.name)
                     }
                 }
             }
@@ -939,7 +949,11 @@ class Container {
         .filter(m => !availableMicsMap.get(m.id))
         const matchingShots = this.getMatchingShots(availableMicsMap)
         const forbiddenShots = this.getShotsFromMap(forbiddenShotsMap)
-        .filter(s => matchingShots.indexOf(s) < 0)
+        .filter(s => matchingShots.matching.indexOf(s) < 0)
+
+        matchingShots.unmatching.forEach(s => {
+            if (forbiddenShots.indexOf(s) === -1) forbiddenShots.push(s)
+        })
 
         this.filteredShotsMap = shotsMap
         .filter(m => availableMicsMap.get(m.id))
