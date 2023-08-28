@@ -1,0 +1,345 @@
+{
+    "id": 1680776575984,
+    "name": "E2E Audio Test",
+    "icon": "folder",
+    "settings": {
+        "mics": [
+            {
+                "id": 0,
+                "name": "Existential Audio Inc.: BlackHole 16ch",
+                "api": 1,
+                "apiName": "MACOSX_CORE",
+                "nChannels": 16,
+                "sampleRate": 48000,
+                "mics": [
+                    true,
+                    true,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ],
+                "micsName": [
+                    "mic1",
+                    "mic2",
+                    "mic3",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                ]
+            }
+        ],
+        "containers": [
+            {
+                "name": "scene1",
+                "containers": [
+                    {
+                        "name": "container1",
+                        "sources": [
+                            {
+                                "name": "mic1",
+                                "options": {
+                                    "path": "/gabin/shot/mic1"
+                                }
+                            },
+                            {
+                                "name": "mic2",
+                                "options": {
+                                    "path": "/gabin/shot/mic2"
+                                }
+                            },
+                            {
+                                "name": "mic3",
+                                "options": {
+                                    "path": "/gabin/shot/mic3"
+                                }
+                            },
+                            {
+                                "name": "mic1-mic2",
+                                "options": {
+                                    "path": "/gabin/shot/mic1-mic2"
+                                }
+                            },
+                            {
+                                "name": "mic2-mic3",
+                                "options": {
+                                    "path": "/gabin/shot/mic2-mic3"
+                                }
+                            },
+                            {
+                                "name": "mic1-mic2-mic3",
+                                "options": {
+                                    "path": "/gabin/shot/mic1-mic2-mic3"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "autocam": [
+            {
+                "name": "scene1",
+                "containers": [
+                    {
+                        "name": "container1",
+                        "sources": [
+                            {
+                                "name": "mic1",
+                                "options": {
+                                    "path": "/gabin/shot/mic1"
+                                }
+                            },
+                            {
+                                "name": "mic2",
+                                "options": {
+                                    "path": "/gabin/shot/mic2"
+                                }
+                            },
+                            {
+                                "name": "mic3",
+                                "options": {
+                                    "path": "/gabin/shot/mic3"
+                                }
+                            },
+                            {
+                                "name": "mic4",
+                                "options": {
+                                    "path": "/gabin/shot/mic4"
+                                }
+                            },
+                            {
+                                "name": "mic1-mic2",
+                                "options": {
+                                    "path": "/gabin/shot/mic1-mic2"
+                                }
+                            },
+                            {
+                                "name": "mic2-mic3",
+                                "options": {
+                                    "path": "/gabin/shot/mic2-mic3"
+                                }
+                            },
+                            {
+                                "name": "mic1-mic2-mic3",
+                                "options": {
+                                    "path": "/gabin/shot/mic1-mic2-mic3"
+                                }
+                            }
+                        ],
+                        "mics": [
+                            {
+                                "id": "mic1",
+                                "cams": [
+                                    {
+                                        "source": {
+                                            "name": "mic1",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1"
+                                            }
+                                        },
+                                        "weight": 60
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic2",
+                                            "options": {
+                                                "path": "/gabin/shot/mic2"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic1-mic2",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1-mic2"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic2-mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic2-mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic1-mic2-mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1-mic2-mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "mic2",
+                                "cams": [
+                                    {
+                                        "source": {
+                                            "name": "mic1",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic2",
+                                            "options": {
+                                                "path": "/gabin/shot/mic2"
+                                            }
+                                        },
+                                        "weight": 50
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic1-mic2",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1-mic2"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic2-mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic2-mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic1-mic2-mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1-mic2-mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "mic3",
+                                "cams": [
+                                    {
+                                        "source": {
+                                            "name": "mic1",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic2",
+                                            "options": {
+                                                "path": "/gabin/shot/mic2"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic3"
+                                            }
+                                        },
+                                        "weight": 60
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic1-mic2",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1-mic2"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic2-mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic2-mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "mic1-mic2-mic3",
+                                            "options": {
+                                                "path": "/gabin/shot/mic1-mic2-mic3"
+                                            }
+                                        },
+                                        "weight": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "durations": {
+                            "min": 3,
+                            "max": 12
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "connections": {
+        "type": "osc",
+        "osc": {
+            "ip": "127.0.0.1:57121"
+        }
+    },
+    "active": true
+}

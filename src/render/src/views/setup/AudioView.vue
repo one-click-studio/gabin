@@ -17,13 +17,11 @@ import BinIcon from '@src/components/icons/BinIcon.vue'
 
 import type { AudioDevice, AudioDeviceSettings } from '../../../../types/protocol'
 
-
-const choosenDevices = ref<AudioDeviceSettings[]>(store.profiles.settings().mics)
-const duplicate = ref<boolean[][]>([])
+const devices_ = ref<AudioDeviceSettings[]>(store.profiles.settings().mics)
 const audioDevices = ref<AudioDevice[]>([])
 
 const addDevice = () => {
-    choosenDevices.value.push({
+    devices_.value.push({
         id: -1,
         api: -1,
         apiName: '',
@@ -32,125 +30,80 @@ const addDevice = () => {
         micsName: [],
         sampleRate: 0,
         nChannels: 0,
+        thresholds: {
+            speaking: 3,
+            silence: 10,
+            vad: 0.05,
+            minVolume: 0.5
+        }
     })
-    duplicate.value.push([])
 
-    updateNextBtn()
-}
-
-const assignDefaultMicName = (index: number, mic: number, value: string) => {
-    const names = getAllNames(index, mic)
-
-    let micName = choosenDevices.value[index].micsName[mic]
-    if (micName) return micName
-
-    let i = 1
-    micName = 'Person ' + i
-    while (names.indexOf(micName) !== -1) {
-        i++
-        micName = 'Person ' + i
-    }
-
-    return micName
-}
-
-const removeDevice = (index: number) => {
-    choosenDevices.value.splice(index, 1)
-    duplicate.value.splice(index, 1)
-    recalculateDuplicate()
     updateNextBtn()
 }
 
 const updateDevice = (device: AudioDevice, index: number) => {
-    choosenDevices.value[index].id = device.id
-    choosenDevices.value[index].name = device.name
-    choosenDevices.value[index].api = device.api
-    choosenDevices.value[index].apiName = device.apiName
-    choosenDevices.value[index].nChannels = device.nChannels
-    choosenDevices.value[index].sampleRate = device.sampleRate
-    choosenDevices.value[index].mics = Array(device.nChannels).fill((device.nChannels === 1))
-    choosenDevices.value[index].micsName = Array(device.nChannels).fill('')
-    duplicate.value[index] = Array(device.nChannels).fill(false)
-}
-
-const updateMic = (index: number, mic: number, value: boolean) => {
-    choosenDevices.value[index].mics[mic] = value
-
-    let micName = assignDefaultMicName(index, mic, choosenDevices.value[index].micsName[mic])
-
-    updateMicName(index, mic, micName)
-    recalculateDuplicate()
-}
-
-const updateMicName = (index: number, mic: number, value: string) => {
-    const names = getAllNames(index, mic)
-
-    duplicate.value[index][mic] = (names.indexOf(value) !== -1)
-
-    choosenDevices.value[index].micsName[mic] = value
+    devices_.value[index] = {
+        id: device.id,
+        name: device.name,
+        api: device.api,
+        apiName: device.apiName,
+        nChannels: device.nChannels,
+        sampleRate: device.sampleRate,
+        mics: Array(device.nChannels).fill((device.nChannels === 1)),
+        micsName: Array(device.nChannels).fill('')
+    }
 
     updateNextBtn()
 }
 
-const getAllNames = (index = -1, mic = -1): string[] => {
-    const names: string[] = []
+const removeDevice = (index: number) => {
+    devices_.value.splice(index, 1)
 
-    for (const i in choosenDevices.value) {
-        const d = choosenDevices.value[i]
-        for (const j in d.mics) {
-            if (d.mics[j] && d.micsName[j] && (parseInt(i) !== index || parseInt(j) !== mic)) {
-                names.push(d.micsName[j])
-            }
-        }
-    }
-
-    return names
+    updateNextBtn()
 }
 
-const recalculateDuplicate = () => {
-    const names: string[] = []
+const updateMic = (index: number, mic: number, value: boolean) => {
+    devices_.value[index].mics[mic] = value
+    devices_.value[index].micsName[mic] = value? defaultMicName(index, mic) : ''
 
-    for (const i in choosenDevices.value) {
-        const d = choosenDevices.value[i]
-        for (const j in d.mics) {
-            if (!duplicate.value[i]) {
-                duplicate.value[i] = []
-            }
-            duplicate.value[i][j] = false
-            if (d.mics[j] && d.micsName[j]) {
-                if (names.indexOf(d.micsName[j]) > -1) {
-                    duplicate.value[i][j] = true
-                }
-                names.push(d.micsName[j])
-            }
-        }
+    updateNextBtn()
+}
+
+const updateMicName = (index: number, mic: number, value: string) => {
+    devices_.value[index].micsName[mic] = value
+
+    updateNextBtn()
+}
+
+const defaultMicName = (index: number, mic: number) => {
+    let count = 0
+    for (let i=0; i<=mic; i++) {
+        if (devices_.value[index].mics[i]) count++
     }
+
+    return 'Person ' + count
+}
+
+const hasDuplicates = (index: number, mic: number): boolean => {
+    const device = devices_.value[index]
+    const names = device.micsName.filter((_, i) => device.mics[i] && i !== mic)
+
+    return (names.indexOf(device.micsName[mic]) !== -1)
 }
 
 const nextIsInvalid = (): boolean => {
-    let disable = true
+    if (!devices_.value.length) return true
 
-    if (choosenDevices.value.length > 0) {
-        disable = false
+    for (const i in devices_.value) {
+        const d = devices_.value[i]
 
-        for (const i in choosenDevices.value) {
-            const d = choosenDevices.value[i]
+        if (!d.mics.reduce((t, x) => t += x?1:0, 0)) return true
 
-            if (!d.mics.reduce((t, x) => (x===true ? t+1 : t), 0)) {
-                disable = true
-                break
-            }
-
-            for (const j in d.mics) {
-                if (d.mics[j] && (!d.micsName[j] || duplicate.value[i][j])) {
-                    disable = true
-                    break
-                }
-            }
-        }
+        const names = d.micsName.filter((_, i) => d.mics[i])
+        if (names.length !== new Set(names).size) return true
     }
 
-    return disable
+    return false
 }
 
 const updateNextBtn = () => {
@@ -175,7 +128,6 @@ onEnterPress(() => {
 })
 
 setAudioDevices()
-recalculateDuplicate()
 updateNextBtn()
 
 </script>
@@ -194,7 +146,7 @@ updateNextBtn()
             Add audio device
         </ButtonUi>
         <div
-            v-for="(device, index) in choosenDevices"
+            v-for="(device, index) in devices_"
             :key="'device-select' + index"
             class="bg-bg-2 flex flex-col w-full mt-4"
         >
@@ -246,7 +198,7 @@ updateNextBtn()
                             v-if="device.mics[mic]"
                             class="min-w-full mt-2"
                             :label="'Channel ' + (mic+1) + ' name'"
-                            :error="duplicate[index][mic]"
+                            :error="hasDuplicates(index, mic)"
                             :value="device.micsName[mic]"
                             @update="(v: string) => updateMicName(index, mic, v)"
                         />

@@ -3,99 +3,110 @@ import { skip } from 'rxjs/operators'
 import type { Subscription } from 'rxjs'
 
 import { ObsClient } from '../clients/OBSClient'
+import { OscClient } from '../clients/OSCClient'
+import { VmixClient } from '../clients/VMIXClient'
 import { AutocamClient } from '../clients/AutocamClient'
-import { StreamdeckClient } from '../clients/StreamdeckClient'
-import { TcpServer } from '../servers/TcpServer'
 
 import db from '../utils/db'
 
-import type { Logger } from '../utils/logger'
 import { getLogger } from '../utils/logger'
 
+import type { Logger } from '../utils/logger'
+import type { OscServer } from '../../main/servers/OscServer'
 import type {
     Shoot,
     AvailableMicsMap,
-    ObsAssetId,
+    Asset,
     MicId,
     AudioDeviceSettings,
 } from '../../types/protocol'
 
 interface Connections {
     obs: boolean
-    streamdeck: boolean
+    osc: boolean
+    vmix: boolean
 }
 
 export class Gabin {
-    isOn: boolean
     isReady: boolean
 
     obs: ObsClient | undefined
-    streamdeck: StreamdeckClient | undefined
+    osc: OscClient | undefined
+    vmix: VmixClient | undefined
     autocam: AutocamClient | undefined
-    tcpServer: TcpServer | undefined
 
     connections$: BehaviorSubject<Connections>
 
+    power$: BehaviorSubject<boolean>
     shoot$: Subject<Shoot>
     autocam$: Subject<boolean>
     availableMics$: BehaviorSubject<AvailableMicsMap>
-    triggeredShot$: BehaviorSubject<ObsAssetId['source']>
+    triggeredShot$: BehaviorSubject<Asset['source']>
     timeline$: BehaviorSubject<MicId>
+    volumeMics$: BehaviorSubject<Map<string, number>>
 
     private logger: Logger
     private subscriptions: Subscription[] = []
+    private scenes: Asset['scene'][]
 
-    constructor() {
-        this.logger = getLogger('Gabin0 🤖')
+    private oscServer: OscServer
 
-        this.isOn = false
+    constructor(oscServer: OscServer) {
+        this.logger = getLogger('Gabin 🤖')
+
+        this.oscServer = oscServer
+
         this.isReady = false
 
+        this.power$ = new BehaviorSubject<boolean>(false)
         this.shoot$ = new Subject<Shoot>()
         this.autocam$ = new Subject<boolean>()
-        this.triggeredShot$ = new BehaviorSubject({ id: -1, name: '' })
+        this.triggeredShot$ = new BehaviorSubject({ name: '' })
         this.availableMics$ = new BehaviorSubject<AvailableMicsMap>(new Map())
         this.timeline$ = new BehaviorSubject('')
+        this.volumeMics$ = new BehaviorSubject<Map<string, number>>(new Map())
 
         this.connections$ = new BehaviorSubject<Connections>({
             obs: false,
-            streamdeck: false
+            osc: false,
+            vmix: false
         })
 
-        this.logger.info('is currently asleep 💤')
+        const containers = db.getSpecificAndDefault(['settings', 'containers'], true)
+        this.scenes = containers.defaultValue
+
+        this.init()
     }
 
     private connect() {
-        this.obs = new ObsClient()
+        const connections = db.getSpecificAndDefault(['connections'], true)
+        this.logger.info('is connecting to', connections.defaultValue)
+
+        if (connections.defaultValue.type === 'obs') {
+            this.obs = new ObsClient()
+        } else if (connections.defaultValue.type === 'osc') {
+            this.osc = new OscClient(this.oscServer)
+        } else if (connections.defaultValue.type === 'vmix') {
+            this.vmix = new VmixClient()
+        }
         this.autocam = new AutocamClient()
-        this.streamdeck = new StreamdeckClient()
-        this.tcpServer = new TcpServer([this.streamdeck])
 
-        this.obs.reachable$.subscribe(r => {
-            const c = this.connections$.getValue()
-            c.obs = r
-            this.connections$.next(c)
-        })
-
-        this.streamdeck.reachable$.subscribe(r => {
-            const c = this.connections$.getValue()
-            c.streamdeck = r
-            this.connections$.next(c)
-        })
+        if (this.obs) this.updateConnections(this.obs.reachable$, 'obs')
+        if (this.osc) this.updateConnections(this.osc.reachable$, 'osc')
+        if (this.vmix) this.updateConnections(this.vmix.reachable$, 'vmix')
 
         this.isReady = true
     }
 
-    async power(on: boolean) {
-        if (!this.isOn && on){
-            await this.on()
-        } else if (this.isOn && !on){
-            this.off()
-        }
-        return on
+    private updateConnections(observable: BehaviorSubject<boolean>, key: keyof Connections) {
+        observable.subscribe(r => {
+            const c = this.connections$.getValue()
+            c[key] = r
+            this.connections$.next(c)
+        })
     }
 
-    private async on() {
+    private async init() {
         this.logger.info('is waking up 👋')
 
         if (!this.isReady) {
@@ -105,25 +116,23 @@ export class Gabin {
         this.initAvailableMics()
 
         this.obs?.connect()
+        this.osc?.connect()
+        this.vmix?.connect()
         this.autocam?.connect()
-        this.streamdeck?.connect()
-        this.tcpServer?.listen()
 
-        this.streamdeck?.setAvailableMics(this.availableMics$.getValue())
         this.manageEvents()
-        this.isOn = true
+        this.power$.next(true)
     }
 
-    private off() {
+    clean() {
         this.logger.info('is going to sleep 💤')
         this.cleanSubscriptions()
 
         this.obs?.clean()
+        this.vmix?.clean()
         this.autocam?.clean()
-        this.streamdeck?.clean()
-        this.tcpServer?.clean()
 
-        this.isOn = false
+        this.power$.next(false)
     }
 
     private cleanSubscriptions() {
@@ -142,9 +151,7 @@ export class Gabin {
     }
 
     private selfEvents() {
-        if (!this.autocam || !this.obs || !this.streamdeck) {
-            return
-        }
+        if (!this.autocam) return
 
         // AUTOCAM EVT
         this.subscriptions.push(this.autocam.shoot$.subscribe(shot => {
@@ -153,67 +160,110 @@ export class Gabin {
         this.autocam.timeline$.subscribe(micId => {
             this.timeline$.next(micId)
         })
-        // STREAMDECK EVT
-        this.subscriptions.push(this.streamdeck.autocam$.pipe(skip(1)).subscribe((autoCam) => {
-            this.autocam$.next(autoCam)
-        }))
-        this.subscriptions.push(this.streamdeck.triggeredShot$.pipe(skip(1)).subscribe((shotId) => {
-            if (shotId) {
-                this.triggeredShot$.next(shotId)
-            }
-        }))
+        this.autocam.volumeMics$.subscribe(vm => {
+            this.volumeMics$.next(vm)
+        })
+
+        // OSC EVT
+        if (this.osc) {
+            this.subscriptions.push(this.osc.triggeredShot$.pipe(skip(1)).subscribe((shotName) => {
+                this.triggerShot(shotName)
+            }))
+            this.subscriptions.push(this.osc.autocam$.pipe(skip(1)).subscribe((autocam) => {
+                this.autocam$.next(autocam)
+            }))
+        }
     }
 
     private manageEvents() {
-        if (!this.autocam || !this.obs || !this.streamdeck) {
-            return
-        }
+        if (!this.autocam) return
 
         this.selfEvents()
 
         // OBS EVT
-        this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(sceneId => {
-            this.logger.debug(sceneId)
-            if (sceneId) {
-                this.logger.info('has received a new scene from obs 🎬')
-                if (this.autocam?.isReachable) this.autocam.setCurrentScene(sceneId)
-            }
-        }))
-        // STREAMDECK EVT
-        this.subscriptions.push(this.streamdeck.toggleMicAvailability$.subscribe((micId) => {
-            this.toggleAvailableMic(micId)
-        }))
+        if (this.obs) {
+            this.subscriptions.push(this.obs.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+        }
+
+        // VMIX EVT
+        if (this.vmix) {
+            this.subscriptions.push(this.vmix.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+        }
+
+        // OSC EVT
+        if (this.osc) {
+            this.subscriptions.push(this.osc.mainScene$.pipe(skip(1)).subscribe(this.setNewScene.bind(this)))
+            this.subscriptions.push(this.osc.micAvailability$.subscribe(({mic, available}) => {
+                this.toggleAvailableMic(mic, available)
+            }))
+        }
 
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
-            this.logger.info('has made magic shot change ✨', `${shoot.containerId} | ${shoot.shotId.name} | ${shoot.mode} mode`)
+            this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
-            if (this.obs?.isReachable) this.obs.shoot(shoot.containerId, shoot.shotId.name)
-            if (this.streamdeck?.isReachable) this.streamdeck.setCurrentShot(shoot.shotId)
+            if (this.osc?.isReachable) this.osc.shoot(shoot.container, shoot.shot)
+            if (this.obs?.isReachable) this.obs.shoot(shoot.container, shoot.shot)
+            if (this.vmix?.isReachable) this.vmix.shoot(shoot.container, shoot.shot)
         }))
+
         this.subscriptions.push(this.autocam$.subscribe((autocam) => {
             this.logger.info('has to toggle autocam 🎚')
             this.autocam?.setEnabled(autocam)
-            this.streamdeck?.setAutocam(autocam)
         }))
+
         this.subscriptions.push(this.availableMics$.subscribe((availableMics) => {
             this.logger.info('has new availability map 🗺', availableMics)
             this.autocam?.setAvailableMics(availableMics)
-            this.streamdeck?.setAvailableMics(availableMics)
         }))
-        this.subscriptions.push(this.triggeredShot$.subscribe((shotId) => {
-            if (shotId.id < 0) return
+
+        this.subscriptions.push(this.triggeredShot$.subscribe((source) => {
+            if (!source.name) return
             this.logger.info('has been ordered to shot 😣')
-            this.autocam?.forcedShot$.next(shotId)
+            this.autocam?.forcedShot$.next(source)
         }))
     }
 
-    toggleAvailableMic(micId: MicId) {
+    toggleAvailableMic(micId: MicId, available: boolean|undefined=undefined) {
         const micsMap = this.availableMics$.getValue()
 
         const mic = micsMap.get(micId)
+        if (mic === available) return
         micsMap.set(micId, !mic)
 
         this.availableMics$.next(micsMap)
+    }
+
+    private triggerShot(sourceName: Asset['source']['name']|undefined) {
+        if (!sourceName) return
+
+        for (const scene of this.scenes) {
+            for (const container of scene.containers) {
+                for (const source of container.sources) {
+                    if (source.name === sourceName) {
+                        this.triggeredShot$.next(source)
+                        return
+                    }
+                }
+            }
+        }
+
+        this.logger.error('cannot find source 🤷‍♂️', sourceName)
+    }
+
+    private setNewScene(sceneName: Asset['scene']['name']|undefined) {
+        const scene = this.getScene(sceneName)
+
+        this.logger.info('has received a new scene 🎬', scene?.name)
+        if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene?.name)
+    }
+
+    private getScene(sceneName: Asset['scene']['name']|undefined): Asset['scene']|undefined {
+        if (!sceneName) return
+        return this.scenes.find(s => s.name === sceneName)
+    }
+
+    updateDeviceOptions(devices: AudioDeviceSettings[]) {
+        this.autocam?.updateAudioDevices(devices)
     }
 
 }

@@ -4,18 +4,15 @@ import InputUi from '@src/components/basics/InputUi.vue'
 import { validURL } from '@src/components/utils/UtilsTools.vue'
 import type { Connection } from '../../../../types/protocol'
 
-interface Props {
+const props = defineProps<{
     connection: Connection
     label: string
     password?: boolean
     error?: boolean
-}
-interface Emits {
+}>()
+const $emit = defineEmits<{
     (e: 'update', connection: Connection): void
-}
-
-const props = defineProps<Props>()
-const $emit = defineEmits<Emits>()
+}>()
 
 const getConnectionCopy = (): Connection => {
     return JSON.parse(JSON.stringify(props.connection))

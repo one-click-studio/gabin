@@ -1,4 +1,17 @@
 <script lang="ts" setup>
+import { useRouter } from 'vue-router'
+import { store } from '@src/store/store'
+
+const router = useRouter()
+
+const interval = setInterval(() => {
+    if (!store.socket?.connected) return
+
+    const path = (store.redirect.path && store.redirect.path !== '/disconnect')? store.redirect.path : '/home'
+    router.push(path)
+    clearInterval(interval)
+}, 1000)
+
 </script>
 
 <template>

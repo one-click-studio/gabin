@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 
-interface Props {
-    open: boolean
-}
+import ButtonUi from '@src/components/basics/ButtonUi.vue'
+import CrossIcon from '@src/components/icons/CrossIcon.vue'
+
 interface Emits {
     (e: 'close'): void
 }
 
-defineProps<Props>()
+defineProps<{
+    open: boolean
+}>()
 const $emit = defineEmits<Emits>()
 
 const close = () => {
@@ -20,16 +22,24 @@ const close = () => {
         v-if="open"
         to="#main"
     >
-        <div
-            class="modal-background"
-            @click="close"
-        />
+        <div class="h-screen w-screen z-50 absolute top-0 left-0">
+            <div
+                class="modal-background"
+                @click="close"
+            />
 
-        <div
-            class="modal-container"
-        >
-            <slot />
+            <div class="modal-container scroll-bar">
+                <div class="absolute top-4 right-4">
+                    <ButtonUi
+                        @click="close"
+                    >
+                        <CrossIcon />
+                    </ButtonUi>
+                </div>
+                <slot />
+            </div>
         </div>
+
     </Teleport>
 </template>
 
@@ -41,8 +51,8 @@ const close = () => {
 }
 
 .modal-container {
-    @apply flex justify-center items-center p-8 z-50;
+    @apply p-8 z-50;
     @apply bg-bg-2 border-bg-1 border rounded-lg;
-    @apply absolute w-1/2 mx-[25%] mt-[15%];
+    @apply relative w-1/2 mx-[25%] mt-[10%] max-h-[70%];
 }
 </style>

@@ -1,0 +1,6 @@
+{
+    "HOST": "localhost",
+    "HTTP_PORT": 1510,
+    "OSC_PORT": 32123,
+    "BASE_URL": "/"
+}

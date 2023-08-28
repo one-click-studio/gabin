@@ -11,19 +11,51 @@ export type Durations = {
     max: number
 }
 
-export type ObsAssetId = {
-    scene: ObsSceneId
-    source: ObsSource
+export type Thresholds = {
+    speaking: number
+    silence: number
+    vad: number
+    minVolume: number
 }
 
-export type ObsSource = {
-    id: number,
+export type SpeakingMic = {
     name: string
+    speaking: boolean
+    volume: number
+    device: string
 }
 
-export type ObsScene = {
-    id: ObsAssetId['scene']
-    sources: ObsAssetId['source'][]
+
+export type AssetId = number
+export type AssetName = string
+
+export type AssetScene = {
+    name: AssetName
+    containers: AssetContainer[]
+    options?: any
+}
+
+export type AssetContainer = {
+    name: AssetName
+    sources: AssetSource[]
+    options?: any
+}
+
+export type AssetSource = {
+    name: AssetName
+    options?: any
+}
+
+export type Asset = {
+    id: AssetId
+    name: AssetName
+    scene: AssetScene
+    container: AssetContainer
+    source: AssetSource
+}
+
+export interface OscSource extends AssetSource {
+    path: string
 }
 
 export type ResponseObsScene = {
@@ -44,7 +76,7 @@ export type ResponseObsItem = {
 }
 
 export interface AutocamSource {
-    source: ObsAssetId['source']
+    source: AssetSource
     weight: number
 }
 
@@ -55,17 +87,20 @@ export interface AudioDevice {
     nChannels: number
     api: unknown
     apiName: string
+    thresholds?: Thresholds
 }
 
 export interface Shoot {
-    containerId: ObsAssetId['scene']
-    shotId: ObsAssetId['source']
+    sceneName: AssetScene['name']
+    container: AssetContainer
+    shot: AssetSource
     mode: 'focus' | 'illustration'
 }
 
 export interface SpeakingMic {
     name: string
     speaking: boolean
+    volume?: number
 }
 
 export type AvailableMicsMap = Map<MicId, boolean>
@@ -74,6 +109,7 @@ export interface Toast {
     title: string
     description: string
     type: 'success' | 'error' | 'info' | ''
+    duration?: number
 }
 
 
@@ -81,15 +117,16 @@ export interface Toast {
 
 export interface ServerConfig {
     profiles: Profile[]
-    connections: ConnectionsConfig
 }
 
 
 /********** CONNECTIONS **********/
-export type ConnectionType = 'obs' | 'tcp'
+export type ConnectionType = 'obs' | 'osc' | 'vmix'
 export interface ConnectionsConfig {
-    tcp: Connection
+    type?: 'obs' | 'osc' | 'vmix'
     obs?: Connection
+    osc?: Connection
+    vmix?: Connection
 }
 export interface Connection {
     ip: string
@@ -107,11 +144,11 @@ export interface Profile {
     settings: ProfileSettings
     connections: ConnectionsConfig
     autostart?: boolean
-    startminimized?: boolean
+    record?: string
 }
 export interface ProfileSettings {
     mics: AudioDeviceSettings[]
-    containers: VideoDeviceSettings[]
+    containers: AssetScene[]
     autocam: AutocamSettings[]
 }
 
@@ -120,17 +157,47 @@ export interface AudioDeviceSettings extends AudioDevice {
     mics: boolean[]
     micsName: string[]
 }
-export interface VideoDeviceSettings {
-    scene: ObsAssetId['scene']
-    source: ObsAssetId['source']
-    cams: ObsAssetId['source'][]
-}
-export interface AutocamSettings {
-    scene: ObsAssetId['scene']
-    source: ObsAssetId['source']
+
+// VideoDeviceSettings == AssetScene
+// export type AssetScene = {
+//     id: AssetId
+//     name: AssetName
+//     containers: AssetContainer[]
+// }
+// export type AssetContainer = {
+//     id: AssetId
+//     name: AssetName
+//     sources: AssetSource[]
+// }
+// export type AssetSource = {
+//     id: AssetId
+//     name: AssetName
+// }
+// export interface AutocamSource {
+//     source: AssetSource
+//     weight: number
+// }
+// export interface OscScene extends AssetScene {
+// export interface VideoDeviceSettings {
+//     scene: AssetScene
+//     source: AssetSource
+//     cams: AssetSource[]
+// }
+
+export interface AutocamContainer extends AssetContainer {
     mics: AutocamMic[]
     durations: Durations
 }
+
+export interface AutocamSettings extends AssetScene {
+    containers: AutocamContainer[]
+}
+// export interface AutocamSettings {
+//     scene: AssetScene
+//     source: AssetSource
+//     mics: AutocamMic[]
+//     durations: Durations
+// }
 export interface AutocamMic {
     id: string
     cams: AutocamSource[]
@@ -147,19 +214,4 @@ export interface NavBtn {
     disable: boolean
     callback: Callback
     trigger: Callback
-}
-
-
-/*************** TCP SERVER ***************/
-
-export type TcpRequest = {
-    type: string
-    data: unknown
-}
-export type TcpClient = {
-    types: string[]
-    handler: (request: TcpRequest) => void,
-    sockets?: string[]
-    send$?: any
-    // listen?: () => void
 }
