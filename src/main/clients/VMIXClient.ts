@@ -31,7 +31,7 @@ export class VmixClient extends Client {
     private mainScenes: Asset['scene']['name'][]
 
     constructor(setup: boolean=false) {
-        super('osc-client')
+        super('vmix-client')
 
         this.tally$ = new BehaviorSubject('')
         this.xml$ = new BehaviorSubject('')
@@ -94,7 +94,7 @@ export class VmixClient extends Client {
                 }
             })
             this.client.on('close', () => {
-                this.logger.debug(`Client disconnected`)
+                this.logger.info(`Client disconnected`)
                 this.reachable$.next(false)
             })
             this.client.on('error', (error) => {
@@ -142,12 +142,12 @@ export class VmixClient extends Client {
 
             const sources: Asset['source'][] = []
 
-            this.logger.debug('getSources from keys', {keys})
+            // this.logger.debug('getSources from keys', {keys})
             for (const index in keys) {
                 const source = inputs.get(keys[index])
                 if (!source) continue
                 
-                this.logger.debug('source', {source, index:parseInt(index)+1})
+                // this.logger.debug('source', {source, index:parseInt(index)+1})
                 sources.push({
                     name: source.title,
                     options: {
@@ -157,7 +157,7 @@ export class VmixClient extends Client {
                 })
             }
             
-            this.logger.debug('extracted sources', {sources})
+            // this.logger.debug('extracted sources', {sources})
             return sources
         }
 
@@ -181,7 +181,12 @@ export class VmixClient extends Client {
         const parser = new XMLParser({ignoreAttributes : false})
         const doc = parser.parse(xml)
 
-        if (!doc?.vmix?.inputs?.input) {
+        let vmix = doc?.vmix
+        if (vmix && vmix.length > 0){
+            vmix = vmix[0]
+        }
+
+        if (!vmix?.inputs?.input) {
             this.logger.error('No inputs found')
             return []
         }
@@ -197,7 +202,7 @@ export class VmixClient extends Client {
         }
 
         const inputs: Map<ResponseVmixInput['id'], ResponseVmixInput> = new Map()
-        doc.vmix.inputs.input.forEach((input: any) => {
+        vmix.inputs.input.forEach((input: any) => {
             const i = {
                 title: input['@_title'],
                 index: parseInt(input['@_number']),
