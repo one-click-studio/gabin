@@ -517,6 +517,8 @@ export class AutocamClient extends Client {
     }
 
     setCurrentScene(sceneName: Asset['scene']['name']='') {
+        if (this.currentScene === sceneName) return
+
         this.currentScene = sceneName
         this.currentMapping = this.autocamMapping.find(c => c.name === sceneName)?.containers || []
 
