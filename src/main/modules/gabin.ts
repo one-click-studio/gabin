@@ -19,6 +19,7 @@ import type {
     Asset,
     MicId,
     AudioDeviceSettings,
+    ConnectionType
 } from '../../types/protocol'
 
 interface Connections {
@@ -48,6 +49,7 @@ export class Gabin {
     private logger: Logger
     private subscriptions: Subscription[] = []
     private scenes: Asset['scene'][]
+    private defaultConnection: ConnectionType | undefined
 
     private oscServer: OscServer
 
@@ -82,13 +84,13 @@ export class Gabin {
         const connections = db.getSpecificAndDefault(['connections'], true)
         this.logger.info('is connecting to', connections.defaultValue)
 
-        if (connections.defaultValue.type === 'obs') {
+        this.defaultConnection = connections.defaultValue.type
+        if (this.defaultConnection === 'obs') {
             this.obs = new ObsClient()
-        } else if (connections.defaultValue.type === 'osc') {
-            this.osc = new OscClient(this.oscServer)
-        } else if (connections.defaultValue.type === 'vmix') {
+        } else if (this.defaultConnection === 'vmix') {
             this.vmix = new VmixClient()
         }
+        this.osc = new OscClient(this.oscServer, this.defaultConnection === 'osc')
         this.autocam = new AutocamClient()
 
         if (this.obs) this.updateConnections(this.obs.reachable$, 'obs')
@@ -201,7 +203,7 @@ export class Gabin {
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
             this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
-            if (this.osc?.isReachable) this.osc.shoot(shoot.container, shoot.shot)
+            if (this.osc?.isReachable && this.defaultConnection === 'osc') this.osc.shoot(shoot.container, shoot.shot)
             if (this.obs?.isReachable) this.obs.shoot(shoot.container, shoot.shot)
             if (this.vmix?.isReachable) this.vmix.shoot(shoot.container, shoot.shot)
         }))
