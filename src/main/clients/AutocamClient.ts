@@ -575,8 +575,10 @@ class Container {
 
         this.trigger$.subscribe(params => {
             if (!this.focus) this.focus = true
-            this.logger.warn('FOCUS MODE (triggered)', params)
-            this.focusMode(params.micId, params.shotName)
+            if (!this.isShowingMic(params.micId)){
+                this.logger.warn('FOCUS MODE (triggered)', params)
+                this.focusMode(params.micId, params.shotName)
+            }
         })
     }
 
@@ -755,12 +757,15 @@ class Container {
         this.timeouts.push(setTimeout(() => {
             this.lock = false
 
-            if (this.focus){
+            if (this.focus && !this.isShowingMic(this.currentMic)){
                 this.focusMode(this.currentMic)
             }
         }, this.durations.min * 1000))
 
         this.timeouts.push(setTimeout(() => {
+            if (this.focus){
+                return this.focusMode(this.currentMic)
+            }
             this.illustrationMode()
         }, duration * 1000))
     }
@@ -975,6 +980,7 @@ class Container {
 
     focus_() {
         this.focus = true
+        this.toUnfocus = false
     }
 
 }
