@@ -38,10 +38,6 @@ const settings = (mic: SpeakingMic) => {
 }
 
 const updateThresholds = (key: keyof Thresholds, value: number) => {
-    if (!value && key !== 'minVolume') {
-        thresholds.value[key] = 0
-        return
-    }
     thresholds.value[key] = value
 }
 
@@ -80,6 +76,10 @@ const saveSettings = async (dName?: string) => {
 
     thresholds.value = DEFAULT_THRESHOLDS
     deviceName.value = false
+}
+
+const toStr = (v: number): string => {
+    return isNaN(v)? '' : v + ''
 }
 
 const resetAll = async () => {
@@ -122,8 +122,8 @@ const resetAll = async () => {
                         <InputUi
                             label="Speaking"
                             class="threshold-input"
-                            :value="thresholds.speaking + ''"
-                            @update="(v) => updateThresholds('speaking', Math.round(parseInt(v))/100)"
+                            :value="toStr(thresholds.speaking)"
+                            @update="(v) => updateThresholds('speaking', parseInt(v))"
                         />
                     </div>
                     <div class="threshold">
@@ -135,7 +135,7 @@ const resetAll = async () => {
                         <InputUi
                             label="Silence"
                             class="threshold-input"
-                            :value="thresholds.silence + ''"
+                            :value="toStr(thresholds.silence)"
                             @update="(v) => updateThresholds('silence', parseInt(v))"
                         />
                     </div>
@@ -148,9 +148,9 @@ const resetAll = async () => {
                         <InputUi
                             label="VAD"
                             class="threshold-input"
-                            :value="thresholds.vad*100 + ''"
+                            :value="toStr(thresholds.vad*100)"
                             unit="%"
-                            @update="(v) => updateThresholds('vad', parseInt(v))"
+                            @update="(v) => updateThresholds('vad', Math.round(parseInt(v))/100)"
                         />
                     </div>
                     <div class="threshold">
@@ -162,9 +162,9 @@ const resetAll = async () => {
                         <InputUi
                             label="Min. vol."
                             class="threshold-input"
-                            :value="thresholds.minVolume*100/2 + ''"
+                            :value="toStr(Math.round(thresholds.minVolume*100/2))"
                             unit="%"
-                            @update="(v) => updateThresholds('minVolume', parseInt(v)/100*2)"
+                            @update="(v) => updateThresholds('minVolume', Math.round(parseInt(v)*2)/100)"
                         />
                     </div>
                 </div>
