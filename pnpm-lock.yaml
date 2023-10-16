@@ -1,4 +1,8 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
 dependencies:
   audify:
@@ -16,6 +20,9 @@ dependencies:
   finalhandler:
     specifier: ^1.2.0
     version: 1.2.0
+  node-mac-permissions:
+    specifier: ^2.3.0
+    version: 2.3.0
   obs-websocket-js:
     specifier: ^5.0.2
     version: 5.0.2
@@ -1194,6 +1201,10 @@ packages:
     dependencies:
       semver: 7.3.8
 
+  /node-addon-api@3.2.1:
+    resolution: {integrity: sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==}
+    dev: false
+
   /node-addon-api@5.1.0:
     resolution: {integrity: sha512-eh0GgfEkpnoWDq+VY8OyvYhFEzBk6jIYbRKdIlyTiAXIVJ8PyBaKb0rp7oDtoddbdoHWhq8wwr+XZ81F1rpNdA==}
     dev: false
@@ -1213,6 +1224,15 @@ packages:
     dependencies:
       whatwg-url: 5.0.0
     dev: true
+
+  /node-mac-permissions@2.3.0:
+    resolution: {integrity: sha512-kZ/bUeXv+Xp6+VLS77ShgSfS8df9HB13SnS1ql+d3Cd5ry0uZkOgNh434cAhZBHiagYQWykPqgY7n9jd7t74Fw==}
+    os: [darwin]
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      node-addon-api: 3.2.1
+    dev: false
 
   /nodemon@2.0.20:
     resolution: {integrity: sha512-Km2mWHKKY5GzRg6i1j5OxOHQtuvVsgskLfigG25yTtbyfRGn/GNvIbRyOf1PSCKJ2aT/58TiuUsuOU5UToVViw==}
@@ -2047,7 +2067,6 @@ packages:
     name: systray2
     version: 2.1.4
     engines: {node: '>=4.0.0'}
-    prepare: true
     requiresBuild: true
     dependencies:
       debug: 4.3.4

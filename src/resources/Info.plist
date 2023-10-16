@@ -24,6 +24,8 @@
     <true/>
     <key>NSRequiresAquaSystemAppearance</key>
     <false/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Gabin need to listen to microphone in order to do his magic.</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.video</string>
   </dict>
