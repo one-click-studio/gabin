@@ -552,6 +552,7 @@ class Container {
     private shotsMap: AutocamContainer['mics'] = []
     private filteredShotsMap: AutocamContainer['mics'] = []
     private micsMap: MicsMap = new Map()
+    private noIllu: Asset['source']['name'][] = []
 
     private durations: Durations = { min: 0, max: 0 }
     private shoot$: Subject<Shoot>
@@ -589,6 +590,7 @@ class Container {
         this.durations = container.durations
         this.shots = this.getShotsFromMap(container.mics)
         this.micsMap = this.getMicsMapFromShotMap(container.mics)
+        this.noIllu = this.getNoIlluFromShotMap(container.mics)
     }
 
     private getShotsFromMap(mics: AutocamContainer['mics'], noWeight?: boolean): Asset['source']['name'][] {
@@ -618,6 +620,20 @@ class Container {
         })
 
         return micsMap
+    }
+
+    private getNoIlluFromShotMap(mics: AutocamContainer['mics']): Asset['source']['name'][] {
+        let shots: Asset['source']['name'][] = []
+
+        for (let mic of mics){
+            for (let cam of mic.cams){
+                if (cam.source.options?.noIllu && shots.indexOf(cam.source.name) === -1){
+                    shots.push(cam.source.name)
+                }
+            }
+        }
+
+        return shots
     }
 
     // SHOOT
@@ -706,7 +722,7 @@ class Container {
     private getAllowedShots(shots: Asset['source']['name'][]): Asset['source']['name'][] {
         const unallowedShots = this.getUnallowedShots()
 
-        return shots.filter(s => unallowedShots.indexOf(s) < 0)
+        return shots.filter(s => unallowedShots.indexOf(s) < 0 && this.noIllu.indexOf(s) < 0)
     }
 
     // ILLUSTRATION MODE
@@ -732,9 +748,9 @@ class Container {
     }
 
     private illustrationMode(micId?: MicId, shotName?: Asset['source']['name']) {
-        if (!this.enable){
-            return
-        }
+        // if (!this.enable){
+        //     return
+        // }
 
         this.clearTimeouts()
         const duration = this.getIllustrationDuration()
@@ -796,9 +812,9 @@ class Container {
     }
 
     private focusMode(micId: MicId, shotName?: Asset['source']['name']) {
-        if ((!this.enable || this.lock) && !shotName) {
-            return
-        }
+        // if ((!this.enable || this.lock) && !shotName) {
+        if (this.lock && !shotName) return
+
         const forced = shotName? true : false
         const duration = forced? this.getIllustrationDuration() : this.durations.min
 
@@ -825,6 +841,8 @@ class Container {
             this.logger.warn('unlock (focus)')
             this.lock = false
 
+            if (!this.enable) return
+
             if (this.currentMic && this.currentMic !== micId) {
                 this.logger.warn('FOCUS MODE (currentMic changed)', {currentMic:this.currentMic, micId})
                 this.focusMode(this.currentMic)
@@ -837,6 +855,9 @@ class Container {
 
         this.timeouts.push(setTimeout(() => {
             this.logger.warn('end (focus)')
+
+            if (!this.enable) return
+
             if (!this.focus || this.toUnfocus || !this.currentMic) {
                 this.logger.warn('ILLUSTRATION MODE (after max duration && !focus)')
 

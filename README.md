@@ -93,7 +93,13 @@ Register :
 | ```/register/defaultProfile``` | host: string, port: number, path: string | get updated when new default profile is set |
 
 ### Other options
+- allow shot to be in scene but prevent from showing automatically
+
+In the json database, go under ```profiles > settings > autocam > containers > mics > cams > source > options```.
+There you can add a ```noIllu``` options, a boolean (```true``` or ```false```)
+
 - allow/forbid some shots depending on which mics are availables
+
 In the json database, go under ```profiles > settings > autocam > containers > mics > cams > source > options```.
 There you can add a ```matching``` options, the value must be a array of strings.
 You have to specify for each mics either :
