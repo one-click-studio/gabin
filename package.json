@@ -28,6 +28,7 @@
       "node_modules/.pnpm/webrtcvad@*/node_modules/webrtcvad/build/Release/*",
       "node_modules/.pnpm/audify@*/node_modules/audify/build/Release/*",
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
+      "node_modules/.pnpm/node-mac-permissions@*/node_modules/node-mac-permissions/*",
       "node_modules/systray2/traybin/*"
     ],
     "outputPath": "dist"
