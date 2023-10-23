@@ -6,7 +6,6 @@ import finaleHandler from 'finalhandler'
 import fs from 'fs'
 import Systray from 'systray2'
 import { auditTime } from 'rxjs/operators'
-import { askForMicrophoneAccess } from 'node-mac-permissions'
 
 import { Server, Socket } from "socket.io"
 
@@ -206,18 +205,7 @@ export class App {
         this.setup = new Setup(this.osc)
     }
 
-    private async initPermissions() {
-        const status = await askForMicrophoneAccess()
-        if (status !== 'authorized') {
-            this.logger.error(`Microphone access not granted (${status})`)
-        }
-    }
-
     async init() {
-        // if os is macos, ask for microphone access        
-        if (process.platform === 'darwin') {
-            await this.initPermissions()
-        }
         this.initError()
         this.initServer()
         await this.initDatabase()

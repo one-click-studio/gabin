@@ -28,7 +28,6 @@
       "node_modules/.pnpm/webrtcvad@*/node_modules/webrtcvad/build/Release/*",
       "node_modules/.pnpm/audify@*/node_modules/audify/build/Release/*",
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
-      "node_modules/.pnpm/node-mac-permissions@*/node_modules/node-mac-permissions/*",
       "node_modules/systray2/traybin/*"
     ],
     "outputPath": "dist"
@@ -39,7 +38,6 @@
     "dotenv": "^16.0.3",
     "fast-xml-parser": "^4.2.0",
     "finalhandler": "^1.2.0",
-    "node-mac-permissions": "^2.3.0",
     "obs-websocket-js": "^5.0.2",
     "onnxruntime-node": "^1.13.1",
     "osc-js": "^2.4.0",
