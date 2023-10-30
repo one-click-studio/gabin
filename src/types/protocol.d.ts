@@ -94,7 +94,7 @@ export interface Shoot {
     sceneName: AssetScene['name']
     container: AssetContainer
     shot: AssetSource
-    mode: 'focus' | 'illustration'
+    mode: 'focus' | 'illustration' | 'unhandled'
 }
 
 export interface SpeakingMic {
