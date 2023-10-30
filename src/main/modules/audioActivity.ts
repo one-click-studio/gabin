@@ -304,6 +304,9 @@ export class AudioActivity {
 
         for (let i in this._recorders) this._recorders[i].end()
 
+
+        this._isOpen = false
+
         this._rtAudio.stop()
         this._rtAudio.closeStream()
     }
