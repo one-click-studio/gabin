@@ -1,7 +1,7 @@
 import path from "path"
 import fs from "fs"
 import os from "os"
-import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
+import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo, RtAudioErrorType, RtAudioStreamFlags } from "audify"
 import { InferenceSession, Tensor } from "onnxruntime-node"
 import { getLogger } from '../utils/logger'
 import { formatDate } from '../utils/utils'
@@ -20,6 +20,8 @@ interface Device {
 }
 
 type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined, consecutive: number}>
+
+const TIME_TO_WATCH = 30 * 1000
 
 const AudioApiByPlateform = {
     LINUX_ALSA: ['linux'],
@@ -133,6 +135,11 @@ export class AudioActivity {
     private _channels: number[]
     private _onAudio: (speaking: boolean, channel: number, volume: number) => void
 
+    private _restarting: boolean = false
+    private _lastProcess: number = 0
+    private _volumes: number[] = []
+    private _volFrameLength = 0
+
     constructor(options: {
         deviceName: string
         apiId?: RtAudioApi
@@ -229,6 +236,11 @@ export class AudioActivity {
 
         this._sampleRate = this.getSampleRate(this._device.data)
 
+
+        // 30 * 1000 milliseconds / (( samplerate * bitrate) / (framesPerBuffer * channels * 2))
+        this._volFrameLength = Math.round(TIME_TO_WATCH/((this._sampleRate*8)/(this._framesPerBuffer*this._device.data.inputChannels*2)))
+
+
         this._sileroVad = new SileroVad()
         await this._sileroVad.load()
 
@@ -240,6 +252,13 @@ export class AudioActivity {
                 })
             }
         }
+
+        setInterval(() => {
+            if (this._isOpen && Date.now() - this._lastProcess > TIME_TO_WATCH) {
+                logger.error('Audio stream not processing, restarting')
+                this.restart()
+            }
+        }, TIME_TO_WATCH/2)
     }
 
     public async start() {
@@ -267,11 +286,17 @@ export class AudioActivity {
             this._framesPerBuffer,
             "MyStream",
             this.process.bind(this),
-            null
+            null,
+            RtAudioStreamFlags.RTAUDIO_ALSA_USE_DEFAULT,
+            (type: RtAudioErrorType, msg: string) => {
+                logger.error(`RtAudio error: ${type} - ${msg}`)
+            }
         )
         this._isOpen = true
-
+        this._volumes = []
+        
         this._rtAudio.start()
+        this._restarting = false
     }
 
     public stop() {
@@ -279,8 +304,21 @@ export class AudioActivity {
 
         for (let i in this._recorders) this._recorders[i].end()
 
+
+        this._isOpen = false
+
         this._rtAudio.stop()
         this._rtAudio.closeStream()
+    }
+
+    public async restart() {
+        if (this._restarting) return
+
+        logger.debug('Restarting audio stream')
+        this.stop()
+        // wait 1 second to make sure the stream is closed
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        this.start()
     }
 
     private async load() {
@@ -337,6 +375,12 @@ export class AudioActivity {
         return path.join(dir, `audio-${datestring}-${deviceName}-${this._channels[channel]+1}.wav`)
     }
 
+    private shouldRestart(): boolean {
+        const sum = this._volumes.reduce((a, b) => a + b, 0)
+        if (sum === 0 && this._volumes.length >= this._volFrameLength) return true
+        return false
+    }
+
 
     async process(pcm: Buffer) {
         // make sure stream stays open
@@ -350,7 +394,9 @@ export class AudioActivity {
         }
 
         const processed: ProcessedChannel = new Map()
+        this._lastProcess = Date.now()
 
+        let sumVolume = 0 
         for (let i = 0; i < buffers.length; i++) {
             if (!this._bufferLength) this.setBufferSize(buffers[i].length)
 
@@ -364,8 +410,13 @@ export class AudioActivity {
             const volume = Math.round(this.getVolume(buffers[i])*100)/100
             const speaking = await this.processChannel(buffers[i], i, volume)
             
+            sumVolume += volume
             processed.set(i, {volume, speaking, consecutive: 0})
         }
+        this._volumes.push(sumVolume)
+        this._volumes = this._volumes.slice(-this._volFrameLength)
+
+        if (this.shouldRestart()) return this.restart()
 
         if (this.tooManySpeakers(processed)){
             const channelId = this.chooseSpeaker(processed)
