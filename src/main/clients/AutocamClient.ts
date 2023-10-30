@@ -479,7 +479,9 @@ export class AutocamClient extends Client {
     private enableContainers() {
         let init = false
         const length = this.containerMap.size
+        const currentMic = this.timeline$.getValue() || this.lastSpeaker
         let index = 0
+
         this.containerMap.forEach((container) => {
             if (container.focus && !this.lockShot.name && !this.enable) {
                 this.lockShot = container.getCurrentShot()
@@ -488,7 +490,12 @@ export class AutocamClient extends Client {
 
             container.enable = this.enable
             if (this.enable) {
-                container.init()
+                if ((container.hasShotForMic(currentMic) || index === length - 1) && !init) {
+                    container.init(currentMic)
+                    init = true
+                } else {
+                    container.init()
+                }
             } else if ((container.hasShot(this.lockShot) || index === length - 1) && !init) {
                 container.disabledInit(this.lockShot)
                 init = true
@@ -890,8 +897,12 @@ class Container {
 
     // PUBLIC METHODS
 
-    init() {
-        this.illustrationMode()
+    init(currentMic?: MicId) {
+        if (currentMic) {
+            this.trigger$.next({ micId: currentMic })
+        } else {
+            this.illustrationMode()
+        }
         return
     }
 
