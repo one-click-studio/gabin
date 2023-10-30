@@ -33,7 +33,7 @@ const initNewScene = (shoot: Shoot) => {
     shoots_.value = new Map()
 
     shoots_.value.set(shoot.container.name, shoot)
-    msg.value.default = 'I\'m now showing'
+    msg.value.default = (shoot.mode === 'unhandled'? '(not in config) ' : '') + 'I\'m now showing'
     msg.value.main = currentScene_.value
 }
 

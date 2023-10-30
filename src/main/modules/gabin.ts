@@ -201,6 +201,8 @@ export class Gabin {
         }
 
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
+            if (shoot.mode === 'unhandled') return
+
             this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
             if (this.osc?.isReachable && this.defaultConnection === 'osc') this.osc.shoot(shoot.container, shoot.shot)
@@ -257,6 +259,15 @@ export class Gabin {
 
         this.logger.info('has received a new scene 🎬', scene?.name)
         if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene?.name)
+
+        if (!scene && sceneName) {
+            this.shoot$.next({
+                sceneName,
+                container: { name: '', sources: [] },
+                shot: { name: '' },
+                mode: 'unhandled'
+            })
+        }
     }
 
     private getScene(sceneName: Asset['scene']['name']|undefined): Asset['scene']|undefined {
