@@ -72,6 +72,7 @@ export class AutocamClient extends Client {
     private autocamMapping: AutocamSettings[] = []
     private currentMapping: AutocamContainer[] = []
 
+    private lockShot: Asset['source'] = { name:'' }
     private lastSpeaker: MicId = ''
 
     constructor() {
@@ -439,8 +440,10 @@ export class AutocamClient extends Client {
         this.subscriptions.forcedShot = this.forcedShot$.subscribe(source => {
             const currentMic = this.timeline$.getValue()
 
+            this.lockShot = source
+
             const isShowing = this.getShowingShotContainer(source.name)
-            if (isShowing) {
+            if (isShowing && isShowing.focus) {
                 this.logger.warn('A container is already showing this shot', isShowing.name)
                 return
             }
@@ -475,11 +478,24 @@ export class AutocamClient extends Client {
     }
 
     private enableContainers() {
-        this.containerMap.forEach(container => {
+        let init = false
+        const length = this.containerMap.size
+        let index = 0
+        this.containerMap.forEach((container) => {
+            if (container.focus && !this.lockShot.name && !this.enable) {
+                this.lockShot = container.getCurrentShot()
+                init = true
+            }
+
             container.enable = this.enable
             if (this.enable) {
                 container.init()
+            } else if ((container.hasShot(this.lockShot) || index === length - 1) && !init) {
+                container.disabledInit(this.lockShot)
+                init = true
             }
+
+            index++
         })
     }
 
@@ -881,6 +897,17 @@ class Container {
         return
     }
 
+    disabledInit(lockShot: Asset['source']) {
+        let shotName: string|undefined = lockShot.name
+        if (!this.hasShot(lockShot, true)) {
+            shotName = this.getRandomShot(this.shots)
+        }
+        if (shotName) {
+            this.trigger$.next({ micId: this.currentMic, shotName })
+        }
+        return
+    }
+
     clearTimeouts() {
         this.timeouts.forEach(t => {
             clearTimeout(t)
@@ -918,6 +945,10 @@ class Container {
 
     setCurrentMic(micId: MicId) {
         this.currentMic = micId
+    }
+
+    getCurrentShot(): Asset['source'] {
+        return this.currentShot
     }
 
     private shotIsMatching(matching: string[], availableMicsMap: AvailableMicsMap): boolean {
