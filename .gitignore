@@ -16,3 +16,4 @@ certificate.p12
 playwright.config.ts
 * copy.*
 *.wav
+.idea
