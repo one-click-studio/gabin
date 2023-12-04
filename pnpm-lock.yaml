@@ -3,7 +3,7 @@ lockfileVersion: '6.0'
 dependencies:
   audio-manager-node:
     specifier: github:one-click-studio/audio-manager-node
-    version: github.com/one-click-studio/audio-manager-node/a24093ed788a1432c22f47eb8382866fa121761b
+    version: github.com/one-click-studio/audio-manager-node/95f2c7578295891cf65f5dd250720471567dab90
   deep-eql:
     specifier: ^4.1.3
     version: 4.1.3
@@ -1795,10 +1795,10 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  github.com/one-click-studio/audio-manager-node/a24093ed788a1432c22f47eb8382866fa121761b:
-    resolution: {tarball: https://codeload.github.com/one-click-studio/audio-manager-node/tar.gz/a24093ed788a1432c22f47eb8382866fa121761b}
+  github.com/one-click-studio/audio-manager-node/95f2c7578295891cf65f5dd250720471567dab90:
+    resolution: {tarball: https://codeload.github.com/one-click-studio/audio-manager-node/tar.gz/95f2c7578295891cf65f5dd250720471567dab90}
     name: audio-manager-node
-    version: 1.0.1
+    version: 1.0.2
     dependencies:
       typescript: 5.3.2
     dev: false
