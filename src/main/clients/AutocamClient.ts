@@ -7,7 +7,6 @@ import { getLogger, type Logger } from '../../main/utils/logger'
 import { random, deepCopy } from '../../main/utils/utils'
 
 import { AudioActivity, getDevices } from '../../main/modules/audioActivity'
-import type { RtAudioApi } from 'audify'
 
 import type {
     AudioDevice,
@@ -129,9 +128,7 @@ export class AutocamClient extends Client {
         for (const i in devicesData){
             const recorder = new AudioActivity({
                 deviceName: devicesData[i].name,
-                apiId: devicesData[i].api as RtAudioApi,
                 channels: devicesData[i].channels.map(c => c.channelId),
-                framesPerBuffer: 960,
                 onAudio: (speaking, channelId, volume) => {
                     devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking, volume)
                 },
@@ -193,10 +190,11 @@ export class AutocamClient extends Client {
 
     private getMicsVolumeMap(devices: AudioDeviceSettings[]): Map<string, number> {
         const micIds = devices.reduce((p, d) => p.concat(d.micsName.filter((_m,i) => d.mics[i])), <string[]>[])
-        return new Map(micIds.map((m) => [m, 0]))
+        return new Map(micIds.map((m) => [m, -60]))
     }
 
     private setMicVolume(micId: MicId, volume: number) {
+        if (volume < -60) volume = -60
         if (!this.micsVolume.has(micId)) return
         this.micsVolume.set(micId, volume)
         this.volumeMics$.next(this.micsVolume)
@@ -231,10 +229,7 @@ export class AutocamClient extends Client {
 
         return {
             id: device.id,
-            api: device.api,
-            apiName: device.apiName,
             name: device.name,
-            sampleRate: device.sampleRate,
             nChannels: device.nChannels,
             channels: this.getChannels(deviceMics),
             thresholds: device.thresholds
