@@ -83,10 +83,7 @@ export interface AutocamSource {
 export interface AudioDevice {
     id: number
     name: string
-    sampleRate: number
     nChannels: number
-    api: unknown
-    apiName: string
     thresholds?: Thresholds
 }
 

@@ -100,10 +100,7 @@ export const getAllAudioDevices = (): AudioDevice[] => {
         aDevices.push({
             id: d.id,
             name: d.data.name,
-            sampleRate: d.data.preferredSampleRate,
             nChannels: d.data.inputChannels,
-            api: d.apiId,
-            apiName: d.apiName,
         })
     }
 
