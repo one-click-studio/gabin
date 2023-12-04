@@ -1,6 +1,5 @@
 import fs from "fs"
 import path from "path"
-import { RtAudio, RtAudioFormat } from "audify"
 import OSC from 'osc-js'
 import { Subject, BehaviorSubject } from 'rxjs'
 
@@ -24,134 +23,132 @@ const CONFIG = {
     apiName: "MACOSX_CORE"
 } as const
 
-const sendWav = async (wavPath: string, device: {id: number, nChannels: number}, callback: ()=>void): Promise<boolean> => {
+// const sendWav = async (wavPath: string, device: {id: number, nChannels: number}, callback: ()=>void): Promise<boolean> => {
 
-    const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] => {
-        const buffers: number[][] = []
+//     const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] => {
+//         const buffers: number[][] = []
 
-        // init buffers
-        for (let i = 0; i < channels; i++) buffers[i] = []
+//         // init buffers
+//         for (let i = 0; i < channels; i++) buffers[i] = []
 
-        for (let i = 0; i < buffer.length; i++) {
-            const index = Math.floor((i%(channels*size)) / size)
-            buffers[index].push(buffer[i])
-        }
+//         for (let i = 0; i < buffer.length; i++) {
+//             const index = Math.floor((i%(channels*size)) / size)
+//             buffers[index].push(buffer[i])
+//         }
 
-        return buffers
-    }
+//         return buffers
+//     }
 
-    const joinBuffers = (buffers: number[][], size: number): Buffer => {
-        const length = buffers[0].length
-        const channels = buffers.length
+//     const joinBuffers = (buffers: number[][], size: number): Buffer => {
+//         const length = buffers[0].length
+//         const channels = buffers.length
 
-        let array: number[] = []
+//         let array: number[] = []
 
-        for (let i = 0; i < length; i+=size) {
-            for (let j = 0; j < channels; j++) {
-                for (let k = 0; k < size; k++) {
-                    array.push(buffers[j][i+k])
-                }
-            }
-        }
+//         for (let i = 0; i < length; i+=size) {
+//             for (let j = 0; j < channels; j++) {
+//                 for (let k = 0; k < size; k++) {
+//                     array.push(buffers[j][i+k])
+//                 }
+//             }
+//         }
 
-        return Buffer.from(array)
-    }
+//         return Buffer.from(array)
+//     }
 
-    const openWavFile = (filePath: string): Buffer => {
-        return fs.readFileSync(filePath)
-    }
+//     const openWavFile = (filePath: string): Buffer => {
+//         return fs.readFileSync(filePath)
+//     }
 
-    const getWavBody = (buf: Buffer): Buffer => {
-        const endOfHeader = [116, 97] as const
+//     const getWavBody = (buf: Buffer): Buffer => {
+//         const endOfHeader = [116, 97] as const
 
-        let headerEnd = 0
-        for (let i = 0; i < 1000; i++) {
-            if (buf[i] === endOfHeader[0] && buf[i+1] === endOfHeader[1]) {
-                headerEnd = i + 6
-                break
-            }
-        }
+//         let headerEnd = 0
+//         for (let i = 0; i < 1000; i++) {
+//             if (buf[i] === endOfHeader[0] && buf[i+1] === endOfHeader[1]) {
+//                 headerEnd = i + 6
+//                 break
+//             }
+//         }
 
-        return buf.subarray(headerEnd)
-    }
+//         return buf.subarray(headerEnd)
+//     }
 
-    const rawBuf = openWavFile(wavPath)
-    const nChannels = rawBuf[22]
+//     const rawBuf = openWavFile(wavPath)
+//     const nChannels = rawBuf[22]
 
-    const buf = getWavBody(rawBuf)
+//     const buf = getWavBody(rawBuf)
 
-    const rtAudio = new RtAudio()
+//     // rtAudio.getDevices().forEach((device) => {
+//     //     console.log(device)
+//     // })
+//     // return
 
-    // rtAudio.getDevices().forEach((device) => {
-    //     console.log(device)
-    // })
-    // return
+//     // const virtualAudioLoopback = {
+//     //     deviceId: device.id,
+//     //     nChannels: device.nChannels,
+//     //     firstChannel: 0
+//     // }
 
-    const virtualAudioLoopback = {
-        deviceId: device.id,
-        nChannels: device.nChannels,
-        firstChannel: 0
-    }
+//     // console.log(`\nvirtualAudioLoopback: ${JSON.stringify(virtualAudioLoopback)}`)
 
-    // console.log(`\nvirtualAudioLoopback: ${JSON.stringify(virtualAudioLoopback)}`)
+//     // let index = 0
+//     // const dataSize = 2
+//     // const frameSize = 1920
+//     // const channels = virtualAudioLoopback.nChannels
+//     // const length = frameSize * channels * dataSize
 
-    let index = 0
-    const dataSize = 2
-    const frameSize = 1920
-    const channels = virtualAudioLoopback.nChannels
-    const length = frameSize * channels * dataSize
+//     // console.warn(`\n\nthis will stream only the ${channels} firsts channels of the wav file.`)
+//     // console.warn('the wav file must be 16bits, 44100Hz, and must be a valid wav file.')
 
-    console.warn(`\n\nthis will stream only the ${channels} firsts channels of the wav file.`)
-    console.warn('the wav file must be 16bits, 44100Hz, and must be a valid wav file.')
+//     // return new Promise((resolve, reject) => {
 
-    return new Promise((resolve, reject) => {
+//     //     rtAudio.openStream(
+//     //         virtualAudioLoopback,
+//     //         virtualAudioLoopback,
+//     //         RtAudioFormat.RTAUDIO_SINT16,
+//     //         44100,
+//     //         frameSize,
+//     //         "MyStream",
+//     //         () => {
+//     //             if (!index) {
+//     //                 callback()
+//     //             }
 
-        rtAudio.openStream(
-            virtualAudioLoopback,
-            virtualAudioLoopback,
-            RtAudioFormat.RTAUDIO_SINT16,
-            44100,
-            frameSize,
-            "MyStream",
-            () => {
-                if (!index) {
-                    callback()
-                }
+//     //             if (index >= buf.length) {
+//     //                 rtAudio.stop()
+//     //                 console.log(`\nstop streaming`)
+//     //                 return resolve(true)
+//     //             }
 
-                if (index >= buf.length) {
-                    rtAudio.stop()
-                    console.log(`\nstop streaming`)
-                    return resolve(true)
-                }
+//     //             let resp = buf.subarray(index, index + frameSize*nChannels*dataSize)
+//     //             const buffers = splitBuffer(resp, dataSize, nChannels)
 
-                let resp = buf.subarray(index, index + frameSize*nChannels*dataSize)
-                const buffers = splitBuffer(resp, dataSize, nChannels)
+//     //             if (nChannels < channels){
+//     //                 while (buffers.length < channels) {
+//     //                     buffers.push(new Array(frameSize*dataSize).fill(0))
+//     //                 }
+//     //             } else if (nChannels >  channels) {
+//     //                 while (buffers.length > channels) {
+//     //                     buffers.pop()
+//     //                 }
+//     //             }
+//     //             resp = joinBuffers(buffers, dataSize)
+//     //             index += frameSize*nChannels*dataSize
 
-                if (nChannels < channels){
-                    while (buffers.length < channels) {
-                        buffers.push(new Array(frameSize*dataSize).fill(0))
-                    }
-                } else if (nChannels >  channels) {
-                    while (buffers.length > channels) {
-                        buffers.pop()
-                    }
-                }
-                resp = joinBuffers(buffers, dataSize)
-                index += frameSize*nChannels*dataSize
+//     //             if (resp.length !== length) {
+//     //                 console.warn(`buffer length is not correct (${resp.length} instead of ${length})`)
+//     //                 return
+//     //             }
+//     //             rtAudio.write(resp)
+//     //         },
+//     //         null
+//     //     )
 
-                if (resp.length !== length) {
-                    console.warn(`buffer length is not correct (${resp.length} instead of ${length})`)
-                    return
-                }
-                rtAudio.write(resp)
-            },
-            null
-        )
-
-        rtAudio.start()
-        console.log(`\nstreaming ${wavPath}`)
-    })
-}
+//     //     rtAudio.start()
+//     //     console.log(`\nstreaming ${wavPath}`)
+//     // })
+// }
 
 const initOSC = async (): Promise<any> => {
     console.log('init osc')
@@ -343,14 +340,14 @@ const main = async () => {
 
         if (playing$.getValue() === true || !device) return
 
-        sendWav(files.wav, device, () => {
-            initPlaying = false
-            playing$.next(true)
-        }).then(() => {
-            playing$.next(false)
-        }).catch((err) => {
-            console.error(err)
-        })
+        // sendWav(files.wav, device, () => {
+        //     initPlaying = false
+        //     playing$.next(true)
+        // }).then(() => {
+        //     playing$.next(false)
+        // }).catch((err) => {
+        //     console.error(err)
+        // })
     }
 
     const getShots = () => {

@@ -24,9 +24,6 @@
     "assets": [
       "build/render/**/*",
       "build/resources/**/*",
-      "node_modules/.pnpm/onnxruntime-node@*/node_modules/onnxruntime-node/bin/napi-v3/**/**/*",
-      "node_modules/.pnpm/webrtcvad@*/node_modules/webrtcvad/build/Release/*",
-      "node_modules/.pnpm/audify@*/node_modules/audify/build/Release/*",
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
       "node_modules/systray2/traybin/*"
     ],
