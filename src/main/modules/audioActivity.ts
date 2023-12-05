@@ -223,12 +223,6 @@ export class AudioActivity {
             if (shortIndex === -1) continue
 
             const speaking = await this.processChannel(data[i]);
-            if (data[i].volume > -30) {
-                logger.debug({
-                    channel: data[i].channelId,
-                    volume: data[i].volume,
-                })
-            }
 
             // sumVolume += volume
             processed.set(i, {
