@@ -3,7 +3,7 @@ lockfileVersion: '6.0'
 dependencies:
   audio-manager-node:
     specifier: github:one-click-studio/audio-manager-node
-    version: github.com/one-click-studio/audio-manager-node/10dae4eb6ad1d1f157fb6dc3698308ae6c06664d
+    version: github.com/one-click-studio/audio-manager-node/d50e9ad9359a4f865e61dcc52141b650354e8c27
   deep-eql:
     specifier: ^4.1.3
     version: 4.1.3
@@ -60,6 +60,9 @@ devDependencies:
   cross-env:
     specifier: ^7.0.3
     version: 7.0.3
+  exe-edit:
+    specifier: ^0.1.1
+    version: 0.1.1
   nodemon:
     specifier: ^2.0.20
     version: 2.0.20
@@ -621,6 +624,11 @@ packages:
   /eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
     dev: false
+
+  /exe-edit@0.1.1:
+    resolution: {integrity: sha512-TbzLx5sYvK3bqxJH5Q+p8JYokrrc6DauJiFAUK+o3j/Esb08YKokI3KziT9UaOUUjebaA3rHEdImIEY6MZdomA==}
+    hasBin: true
+    dev: true
 
   /expand-template@2.0.3:
     resolution: {integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==}
@@ -1648,8 +1656,8 @@ packages:
     hasBin: true
     dev: true
 
-  /typescript@5.3.2:
-    resolution: {integrity: sha512-6l+RyNy7oAHDfxC4FzSJcz9vnjTKxrLpDG5M2Vu4SHRVNg6xzqZp6LYSR9zjqQTu8DU/f5xwxUdADOkbrIX2gQ==}
+  /typescript@5.3.3:
+    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: false
@@ -1795,12 +1803,12 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  github.com/one-click-studio/audio-manager-node/10dae4eb6ad1d1f157fb6dc3698308ae6c06664d:
-    resolution: {tarball: https://codeload.github.com/one-click-studio/audio-manager-node/tar.gz/10dae4eb6ad1d1f157fb6dc3698308ae6c06664d}
+  github.com/one-click-studio/audio-manager-node/d50e9ad9359a4f865e61dcc52141b650354e8c27:
+    resolution: {tarball: https://codeload.github.com/one-click-studio/audio-manager-node/tar.gz/d50e9ad9359a4f865e61dcc52141b650354e8c27}
     name: audio-manager-node
-    version: 1.0.3
+    version: 1.0.7
     dependencies:
-      typescript: 5.3.2
+      typescript: 5.3.3
     dev: false
 
   github.com/one-click-studio/node-systray/5cbccb3c8d949ad7bbc1d0e6867b95140fbd9fd6:

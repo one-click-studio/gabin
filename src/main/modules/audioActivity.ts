@@ -1,7 +1,7 @@
 import path from "path"
 import fs from "fs"
 
-import audioModule, { AudioDevice, AudioFeedback } from 'audio-manager-node'
+import audioManager, { AudioDevice, AudioFeedback, HostApi } from 'audio-manager-node'
 
 import { getLogger } from '../utils/logger'
 import { formatDate } from '../utils/utils'
@@ -33,7 +33,7 @@ export class AudioActivity {
     private _sharedState: unknown | undefined
 
     private _deviceName: string
-    private _device : Device | undefined
+    private _device : AudioDevice | undefined
 
     private _isOpen: boolean
 
@@ -49,6 +49,7 @@ export class AudioActivity {
 
     constructor(options: {
         deviceName: string
+        host?: HostApi
         channels: number[]
         onAudio: (speaking: boolean, channel: number, volume: number) => void,
         thresholds?: {
@@ -72,7 +73,7 @@ export class AudioActivity {
         this._consecutive = Array(options.channels.length).fill(0)
         this._isOpen = false
 
-        this.getDevice()
+        this._device = getAudioDevice(this._deviceName, options.host)
     }
 
     public getName(): string {
@@ -147,34 +148,33 @@ export class AudioActivity {
 
     public async start() {
         if (!this._device) return
-
+        
         this.init()
+        logger.info(this._device)
 
-        logger.info({
-            deviceId: this._device.id,
-            nChannels: this._device.data.inputChannels,
-            firstChannel: 0
-        })
-
-        this._sharedState = audioModule.start(this._device.data.name, this.getFileName(), (err, data) => {
-            if (err) {
-                logger.error(err)
-                return
+        this._sharedState = audioManager.start(
+            this._device.name,
+            this._device.host,
+            this.getFileName(),
+            (err, data) => {
+                if (err) {
+                    logger.error(err)
+                    return
+                }
+                // logger.info(data)
+                this.process(data)
             }
-            // logger.info(data)
-            this.process(data)
-        })
+        )
 
         this._isOpen = true
-        this._volumes = []
-        
-        this._restarting = false
+        // this._volumes = []
+        // this._restarting = false
     }
 
     public stop() {
         if (!this._sharedState || !this._isOpen) return
 
-        audioModule.stop(this._sharedState)
+        audioManager.stop(this._sharedState)
 
         this._isOpen = false
         this._sharedState = undefined
@@ -193,7 +193,7 @@ export class AudioActivity {
     private getFileName(): string {
         if (!this._device || !this._record) return ""
 
-        const deviceName = this._device.data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
+        const deviceName = this._device.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
 
         let d = new Date()
         let datestring = d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "-" + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2)
@@ -345,44 +345,23 @@ export class AudioActivity {
         return undefined
     }
 
-    private getDevice() {
-
-        const device = getAudioDevice(this._deviceName)
-        if (device) {
-            this._device = {
-                id: -1,
-                data: device,
-            }
-
-            return
-        }
-    }
-
 }
 
-const getAudioDevice = (deviceName: string): AudioDevice | undefined => {
+const getAudioDevice = (deviceName: string, host?: HostApi): AudioDevice | undefined => {
     try {
-        return audioModule.getDevice(deviceName)
+        const device = audioManager.getDevice(deviceName, host)
+        if (device.error) {
+            logger.error(`cannot find device ${deviceName}`, device.error)
+            return undefined
+        }
+        return device
     } catch (e) {
         logger.error(`cannot find device ${deviceName}`, e)
         return undefined
     }
 }
 
-export const getDevices = (): Device[] => {
-    const d = audioModule.getAllDevices();
-
-    const devices: Device[] = []
-    for (let j = 0; j < d.inputs.length; j++) {
-        const device = getAudioDevice(d.inputs[j])
-        if (!device) continue
-
-        devices.push({
-            id: j,
-            data: device,
-        })
-    }
-
-    return devices
+export const getDevices = (): AudioDevice[] => {
+    return audioManager.getAllDevices();
 }
 

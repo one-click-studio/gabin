@@ -25,6 +25,7 @@ const addDevice = () => {
     devices_.value.push({
         id: -1,
         name: '',
+        host: '',
         mics: [],
         micsName: [],
         nChannels: 0,
@@ -43,6 +44,7 @@ const updateDevice = (device: AudioDevice, index: number) => {
     devices_.value[index] = {
         id: device.id,
         name: device.name,
+        host: device.host,
         nChannels: device.nChannels,
         mics: Array(device.nChannels).fill((device.nChannels === 1)),
         micsName: Array(device.nChannels).fill('')
@@ -109,6 +111,13 @@ const setAudioDevices = async () => {
     loadingAD.value = true
     audioDevices.value = await socketEmitter(store.socket, 'getAudioDevices', {}) as AudioDevice[]
     loadingAD.value = false
+
+    audioDevices.value.sort((a, b) => {
+        if (a.host === b.host) {
+            return a.name > b.name ? 1 : -1
+        }
+        return a.host > b.host ? 1 : -1
+    })
 }
 
 onEnterPress(() => {
@@ -147,8 +156,8 @@ updateNextBtn()
                         class="bg-bg-1 flex-1"
                         :options="audioDevices"
                         label="Audio device"
-                        :value="device.name? device.name :  ''"
-                        keyvalue="name"
+                        :value="device.name? device.host + ' - ' + device.name :  ''"
+                        keyvalue="host,name"
                         @update="(d: AudioDevice) => updateDevice(d, index)"
                     />
                     <ButtonUi

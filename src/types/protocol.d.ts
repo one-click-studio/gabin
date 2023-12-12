@@ -81,9 +81,10 @@ export interface AutocamSource {
 }
 
 export interface AudioDevice {
-    id: number
+    id?: number
     name: string
     nChannels: number
+    host: string
     thresholds?: Thresholds
 }
 

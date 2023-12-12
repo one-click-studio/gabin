@@ -1,5 +1,6 @@
 import { Subject, BehaviorSubject } from 'rxjs'
 import type { Subscription } from 'rxjs'
+import audioManager, { HostApi } from 'audio-manager-node'
 
 import { Client } from '../../main/clients/Client'
 import db from '../../main/utils/db'
@@ -105,6 +106,7 @@ export class AutocamClient extends Client {
 
     override async connect() {
         super.connect()
+
         this.init()
 
         this.enable = true
@@ -118,24 +120,25 @@ export class AutocamClient extends Client {
         }
 
         if (!devicesData.length) {
-            this.logger.info({ devices: getDevices().filter(d => d.data.inputChannels > 0) }, 'available devices list')
+            this.logger.info({ devices: getDevices().filter(d => d.inputChannels > 0) }, 'available devices list')
             return
         }
 
         const record = db.getDefaultValue(['record'], true)
 
         this.recorders = []
+
         for (const i in devicesData){
             const recorder = new AudioActivity({
                 deviceName: devicesData[i].name,
+                host: devicesData[i].host as unknown as HostApi,
                 channels: devicesData[i].channels.map(c => c.channelId),
                 onAudio: (speaking, channelId, volume) => {
                     devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking, volume)
                 },
                 record
             })
-            recorder.start()
-
+            recorder.start()    
             this.recorders.push(recorder)
         }
 
@@ -228,9 +231,9 @@ export class AutocamClient extends Client {
         this.logger.info(deviceMics)
 
         return {
-            id: device.id,
             name: device.name,
             nChannels: device.nChannels,
+            host: device.host,
             channels: this.getChannels(deviceMics),
             thresholds: device.thresholds
         }
