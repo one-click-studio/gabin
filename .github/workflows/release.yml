@@ -81,9 +81,6 @@ jobs:
           mkdir ./win-dist
           mv ./dist/gabin-win-x64.exe ./win-dist/
 
-      - name: ls builds
-        run: ls -R
-
       - name: Upload executables to asset
         id: upload-release-asset
         uses: softprops/action-gh-release@v1
@@ -97,14 +94,14 @@ jobs:
              ./dist/*
 
       - name: upload mac artifacts
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.package-json.outputs.version }}
           path: mac-dist
           retention-days: 1
 
       - name: upload win artifacts
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.package-json.outputs.version }}
           path: win-dist
