@@ -37,6 +37,7 @@ export class AudioActivity {
 
     private _isOpen: boolean
 
+    private _gain: number = 0
     private _record: string | null = null
 
     private _channels: number[]
@@ -50,6 +51,7 @@ export class AudioActivity {
     constructor(options: {
         deviceName: string
         host?: HostApi
+        gain?: number
         channels: number[]
         onAudio: (speaking: boolean, channel: number, volume: number) => void,
         thresholds?: {
@@ -68,6 +70,7 @@ export class AudioActivity {
         if (options.thresholds?.silence) this.setSilenceThreshold(options.thresholds.silence)
         if (options.thresholds?.vad) this.setVadThreshold(options.thresholds.vad)
         if (options.record) this._record = options.record
+        if (options.gain) this._gain = options.gain
 
         this._speaking = Array(options.channels.length).fill(false)
         this._consecutive = Array(options.channels.length).fill(0)
@@ -151,6 +154,8 @@ export class AudioActivity {
         
         this.init()
         logger.info(this._device)
+        logger.debug(this._gain)
+
 
         this._sharedState = audioManager.start(
             this._device.name,
@@ -163,7 +168,8 @@ export class AudioActivity {
                 }
                 // logger.info(data)
                 this.process(data)
-            }
+            },
+            this._gain
         )
 
         this._isOpen = true

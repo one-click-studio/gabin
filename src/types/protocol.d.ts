@@ -86,6 +86,7 @@ export interface AudioDevice {
     nChannels: number
     host: string
     thresholds?: Thresholds
+    gain?: number
 }
 
 export interface Shoot {

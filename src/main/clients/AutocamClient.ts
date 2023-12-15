@@ -136,7 +136,8 @@ export class AutocamClient extends Client {
                 onAudio: (speaking, channelId, volume) => {
                     devicesData[i].channels.find(c => c.channelId === channelId)?.onToggleSpeaking(speaking, volume)
                 },
-                record
+                record,
+                gain: devicesData[i].gain,
             })
             recorder.start()    
             this.recorders.push(recorder)
@@ -232,6 +233,7 @@ export class AutocamClient extends Client {
 
         return {
             name: device.name,
+            gain: device.gain,
             nChannels: device.nChannels,
             host: device.host,
             channels: this.getChannels(deviceMics),
