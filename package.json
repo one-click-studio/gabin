@@ -26,6 +26,7 @@
       "build/resources/**/*",
       "node_modules/.pnpm/github.com+one-click-studio+audio-manager-node@*/node_modules/audio-manager-node/**/*",
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
+      "node_modules/.pnpm/node-mac-permissions@*/node_modules/node-mac-permissions/*.node",
       "node_modules/systray2/traybin/*"
     ],
     "outputPath": "dist"
