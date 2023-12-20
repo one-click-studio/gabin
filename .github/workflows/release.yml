@@ -62,7 +62,7 @@ jobs:
       - name: Run pkg
         run: |
           npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
-          npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
+          npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64 --no-bytecode --public-packages "*" --public
 
           mkdir ./mac-dist
           mv ./dist/gabin-macos-arm64 ./mac-dist/
