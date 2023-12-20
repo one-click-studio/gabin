@@ -61,7 +61,13 @@ jobs:
 
       - name: Run pkg
         run: |
+          pnpm i node-gyp
+          rm -Rf ./node_modules/node-mac-permissions/build/Release/*
+          ( cd ./node_modules/node-mac-permissions && npx node-gyp rebuild --platform=darwin --arch=x64 )
           npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
+
+          rm -Rf ./node_modules/node-mac-permissions/build/Release/*
+          ( cd ./node_modules/node-mac-permissions && npx node-gyp rebuild --platform=darwin --arch=arm64 )
           npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64 --no-bytecode --public-packages "*" --public
 
           mkdir ./mac-dist
