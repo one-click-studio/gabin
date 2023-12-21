@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@hurdlegroup/node-mac-permissions':
+    specifier: ^2.5.7
+    version: 2.5.7
   audio-manager-node:
     specifier: github:one-click-studio/audio-manager-node
     version: github.com/one-click-studio/audio-manager-node/6f7b87e505f010fc042fc92566422b35270c5e65
@@ -16,9 +19,6 @@ dependencies:
   finalhandler:
     specifier: ^1.2.0
     version: 1.2.0
-  node-mac-permissions:
-    specifier: ^2.3.0
-    version: 2.3.0
   obs-websocket-js:
     specifier: ^5.0.2
     version: 5.0.2
@@ -129,6 +129,14 @@ packages:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
+
+  /@hurdlegroup/node-mac-permissions@2.5.7:
+    resolution: {integrity: sha512-s9g412Ky8evoAK/yZcoIQHU7qdx1utEy3vgjlGOj74bChsRNZOf4s5+TIbVx2+mN0DXFHfRpfpnpkyL0syL+wA==}
+    requiresBuild: true
+    dependencies:
+      node-addon-api: 3.2.1
+      node-gyp-build: 4.7.1
+    dev: false
 
   /@jridgewell/gen-mapping@0.3.2:
     resolution: {integrity: sha512-mh65xKQAzI6iBcFzwv28KVWSmCkdRBWoOh+bYQGW3+6OZvbbN3TqMGo5hqYxQniRcH9F2VZIoJCm4pa3BPDK/A==}
@@ -329,12 +337,6 @@ packages:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
     dev: true
-
-  /bindings@1.5.0:
-    resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
-    dependencies:
-      file-uri-to-path: 1.0.0
-    dev: false
 
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -667,10 +669,6 @@ packages:
     dependencies:
       reusify: 1.0.4
     dev: true
-
-  /file-uri-to-path@1.0.0:
-    resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
-    dev: false
 
   /fill-range@7.0.1:
     resolution: {integrity: sha512-qOo9F+dMUmC2Lcb4BbVvnKJxTPjCm+RRpe4gDuGrzkL7mEVl/djYSu2OdQ2Pa302N4oqkSg9ir6jaLWJ2USVpQ==}
@@ -1049,13 +1047,9 @@ packages:
       whatwg-url: 5.0.0
     dev: true
 
-  /node-mac-permissions@2.3.0:
-    resolution: {integrity: sha512-kZ/bUeXv+Xp6+VLS77ShgSfS8df9HB13SnS1ql+d3Cd5ry0uZkOgNh434cAhZBHiagYQWykPqgY7n9jd7t74Fw==}
-    os: [darwin]
-    requiresBuild: true
-    dependencies:
-      bindings: 1.5.0
-      node-addon-api: 3.2.1
+  /node-gyp-build@4.7.1:
+    resolution: {integrity: sha512-wTSrZ+8lsRRa3I3H8Xr65dLWSgCvY2l4AOnaeKdPA9TB/WYMPaTcrzf3rXvFoVvjKNVnu0CcWSx54qq9GKRUYg==}
+    hasBin: true
     dev: false
 
   /nodemon@2.0.20:

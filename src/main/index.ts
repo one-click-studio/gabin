@@ -44,7 +44,7 @@ const AUTO_OPEN = !args.includes('--no-auto-open')
 
 const main = async () => {
     if (process.platform === 'darwin') {
-        const NMP = require('node-mac-permissions')
+        const NMP = require('@hurdlegroup/node-mac-permissions')
         if (NMP.getAuthStatus('microphone') !== 'authorized') {
             const resp = await NMP.askForMicrophoneAccess()
             if (resp === 'denied') {

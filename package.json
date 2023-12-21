@@ -26,18 +26,19 @@
       "build/resources/**/*",
       "node_modules/.pnpm/github.com+one-click-studio+audio-manager-node@*/node_modules/audio-manager-node/**/*",
       "node_modules/.pnpm/rxjs@*/node_modules/tslib/tslib.js",
-      "node_modules/.pnpm/node-mac-permissions@*/node_modules/node-mac-permissions/**/*.node",
+      "node_modules/.pnpm/@hurdlegroup+node-mac-permissions@*/node_modules/@hurdlegroup/node-mac-permissions/*",
+      "node_modules/.pnpm/@hurdlegroup+node-mac-permissions@*/node_modules/@hurdlegroup/node-mac-permissions/**/*",
       "node_modules/systray2/traybin/*"
     ],
     "outputPath": "dist"
   },
   "dependencies": {
+    "@hurdlegroup/node-mac-permissions": "^2.5.7",
     "audio-manager-node": "github:one-click-studio/audio-manager-node",
     "deep-eql": "^4.1.3",
     "dotenv": "^16.0.3",
     "fast-xml-parser": "^4.2.0",
     "finalhandler": "^1.2.0",
-    "node-mac-permissions": "^2.3.0",
     "obs-websocket-js": "^5.0.2",
     "osc-js": "^2.4.0",
     "rxjs": "^7.8.0",
