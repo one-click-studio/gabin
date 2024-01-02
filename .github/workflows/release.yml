@@ -154,7 +154,7 @@ jobs:
 
       - name: Run pkg
         run: |
-          # npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
+          npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
           npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
           # npx pkg . -t linux-x64 --compress GZip -o ./dist/gabin-linux-x64
           # npx pkg . -t linux-arm64 --compress GZip -o ./dist/gabin-linux-arm64
@@ -162,7 +162,7 @@ jobs:
 
           mkdir ./mac-dist
           mv ./dist/gabin-macos-arm64 ./mac-dist/
-          # mv ./dist/gabin-macos-x64 ./mac-dist/
+          mv ./dist/gabin-macos-x64 ./mac-dist/
 
           # mkdir ./win-dist
           # mv ./dist/gabin-win-x64.exe ./win-dist/
@@ -271,18 +271,18 @@ jobs:
       
       - name: Sign macOS executables
         run: |
-          # chmod +x mac-dist/gabin-macos-x64
+          chmod +x mac-dist/gabin-macos-x64
           chmod +x mac-dist/gabin-macos-arm64
-          # /usr/bin/codesign --force -s - mac-dist/gabin-macos-x64 -v
+          /usr/bin/codesign --force -s - mac-dist/gabin-macos-x64 -v
           /usr/bin/codesign --force -s - mac-dist/gabin-macos-arm64 -v
 
       - name: Build .app for x64 and arm64
         run: |
-          # mkdir -p mac-dist/x64/Gabin.app/Contents/MacOS
-          # mkdir -p mac-dist/x64/Gabin.app/Contents/Resources
-          # mv mac-dist/gabin-macos-x64 mac-dist/x64/Gabin.app/Contents/MacOS/Gabin
-          # cp src/resources/Info.plist mac-dist/x64/Gabin.app/Contents/Info.plist
-          # cp src/resources/icons/app.icns mac-dist/x64/Gabin.app/Contents/Resources/app.icns
+          mkdir -p mac-dist/x64/Gabin.app/Contents/MacOS
+          mkdir -p mac-dist/x64/Gabin.app/Contents/Resources
+          mv mac-dist/gabin-macos-x64 mac-dist/x64/Gabin.app/Contents/MacOS/Gabin
+          cp src/resources/Info.plist mac-dist/x64/Gabin.app/Contents/Info.plist
+          cp src/resources/icons/app.icns mac-dist/x64/Gabin.app/Contents/Resources/app.icns
 
           mkdir -p mac-dist/arm64/Gabin.app/Contents/MacOS
           mkdir -p mac-dist/arm64/Gabin.app/Contents/Resources
@@ -306,7 +306,7 @@ jobs:
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
     
-          # /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/x64/Gabin.app -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/x64/Gabin.app -v
           /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/arm64/Gabin.app -v
 
       - name: "Notarize app bundle"
@@ -319,21 +319,21 @@ jobs:
           xcrun notarytool store-credentials "notarytool-profile" --apple-id "$MACOS_NOTARIZATION_APPLE_ID" --team-id "$MACOS_NOTARIZATION_TEAM_ID" --password "$MACOS_NOTARIZATION_PWD"
 
           echo "Creating temp notarization archive"
-          # ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "notarization_x64.zip"
+          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "notarization_x64.zip"
           ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "notarization_arm64.zip"
 
           echo "Notarize app"
-          # xcrun notarytool submit "notarization_x64.zip" --keychain-profile "notarytool-profile" --wait &
+          xcrun notarytool submit "notarization_x64.zip" --keychain-profile "notarytool-profile" --wait &
           xcrun notarytool submit "notarization_arm64.zip" --keychain-profile "notarytool-profile" --wait &
           wait
 
           echo "Attach staple"
-          # xcrun stapler staple "./mac-dist/x64/Gabin.app"
+          xcrun stapler staple "./mac-dist/x64/Gabin.app"
           xcrun stapler staple "./mac-dist/arm64/Gabin.app"
 
       - name: "Create zip archives"
         run: |
-          # ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "./mac-dist/gabin-mac-x64.zip"
+          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "./mac-dist/gabin-mac-x64.zip"
           ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "./mac-dist/gabin-mac-arm64.zip"
           
       - name: Upload executables to asset
@@ -346,5 +346,5 @@ jobs:
           prerelease: ${{ github.ref != 'refs/heads/master' }}
           tag_name: ${{ steps.package-json.outputs.version }}
           files: |
-              # ./mac-dist/gabin-mac-x64.zip
+              ./mac-dist/gabin-mac-x64.zip
               ./mac-dist/gabin-mac-arm64.zip
