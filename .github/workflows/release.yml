@@ -154,9 +154,7 @@ jobs:
 
       - name: Run pkg
         run: |
-          # ( cd ./node_modules/@hurdlegroup/node-mac-permissions && npm i && npm run prebuild -- --arch x64 )
           # npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
-          ( cd ./node_modules/@hurdlegroup/node-mac-permissions && npm i && npm run prebuild-darwin-universal )
           npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
           # npx pkg . -t linux-x64 --compress GZip -o ./dist/gabin-linux-x64
           # npx pkg . -t linux-arm64 --compress GZip -o ./dist/gabin-linux-arm64
