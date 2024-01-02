@@ -6,94 +6,9 @@ on:
     branches:
       - main
       - pre-release
+      - test
 
 jobs:
-  # build-executables:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: read package.json version
-  #       uses: Saionaro/extract-package-version@v1.2.1
-  #       id: package-json
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: '3.11' 
-
-  #     - name: Use Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18
-
-  #     - uses: pnpm/action-setup@v2
-  #       name: Install pnpm
-  #       id: pnpm-install
-  #       with:
-  #         version: 7
-  #         run_install: false
-
-  #     - name: Get pnpm store directory
-  #       id: pnpm-cache
-  #       shell: bash
-  #       run: |
-  #         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-  #     - uses: actions/cache@v3
-  #       name: Setup pnpm cache
-  #       with:
-  #         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-pnpm-store-
-
-  #     - name: Install npm dependencies
-  #       run: pnpm install
-
-  #     - uses: actions/cache@v3
-  #       name: Cache pkg modules
-  #       with:
-  #         path: ~/.pkg-cache
-  #         key: ${{ runner.os }}-pkg-${{ hashFiles('**/pnpm-lock.yaml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-pkg-
-          
-  #     - name: Build
-  #       run: pnpm build
-
-  #     - name: Run pkg
-  #       run: |
-  #         npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
-  #         npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64 --no-bytecode --public-packages "*" --public
-
-  #         mkdir ./mac-dist
-  #         mv ./dist/gabin-macos-arm64 ./mac-dist/
-  #         mv ./dist/gabin-macos-x64 ./mac-dist/
-
-  #     - name: Upload executables to asset
-  #       id: upload-release-asset
-  #       uses: softprops/action-gh-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-  #       with:
-  #         draft: ${{ github.ref == 'refs/heads/master' }}
-  #         prerelease: ${{ github.ref != 'refs/heads/master' }}
-  #         tag_name: ${{ steps.package-json.outputs.version }}
-  #         files: |
-  #            ./dist/*
-
-  #     - name: upload mac artifacts
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: ${{ steps.package-json.outputs.version }}
-  #         path: mac-dist
-  #         retention-days: 1
-
-  #     - name: upload win artifacts
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: ${{ steps.package-json.outputs.version }}
-  #         path: win-dist
-  #         retention-days: 1
-
   build-executables:
     runs-on: ubuntu-latest
     steps:
@@ -156,16 +71,16 @@ jobs:
         run: |
           npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
           npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
-          # npx pkg . -t linux-x64 --compress GZip -o ./dist/gabin-linux-x64
-          # npx pkg . -t linux-arm64 --compress GZip -o ./dist/gabin-linux-arm64
-          # npx pkg . -t win-x64 --compress GZip -o ./dist/gabin-win-x64.exe
+          npx pkg . -t linux-x64 --compress GZip -o ./dist/gabin-linux-x64
+          npx pkg . -t linux-arm64 --compress GZip -o ./dist/gabin-linux-arm64
+          npx pkg . -t win-x64 --compress GZip -o ./dist/gabin-win-x64.exe
 
           mkdir ./mac-dist
           mv ./dist/gabin-macos-arm64 ./mac-dist/
           mv ./dist/gabin-macos-x64 ./mac-dist/
 
-          # mkdir ./win-dist
-          # mv ./dist/gabin-win-x64.exe ./win-dist/
+          mkdir ./win-dist
+          mv ./dist/gabin-win-x64.exe ./win-dist/
 
       - name: Upload executables to asset
         id: upload-release-asset
@@ -193,66 +108,66 @@ jobs:
           path: win-dist
           retention-days: 1
 
-  # edit-win-executables:
-  #   runs-on: windows-latest
-  #   needs: build-executables
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: read package.json version
-  #       uses: Saionaro/extract-package-version@v1.2.1
-  #       id: package-json
+  edit-win-executables:
+    runs-on: windows-latest
+    needs: build-executables
+    steps:
+      - uses: actions/checkout@v3
+      - name: read package.json version
+        uses: Saionaro/extract-package-version@v1.2.1
+        id: package-json
 
-  #     - uses: actions/download-artifact@v3
-  #       with:
-  #         name: ${{ steps.package-json.outputs.version }}
-  #         path: win-dist
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ steps.package-json.outputs.version }}
+          path: win-dist
 
-  #     - name: Use Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-  #     - uses: pnpm/action-setup@v2
-  #       name: Install pnpm
-  #       id: pnpm-install
-  #       with:
-  #         version: 7
-  #         run_install: false
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
 
-  #     - name: Get pnpm store directory
-  #       id: pnpm-cache
-  #       shell: bash
-  #       run: |
-  #         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-  #     - uses: actions/cache@v3
-  #       name: Setup pnpm cache
-  #       with:
-  #         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-pnpm-store-
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
-  #     - name: Install npm exe-edit
-  #       run: pnpm i -D exe-edit
+      - name: Install npm exe-edit
+        run: pnpm i -D exe-edit
 
-  #     - name: mkdir dist
-  #       run: mkdir ./dist
+      - name: mkdir dist
+        run: mkdir ./dist
 
-  #     - name: edit exe file
-  #       run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
+      - name: edit exe file
+        run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
 
-  #     - name: Upload executables to asset
-  #       id: upload-release-asset
-  #       uses: softprops/action-gh-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-  #       with:
-  #         draft: ${{ github.ref == 'refs/heads/master' }}
-  #         prerelease: ${{ github.ref != 'refs/heads/master' }}
-  #         tag_name: ${{ steps.package-json.outputs.version }}
-  #         files: |
-  #             ./dist/gabin-win-x64.exe
+      - name: Upload executables to asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          draft: ${{ github.ref == 'refs/heads/master' }}
+          prerelease: ${{ github.ref != 'refs/heads/master' }}
+          tag_name: ${{ steps.package-json.outputs.version }}
+          files: |
+              ./dist/gabin-win-x64.exe
 
   sign-mac-executables:
     runs-on: macos-latest
