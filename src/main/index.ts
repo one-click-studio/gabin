@@ -45,11 +45,16 @@ if (args.includes('--version') || args.includes('-v')) {
 const AUTO_OPEN = !args.includes('--no-auto-open')
 
 const main = async () => {
-    logger.info('Starting Gabin v' + PackageJson.version)
+    logger.info('\n\n\nStarting Gabin v' + PackageJson.version)
 
     const NMP = require('@hurdlegroup/node-mac-permissions')
     const status = NMP.getAuthStatus('microphone')
     logger.info('Microphone status: ' + status)
+
+    // wait 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+    const resp = await NMP.askForMicrophoneAccess()
+    logger.info('Microphone response: ' + resp)
 
     // try {
     //     if (process.platform === 'darwin') {
