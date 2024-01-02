@@ -35,7 +35,6 @@ const generateId = (): number => {
 export const store = reactive({
     socket: <any>undefined,
     keyPress$: new Subject<string>(),
-    isFirstRun: true,
     toast: {
         show: (data: Toast) => {
             store.toast.data = data

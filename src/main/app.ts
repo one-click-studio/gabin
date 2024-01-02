@@ -212,6 +212,11 @@ export class App {
         this.initTray()
 
         this.handle()
+
+        this.logger.info('Ready!')
+
+        const autostart = db.getDefaultValue(['autostart'], true)
+        if (autostart) this.toggleGabin(true)
     }
 
     // CLEAN

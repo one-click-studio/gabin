@@ -61,7 +61,6 @@ socketHandler(store.socket, 'handleVolumeMics', (data: {[k: string]: number}) =>
 })
 
 const init = () => {
-    store.isFirstRun = false
     const profile = store.profiles.getCurrent()
 
     profile?.settings.mics.forEach((device) => {
