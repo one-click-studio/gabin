@@ -49,7 +49,7 @@ const main = async () => {
 
     const NMP = require('@hurdlegroup/node-mac-permissions')
     const status = NMP.getAuthStatus('microphone')
-    logger.debug('Microphone status: ' + status)
+    logger.info('Microphone status: ' + status)
 
     // try {
     //     if (process.platform === 'darwin') {
