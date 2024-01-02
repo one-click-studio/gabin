@@ -1,7 +1,9 @@
 import { App, openApp } from './app'
+import { getLogger, type Logger } from './utils/logger'
 const PackageJson = require('../../package.json')
 const DEFAULT = require('../resources/json/config.json')
 
+const logger = getLogger('main')
 
 // get args
 const args = process.argv.slice(2)
@@ -43,15 +45,20 @@ if (args.includes('--version') || args.includes('-v')) {
 const AUTO_OPEN = !args.includes('--no-auto-open')
 
 const main = async () => {
-    if (process.platform === 'darwin') {
-        const NMP = require('@hurdlegroup/node-mac-permissions')
-        if (NMP.getAuthStatus('microphone') !== 'authorized') {
-            const resp = await NMP.askForMicrophoneAccess()
-            if (resp === 'denied') {
-                console.log('Microphone access denied')
-                process.exit(1)
+    try {
+        if (process.platform === 'darwin') {
+            const NMP = require('@hurdlegroup/node-mac-permissions')
+            if (NMP.getAuthStatus('microphone') !== 'authorized') {
+                const resp = await NMP.askForMicrophoneAccess()
+                if (resp === 'denied') {
+                    console.log('Microphone access denied')
+                    process.exit(1)
+                }
             }
         }
+    } catch (e) {
+        logger.error(e)
+        process.exit(1)
     }
 
     const app = new App()
