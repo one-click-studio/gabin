@@ -96,10 +96,6 @@ const prepareHomeView = () => {
     store.layout.header.iconEdit = true
 
     store.layout.header.dotMenu = (settings.value.autocam.length > 0)
-
-    if (settings.value.autocam.length > 0 && store.isFirstRun && profile?.autostart) {
-        run()
-    }
 }
 
 watch(() => store.profiles.current, () => {
