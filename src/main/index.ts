@@ -47,6 +47,10 @@ const AUTO_OPEN = !args.includes('--no-auto-open')
 const main = async () => {
     logger.info('Starting Gabin v' + PackageJson.version)
 
+    const NMP = require('@hurdlegroup/node-mac-permissions')
+    const status = NMP.getAuthStatus('microphone')
+    logger.debug('Microphone status: ' + status)
+
     // try {
     //     if (process.platform === 'darwin') {
     //         const NMP = require('@hurdlegroup/node-mac-permissions')
