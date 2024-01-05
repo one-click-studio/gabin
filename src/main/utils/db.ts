@@ -1,6 +1,7 @@
 import JsonDb from 'simple-json-db'
 
 import path from 'path'
+import { app as electronApp } from 'electron'
 import dotenv from 'dotenv'
 import deepEqual from 'deep-eql'
 
@@ -13,11 +14,8 @@ import type { ServerConfig } from '../../types/protocol'
 
 dotenv.config()
 
-// default app data folder
-const APP_DATA_FOLDER = path.join(process.env.APPDATA || (process.platform === 'darwin'? process.env.HOME + '/Library/Application Support' : process.env.HOME + "/.local/share"), 'gabin')
-
 // @ts-ignore
-const CONFIG_FILE = path.join((process.env.GABIN_CONFIG_FOLDER || (process.pkg? APP_DATA_FOLDER : '')), './database.json')
+const CONFIG_FILE = path.join((process.env.GABIN_CONFIG_FOLDER || (electronApp.isPackaged ? electronApp.getPath('userData') : '')), './database.json')
 
 const EMPTY_CONFIG = {
     profiles: []
