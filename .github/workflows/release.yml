@@ -22,7 +22,7 @@ jobs:
     - name: Decode and Install Certificate
       if: matrix.os == 'macos-latest'
       run: |
-        echo ${{ secrets.MACOS_CERT }} | base64 --decode > ${{ github.workspace }}/certificate.p12
+        echo "${{ secrets.MACOS_CERT }}" | base64 --decode > ${{ github.workspace }}/certificate.p12
         security create-keychain -p "" build.keychain
         security import ${{ github.workspace }}/certificate.p12 -k build.keychain -P ${{ secrets.MACOS_CERT_PASSWORD }} -T /usr/bin/codesign
         security list-keychains -s build.keychain
