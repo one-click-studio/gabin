@@ -9,7 +9,7 @@
   "main": "./build/main/index.js",
   "bin": "./build/main/index.js",
   "scripts": {
-    "postinstall": "npm --prefix ./src/render install",
+    "postinstall": "npm --prefix ./src/render ci",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "dev": "cross-env GABIN_CLIENT_PORT=5999 concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:server": "npx nodemon --no-auto-open --debug",

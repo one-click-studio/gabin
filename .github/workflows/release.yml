@@ -19,26 +19,10 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Cache Root Node Modules
-      uses: actions/cache@v2
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node-root-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-root-
-
-    - name: Cache Renderer Node Modules
-      uses: actions/cache@v2
-      with:
-        path: src/render/node_modules
-        key: ${{ runner.os }}-node-render-${{ hashFiles('**/src/render/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-render-
-
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '20'
+        node-version: '18'
 
     - name: Install Dependencies
       run: npm ci
@@ -46,17 +30,10 @@ jobs:
     - name: Build Application
       run: npm run build
 
-    - name: List directory contents
-      run: ls -l
-
-    - name: Build distributables
+    - name: Publish Electron App
       env:
         APPLE_ID: ${{ secrets.APPLE_ID }}
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      run: npm run electron:make
-
-    - name: Publish Electron App
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       run: npm run electron:publish
