@@ -1,7 +1,6 @@
 module.exports = {
   packagerConfig: {
     asar: true,
-    executableName: 'gabin',
     icon: './build/resources/icons/app',
     ignore: [
       '^/src($|/)',
@@ -32,12 +31,10 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      executableName: 'gabin',
       config: {
         options: {
+          bin: 'Gabin',
           icon: './build/resources/icons/app.png',
-          name: 'gabin',
-          productName: 'gabin',
         }
       },
     },
