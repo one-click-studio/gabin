@@ -62,7 +62,8 @@ module.exports = {
           owner: 'one-click-studio',
           name: 'gabin'
         },
-        prerelease: true
+        prerelease: true,
+        force: true
       }
     }
   ]

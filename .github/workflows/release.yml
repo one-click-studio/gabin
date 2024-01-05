@@ -13,8 +13,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        architecture: [arm64, x64]
+        include:
+          - os: macos-latest
+            name: darwin
+            arch: x64
+          - os: macos-latest
+            name: darwin
+            arch: arm64
+          - os: windows-latest
+            name: win32
+            arch: x64
+          - os: ubuntu-latest
+            name: linux
+            arch: x64
+          - os: ubuntu-latest
+            name: linux
+            arch: arm64
       fail-fast: false
     steps:
     - name: Checkout Repository
@@ -48,4 +62,4 @@ jobs:
         APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      run: npm run electron:publish
+      run: npm run electron:publish -- --platform=${{ matrix.name }} --arch=${{ matrix.arch }}
