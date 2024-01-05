@@ -1,6 +1,7 @@
 module.exports = {
   packagerConfig: {
     asar: true,
+    executableName: 'gabin',
     icon: './build/resources/icons/app',
     ignore: [
       '^/src($|/)',
@@ -11,7 +12,6 @@ module.exports = {
       '^/database.json$',
       '^/.*\.log$',
     ],
-    platform: 'all',
     osxSign: {
       optionsForFile: (filePath) => {
         return {
@@ -41,7 +41,7 @@ module.exports = {
       executableName: 'gabin',
       config: {
         options: {
-          icon: './build/resources/icons/icon@3x.png',
+          icon: './build/resources/icons/app.png',
           name: 'gabin',
           productName: 'gabin',
         }
