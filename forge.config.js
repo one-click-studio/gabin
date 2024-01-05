@@ -38,11 +38,16 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
-    },
-    {
-      name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        executableName: 'gabin',
+        config: {
+          options: {
+            icon: './build/resources/icons/icon@3x.png',
+            name: 'gabin',
+            productName: 'gabin',
+          }
+        }
+      },
     },
   ],
   plugins: [
