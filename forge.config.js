@@ -1,7 +1,7 @@
 module.exports = {
   packagerConfig: {
     asar: true,
-    executableName: 'gabin',
+    executableName: 'Gabin',
     icon: './build/resources/icons/app',
     ignore: [
       '^/src($|/)',
@@ -12,13 +12,7 @@ module.exports = {
       '^/database.json$',
       '^/.*\.log$',
     ],
-    osxSign: {
-      optionsForFile: (filePath) => {
-        return {
-          entitlements: './build/resources/entitlements.plist',
-        }
-      }
-    },
+    osxSign: {},
     osxNotarize: {
       tool: 'notarytool',
       appleId: process.env.APPLE_ID,
@@ -38,12 +32,12 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      executableName: 'gabin',
+      executableName: 'Gabin',
       config: {
         options: {
           icon: './build/resources/icons/app.png',
-          name: 'gabin',
-          productName: 'gabin',
+          name: 'Gabin',
+          productName: 'Gabin',
         }
       },
     },
