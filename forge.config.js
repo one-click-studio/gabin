@@ -38,14 +38,12 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
+      executableName: 'gabin',
       config: {
-        executableName: 'gabin',
-        config: {
-          options: {
-            icon: './build/resources/icons/icon@3x.png',
-            name: 'gabin',
-            productName: 'gabin',
-          }
+        options: {
+          icon: './build/resources/icons/icon@3x.png',
+          name: 'gabin',
+          productName: 'gabin',
         }
       },
     },
