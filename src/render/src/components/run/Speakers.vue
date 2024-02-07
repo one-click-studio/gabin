@@ -31,6 +31,7 @@ const thresholds = ref<Thresholds>(DEFAULT_THRESHOLDS)
 const settings = (mic: SpeakingMic) => {
     store.profiles.settings().mics.forEach((m) => {
         if (m.name === mic.device && m.thresholds) {
+            console.log(m.thresholds)
             thresholds.value = m.thresholds
         }
     })
@@ -176,9 +177,9 @@ const resetAll = async () => {
                         <InputUi
                             label="Min. vol."
                             class="threshold-input"
-                            :value="toStr(Math.round(thresholds.minVolume*100/2))"
-                            unit="%"
-                            @update="(v) => updateThresholds('minVolume', Math.round(parseInt(v)*2)/100)"
+                            :value="toStr(thresholds.minVolume)"
+                            unit="dB"
+                            @update="(v) => updateThresholds('minVolume', Math.round(parseInt(v)))"
                         />
                     </div>
                 </div>
