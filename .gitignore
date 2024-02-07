@@ -18,3 +18,4 @@ playwright.config.ts
 * copy.*
 *.wav
 build-mac.sh
+.idea

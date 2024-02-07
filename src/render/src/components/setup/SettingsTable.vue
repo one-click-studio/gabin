@@ -66,7 +66,7 @@ const defaultSettings = (devices: AudioDeviceSettings[], scenes: Asset['scene'][
                         const autocamCam = autocamMic?.cams.find((a) => a.source.name === source.name)
                         camsSettings.push({
                             source,
-                            weight: autocamCam?.weight? autocamCam?.weight : (l===m? 100 : 0)
+                          weight: autocamCam?.weight === undefined ? (l===m? 100 : 0) : autocamCam?.weight
                         })
                     }
                     micsSettings.push({
