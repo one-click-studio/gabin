@@ -11,9 +11,6 @@
   "scripts": {
     "postinstall": "npm --prefix ./src/render ci",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
-    "dev": "cross-env GABIN_CLIENT_PORT=5999 concurrently \"npm run dev:client\" \"npm run dev:server\"",
-    "dev:server": "npx nodemon --no-auto-open --debug",
-    "dev:client": "npm --prefix ./src/render run dev",
     "build": "shx rm -rf ./build && concurrently \"npm run build:client\" \"npm run build:server\"",
     "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
     "build:client": "npm --prefix ./src/render run build && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
