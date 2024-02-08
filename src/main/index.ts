@@ -18,6 +18,8 @@ if (args.includes('--help') || args.includes('-h')) {
       -v, --version     Display version
       -s, --silent      Hide logs (except errors & logs from plugins)
       --no-auto-open    Disable auto open
+      --autostart       Enable autostart
+      -p, --profile     Profile to use
 
     Environment variables:
       GABIN_HOST              Hostname to use (default: ${DEFAULT.HOST})
@@ -44,9 +46,18 @@ if (args.includes('--version') || args.includes('-v')) {
 }
 
 const AUTO_OPEN = !args.includes('--no-auto-open')
+const AUTOSTART = args.includes('--autostart')
+
+let PROFILE: string|undefined = undefined
+if (args.includes('--profile') || args.includes('-p')) {
+  const index = args.indexOf('--profile')
+  const profile = args[index + 1]
+  PROFILE = profile
+}
 
 const main = async () => {
   logger.info('Starting Gabin v' + PackageJson.version)
+
 
   electronApp.whenReady().then(async () => {
     if (process.platform === 'darwin') {
@@ -64,8 +75,8 @@ const main = async () => {
         }
     }
 
-    const app = new App()
-    await app.init()
+    const app = new App(AUTOSTART)
+    await app.init(PROFILE)
 
     if (AUTO_OPEN) openApp()
   })

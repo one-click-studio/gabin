@@ -72,11 +72,14 @@ export class App {
 
   private ioClients: Map<string, Socket>
 
-  constructor() {
+  private autostart: boolean
+
+  constructor(autostart: boolean = false) {
     this.logger = getLogger('Gabin - main process 🤖')
 
     this.profiles = new Profiles()
     this.ioClients = new Map()
+    this.autostart = autostart
   }
 
   // INIT
@@ -175,18 +178,19 @@ export class App {
     this.setup = new Setup(this.osc)
   }
 
-  async init() {
+  async init(profile: string|undefined) {
     this.initError()
     this.initServer()
     await this.initDatabase()
     this.initTray()
 
+    if (profile) this.setDefaultProfileByName(profile)
+    
     this.handle()
-
     this.logger.info('Ready!')
 
     const autostart = db.getDefaultValue(['autostart'], true)
-    if (autostart) this.toggleGabin(true)
+    if (autostart || this.autostart) this.toggleGabin(true)
   }
 
   // CLEAN
