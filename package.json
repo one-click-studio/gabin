@@ -17,7 +17,6 @@
     "clean": "shx rm -rf ./out && shx rm -rf ./build && shx rm -rf ./dist && shx rm -rf ./*-dist",
     "dev": "nodemon",
     "preview": "npm run build && npm run electron:start",
-    "test": "ts-node ./src/tests/audio.ts --no-auto-open --debug",
     "electron:start": "electron-forge start",
     "electron:package": "electron-forge package",
     "electron:make": "electron-forge make",
