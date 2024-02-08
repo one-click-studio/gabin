@@ -1,24 +1,26 @@
-import OSC from 'osc-js'
-import { Subject } from 'rxjs'
+import { Server as ServerOsc, Client as ClientOsc, Message as MessageOsc } from 'node-osc';
 
+import { Subject } from 'rxjs'
 import { Server } from '../../main/servers/Server'
 
 const CMD_TYPES = ['on', 'off', 'config', 'profile'] as const
 type CmdType = typeof CMD_TYPES[number]
 
-const REQUEST_TYPES = ['profiles', 'devices', 'isReady'] as const
+const REQUEST_TYPES = ['profiles', 'devices', 'isReady', 'register'] as const
 type RequestType = typeof REQUEST_TYPES[number]
 
-const REGISTER_TYPES = [...REQUEST_TYPES, 'shot', 'autocam', 'defaultProfile'] as const
-type RegisterType = typeof REGISTER_TYPES[number]
+const REGISTER_TYPES = [...REQUEST_TYPES, 'shot', 'autocam', 'defaultProfile', 'mics'] as const
+export type RegisterType = typeof REGISTER_TYPES[number]
 
 export class OscServer extends Server {
     command$: Subject<{type: CmdType, data: any}>
     request$: Subject<{type: RequestType, data: any}>
     register$: Subject<{type: RegisterType, data: any}>
 
+    private commands: Map<string, (msg:any)=>void>
+
     private config: {host: string, port: number}
-    private server: OSC | undefined
+    private serverOsc: ServerOsc | undefined
     private registerMap: Map<RegisterType, {host: string, port: number, path: string, once?:boolean}>
 
     constructor(host: string, port: number) {
@@ -28,37 +30,49 @@ export class OscServer extends Server {
         this.request$ = new Subject()
         this.register$ = new Subject()
         this.registerMap = new Map()
+        this.commands = new Map()
         this.config = { host, port }
     }
 
     override listen() {
         super.listen()
 
-        const options = { 
-            type: 'udp4',
-            open: { host: this.config.host, port: this.config.port },
-        }
-
-        this.server = new OSC({plugin: new OSC.DatagramPlugin(options)})
-
-        this.server.on('open', () => {
+        this.serverOsc = new ServerOsc(this.config.port, this.config.host, () => {
             this.reachable$.next(true)
             this.logger.info("connection was established")
         })
 
-        this.server.on('close', () => {
-            this.reachable$.next(false)
-            this.logger.info("connection was closed")
+        const onMessage = (msg: any) => {
+            this.logger.info(`Message`, {msg})
+            
+            const message = {
+                address: msg[0],
+                args: msg.slice(1)
+            }
+
+            let callback
+            for (const [entry, cb] of this.commands.entries()) {
+                const re = new RegExp('^'+entry+'$')
+                const res = re.exec(message.address)
+                if (res) {
+                    callback = cb
+                    break
+                }
+            }
+            if (callback) callback(message)
+        }
+
+        this.serverOsc.on('message', (msg) => {
+            onMessage(msg)
         })
 
-        this.server.on('error', (err: Error) => {
-            this.reachable$.next(false)
-            this.logger.error("an error occurred", err.stack)
+        this.serverOsc.on('bundle', (bundle) => {
+            bundle.elements.forEach((msg) => {
+                onMessage(msg)
+            })
         })
 
         this.addCommands()
-
-        this.server.open()
 
         this.register$.subscribe(({type, data}) => {
             this.sendRegister(type, data)
@@ -68,43 +82,42 @@ export class OscServer extends Server {
     }
 
     private addCommands() {
-        if (!this.server) return
 
-        // COMMANDS
-        this.server.on('/gabin/on', () => {
+        this.commands.set('/gabin/on', () => {
             this.command('on', {})
         })
-        this.server.on('/gabin/off', () => {
+        this.commands.set('/gabin/off', () => {
             this.command('off', {})
         })
-        this.server.on('/gabin/config', (message: any) => {
+        this.commands.set('/gabin/config', (message: any) => {
             if (!message.args.length) return
             this.command('config', message.args[0], true)
         })
-        this.server.on('/gabin/profile', (message: any) => {
+        this.commands.set('/gabin/profile', (message: any) => {
             if (!message.args.length) return
             this.command('profile', message.args[0])
         })
 
-        this.server.on('/gabin/is-ready', (message: any) => {
+        this.commands.set('/gabin/is-ready', (message: any) => {
             if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             this.request('isReady', message.args[0], message.args[1], message.args[2])
         })
-        this.server.on('/gabin/profiles', (message: any) => {
+        this.commands.set('/gabin/profiles', (message: any) => {
             if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             this.request('profiles', message.args[0], message.args[1], message.args[2])
         })
-        this.server.on('/gabin/devices', (message: any) => {
+        this.commands.set('/gabin/devices', (message: any) => {
             if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             this.request('devices', message.args[0], message.args[1], message.args[2])
         })
 
-        this.server.on('/register/*', (message: any) => {
+
+        this.commands.set('/register/.*', (message: any) => {
             if (!message.args.length || !message.args[0] || !message.args[1]|| !message.args[2]) return
             const type = message.address.split('/').pop()
             this.register(type, message.args[0], message.args[1], message.args[2])
         })
-        this.server.on('/unregister/*', (message: any) => {
+        this.commands.set('/unregister/.*', (message: any) => {
             const type = message.address.split('/').pop()
             this.unregister(type)
         })
@@ -137,9 +150,12 @@ export class OscServer extends Server {
     private register(type: RegisterType, host: string, port: number, path: string, once:boolean =false): boolean {
         this.logger.info('register', {type, host, port, path, once})
         if (REGISTER_TYPES.indexOf(type) === -1) return false
+        this.logger.info('register type found')
         if (!host || !parseInt(port.toString()) || !path) return false
+        this.logger.info('host, port and path are valid')
 
         this.registerMap.set(type, { host, port, path, once })
+        this.request$.next({ type: 'register', data: type })
         return true
     }
 
@@ -151,16 +167,18 @@ export class OscServer extends Server {
     }
 
     private sendRegister(type: RegisterType, data: string) {
-        if (!this.server || !this.isReachable || !this.config) return
+        if (!this.isReachable || !this.config) return
 
         const register = this.registerMap.get(type)
         if (!register) return
 
         data = typeof data === 'string' ? data : JSON.stringify(data)
 
-        const message = new OSC.Message(register.path, data)
-        this.logger.info(`sending message: ${message.address}`)
-        this.server.send(message, { port: register.port, host: register.host })
+        this.logger.info(`sending message: ${register.path}`)
+
+        const client = new ClientOsc(register.host, register.port)
+        const msg = new MessageOsc(register.path, data)
+        client.send(msg)
 
         if (register.once) this.unregister(type)
     }
@@ -168,24 +186,41 @@ export class OscServer extends Server {
     override async clean() {
         this.reachable$.next(false)
 
-        this.server?.close()
-        this.server = undefined
+        this.serverOsc?.close()
+        this.serverOsc = undefined
+
+        // this.server?.close()
+        // this.server = undefined
 
         super.clean()
     }
 
     on(path: string, callback: (message: any) => void) {
-        if (!this.server) return
+        this.commands.set(path, callback)
+        // if (!this.server) return
 
-        this.server.on(path, callback)
+        // this.server.on(path, callback)
     }
 
-    send(path: string, port: number) {
-        if (!this.server || !this.isReachable || !this.config) return
+    send(path: string, port: number, host: string) {
+        if (!this.isReachable || !this.config) return
+        // if (!this.server || !this.isReachable || !this.config) return
 
-        const message = new OSC.Message(path)
-        this.logger.info(`sending message: ${message.address}`)
-        this.server.send(message, { port })
+        const client = new ClientOsc(host, port)
+        const msg = new MessageOsc(path)
+        this.logger.info(`sending '${path}' to '${host}:${port}'`)
+        client.send(msg)
+
+        // const osc = new OSC({ plugin: new OSC.DatagramPlugin() })
+        // osc.open({ host, port })
+
+        // const message = new OSC.Message(path)
+        // osc.send(message)
+
+        // const message = new OSC.Message(path)
+        // this.logger.info('sending', {message, port, host})
+        // // this.logger.info(`sending message: ${message.address}`)
+        // this.server.send(message, { host, port })
     }
 
     getConfig(): {host: string, port: number} {

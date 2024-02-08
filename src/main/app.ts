@@ -13,7 +13,7 @@ import { getLogger, type Logger } from './utils/logger'
 import { Gabin } from './modules/gabin'
 import { Profiles } from './modules/profiles'
 import { Setup, getAllAudioDevices } from './modules/setup'
-import { OscServer } from './servers/OscServer'
+import { OscServer, RegisterType } from './servers/OscServer'
 
 import db from './utils/db'
 import { Profile, Connection, Asset, MicId, Thresholds, AudioDevice } from '../types/protocol'
@@ -230,6 +230,23 @@ export class App {
         this.osc?.register$.next({ type: request.type, data: getAllAudioDevices() })
       } else if (request.type === 'isReady') {
         this.osc?.register$.next({ type: request.type, data: true })
+      } else if (request.type === 'register') {
+        const type = request.data as RegisterType
+        switch (type) {
+          case 'shot':
+            const shot = this.gabin?.shoot$.getValue()
+            if (!shot) return
+            this.osc?.register$.next({ type: type, data: shot.shot.name })
+            break
+          case 'autocam':
+            const autocam = Boolean(this.gabin?.autocam$.getValue())
+            this.osc?.register$.next({ type: type, data: JSON.stringify(autocam) })
+            break
+          case 'mics':
+            const mics = this.gabin?.availableMics$.getValue()
+            if (mics) this.osc?.register$.next({ type: type, data: JSON.stringify(Object.fromEntries(mics)) })
+            break
+        }            
       }
     })
   }
@@ -364,6 +381,7 @@ export class App {
       this.io?.emit('handlePower', p)
     })
     this.gabin.shoot$.subscribe((shoot) => {
+      if (!shoot) return
       this.io?.to(IO_ROOMS.GABIN).emit('handleNewShot', shoot)
       this.osc?.register$.next({ type: 'shot', data: shoot.shot.name })
     })
@@ -379,6 +397,7 @@ export class App {
     })
     this.gabin.availableMics$.subscribe((availableMics) => {
       this.io?.to(IO_ROOMS.GABIN).emit('handleAvailableMics', Object.fromEntries(availableMics))
+      this.osc?.register$.next({ type: 'mics', data: JSON.stringify(Object.fromEntries(availableMics)) })
     })
     this.gabin.connections$.subscribe((c) => {
       this.io?.to(IO_ROOMS.GABIN).emit('handleObsConnected', c.obs)
