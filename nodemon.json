@@ -1,6 +1,6 @@
 {
     "watch": ["src"],
     "ext": ".ts,.js",
-    "ignore": ["src/tests/*"],
-    "exec": "npm run preview"
+    "ignore": ["src/render/dist"],
+    "exec": "DEBUG=true npm run preview -- -- -- --no-auto-open"
 }

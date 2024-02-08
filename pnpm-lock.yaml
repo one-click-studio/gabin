@@ -23,12 +23,12 @@ dependencies:
   finalhandler:
     specifier: ^1.2.0
     version: 1.2.0
+  node-osc:
+    specifier: ^9.1.0
+    version: 9.1.0
   obs-websocket-js:
     specifier: ^5.0.2
     version: 5.0.2
-  osc-js:
-    specifier: ^2.4.0
-    version: 2.4.0
   rxjs:
     specifier: ^7.8.0
     version: 7.8.0
@@ -73,6 +73,9 @@ devDependencies:
   '@types/node':
     specifier: ^18.13.0
     version: 18.13.0
+  '@types/node-osc':
+    specifier: ^6.0.3
+    version: 6.0.3
   '@types/serve-static':
     specifier: ^1.15.0
     version: 1.15.0
@@ -854,6 +857,12 @@ packages:
     dev: true
     optional: true
 
+  /@types/node-osc@6.0.3:
+    resolution: {integrity: sha512-f0JUTDVAlk/mV9RH6jE6g/8Y7l+Mvi3f1x7xv0RG3VI1PktaXEd60mR+4plpMS9VbRovFoPsS7qaaIDhFXdaEw==}
+    dependencies:
+      '@types/node': 18.13.0
+    dev: true
+
   /@types/node@18.13.0:
     resolution: {integrity: sha512-gC3TazRzGoOnoKAhUx+Q0t8S9Tzs74z7m0ipwGpSqQrleP14hKxP4/JUeEQcD3W1/aIpnWl8pHowI7WokuZpXg==}
 
@@ -1032,6 +1041,10 @@ packages:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
     dev: true
+
+  /binpack@0.1.0:
+    resolution: {integrity: sha512-KcSrsGiIKgklTWweVb9XnZPWO1/rGSsK3fwR7VnbDPbLKPlkvSKd/ZrJ1W712r6HzH5u0fa/AZCftATO09x8Aw==}
+    dev: false
 
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -2771,6 +2784,13 @@ packages:
       - supports-color
     dev: true
 
+  /node-osc@9.1.0:
+    resolution: {integrity: sha512-7Ey92VAnGAkQI0MfxFH365v6+wUyHU/EVt5/v4Q81w8b+F/pVQxvmEzPnp70IxvDipSgYtSGer/iZUHZeKCzwg==}
+    engines: {node: ^18.17.0 || >=20.5.0}
+    dependencies:
+      osc-min: 1.1.2
+    dev: false
+
   /nodemon@2.0.20:
     resolution: {integrity: sha512-Km2mWHKKY5GzRg6i1j5OxOHQtuvVsgskLfigG25yTtbyfRGn/GNvIbRyOf1PSCKJ2aT/58TiuUsuOU5UToVViw==}
     engines: {node: '>=8.10.0'}
@@ -2903,13 +2923,11 @@ packages:
       wcwidth: 1.0.1
     dev: true
 
-  /osc-js@2.4.0:
-    resolution: {integrity: sha512-9cvB8m6zt/iCsmeDdFJaD4mjC8preB1Gio+NVmjT0S3qxiejTfJ8vGudyTQciL9yqQHEuINNYS5Kb94+Ceqekg==}
+  /osc-min@1.1.2:
+    resolution: {integrity: sha512-8DbiO8ME85R75stgNVCZtHxB9MNBBNcyy+isNBXrsFeinXGjwNAauvKVmGlfRas5VJWC/mhzIx7spR2gFvWxvg==}
+    engines: {node: '>=0.10.0'}
     dependencies:
-      ws: 8.12.1
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
+      binpack: 0.1.0
     dev: false
 
   /p-cancelable@2.1.1:
