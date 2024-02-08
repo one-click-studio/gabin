@@ -243,7 +243,8 @@ export class Gabin {
         for (const scene of this.scenes) {
             for (const container of scene.containers) {
                 for (const source of container.sources) {
-                    if (source.name === sourceName) {
+                    const sourceNameShort = source.name.split('##')[0].trim()
+                    if (sourceNameShort === sourceName) {
                         this.triggeredShot$.next(source)
                         return
                     }
