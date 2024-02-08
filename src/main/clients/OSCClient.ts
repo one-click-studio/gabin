@@ -59,15 +59,15 @@ export class OscClient extends Client {
     }
 
     private addCommands() {
-        this.osc.on('/scene/*', (message: any) => {
+        this.osc.on('/scene/.*', (message: any) => {
             const scene = message.address.split('/').pop()
             this.sceneTransition(scene)
         })
-        this.osc.on('/source/*', (message: any) => {
+        this.osc.on('/source/.*', (message: any) => {
             const source = message.address.split('/').pop()
             this.sourceTrigger(source)
         })
-        this.osc.on('/mic/*', (message: any) => {
+        this.osc.on('/mic/.*', (message: any) => {
             if (!message.args.length || [0,1].indexOf(message.args[0]) === -1) return
             
             const mic = message.address.split('/').pop()
@@ -90,7 +90,7 @@ export class OscClient extends Client {
         if (!this.config) return
 
         const clientIp = this.splitIp(this.config.ip)
-        this.osc.send(path, clientIp.port)
+        this.osc.send(path, clientIp.port, clientIp.host)
     }
 
     override clean() {
