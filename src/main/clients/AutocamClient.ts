@@ -25,7 +25,7 @@ import type {
 
 type ContainerMap = Map<Asset['container']['name'], Container>
 
-type MicTrigger = { micId: MicId, shotName?: Asset['source']['name'] }
+type MicTrigger = { micId: MicId, shotName?: Asset['source']['name'], lastSpeakers?: MicId[]}
 type CurrentShotsMap = Map<Asset['container']['name'], {source: Asset['source']['name'], mics: MicId[]}>
 type MicsMap = Map<Asset['source']['name'], MicId[]>
 
@@ -51,6 +51,11 @@ type MatchingShots = {
     unmatching: Asset['source']['name'][]
 }
 
+type speakerEvent = {
+    micId: MicId
+    time: number
+}
+
 export class AutocamClient extends Client {
 
     shoot$ = new Subject<Shoot>()
@@ -74,6 +79,7 @@ export class AutocamClient extends Client {
 
     private lockShot: Asset['source'] = { name:'' }
     private lastSpeaker: MicId = ''
+    private speakersEvents: speakerEvent[] = []
 
     constructor() {
         super('autocam')
@@ -344,6 +350,21 @@ export class AutocamClient extends Client {
         return speaker
     }
 
+    private pingPongSpeakers(): MicId[] {
+        const limit = Date.now() - 12000
+
+        let micIds = this.speakersEvents
+        .filter(e => e.time > limit)
+        .map(e => e.micId)
+
+        micIds = micIds
+        .filter((m, i) => micIds.indexOf(m) === i)
+        .reverse()
+        
+        micIds.shift()
+        return micIds
+    }
+
     // MAIN
 
     private manageContainers() {
@@ -380,6 +401,10 @@ export class AutocamClient extends Client {
 
                     if (micId === currentMic) return
 
+                    if (micId !== this.lastSpeaker) {
+                        this.speakersEvents.push({ micId, time: Date.now() })
+                    }
+
                     if (!this.micIsAvailable(micId)) {
                         this.logger.info('mic is not available', micId)
                         return
@@ -415,13 +440,14 @@ export class AutocamClient extends Client {
             }
 
             this.currentMicContainers()
+            const lastSpeakers = this.pingPongSpeakers()
 
             const showing = this.getShowingMicContainer(micId)
             if (showing) {
                 if (this.lastSpeaker === micId && showing.toUnfocus) return showing.focus_()
                 
                 this.logger.info('One container is already showing this mic')
-                showing.trigger$.next({ micId })
+                showing.trigger$.next({ micId, lastSpeakers })
                 this.unfocusContainers(showing.name)
                 return
             }
@@ -429,7 +455,7 @@ export class AutocamClient extends Client {
             const random = this.getRandomContainerByMic(micId)
             if (random) {
                 this.logger.info('Get a random container')
-                random.trigger$.next({ micId })
+                random.trigger$.next({ micId, lastSpeakers })
                 this.unfocusContainers(random.name)
                 return
             }
@@ -596,10 +622,12 @@ class Container {
         this.currentScene = scene
 
         this.trigger$.subscribe(params => {
-            if (!this.focus) this.focus = true
+            this.focus = true
+            this.toUnfocus = false
+
             if (!this.isShowingMic(params.micId)){
                 this.logger.warn('FOCUS MODE (triggered)', params)
-                this.focusMode(params.micId, params.shotName)
+                this.focusMode(params.micId, params.shotName, params.lastSpeakers)
             }
         })
     }
@@ -809,11 +837,35 @@ class Container {
 
     // FOCUS MODE
 
-    private getFocusShot(micId: MicId): Asset['source']['name'] | undefined {
+    private filterShotsByLastSpeakers(shots: AutocamSource[], lastSpeakers: MicId[]): AutocamSource[] {
+        const shotsMap: Map<Asset['source']['name'], number> = new Map()
+        for (let map of this.filteredShotsMap){
+            if (lastSpeakers.indexOf(map.id) > -1){
+                map.cams.forEach(cam => {
+                    if (cam.weight > 0){
+                        shotsMap.set(cam.source.name, (shotsMap.get(cam.source.name) || 0) + 1)
+                    }
+                })
+            }
+        }
+        const shotsNames = Array.from(shotsMap).filter(s => s[1] === lastSpeakers.length).map(s => s[0])
+        return shots.filter(s => shotsNames.indexOf(s.source.name) > -1 && s.weight > 0)
+    }
+
+    private getFocusShot(micId: MicId, lastSpeakers?: MicId[]): Asset['source']['name'] | undefined {
         const shots = this.getShotsForMic(micId)
 
         const unallowedShots = this.getUnallowedShots()
-        const allowedShots = shots.filter(s => unallowedShots.indexOf(s.source.name) < 0)
+        let allowedShots = shots.filter(s => unallowedShots.indexOf(s.source.name) < 0)
+
+        while (lastSpeakers && lastSpeakers.length > 0){
+            const lastShots = this.filterShotsByLastSpeakers(allowedShots, lastSpeakers)
+            if (lastShots.length > 0) {
+                allowedShots = lastShots
+                break
+            }
+            lastSpeakers.pop()
+        }
 
         let shotName = this.pickShot(allowedShots)
 
@@ -832,8 +884,7 @@ class Container {
         return shotName
     }
 
-    private focusMode(micId: MicId, shotName?: Asset['source']['name']) {
-        // if ((!this.enable || this.lock) && !shotName) {
+    private focusMode(micId: MicId, shotName?: Asset['source']['name'], lastSpeakers?: MicId[]) {
         if (this.lock && !shotName) return
 
         const forced = shotName? true : false
@@ -841,7 +892,7 @@ class Container {
 
         this.clearTimeouts()
 
-        shotName = shotName? shotName : this.getFocusShot(micId)
+        shotName = shotName? shotName : this.getFocusShot(micId, lastSpeakers)
         if (!shotName) {
             this.logger.error('problem with getFocusShot : no shot can be found')
             return
@@ -880,7 +931,7 @@ class Container {
             if (!this.enable) return
 
             if (!this.focus || this.toUnfocus || !this.currentMic) {
-                this.logger.warn('ILLUSTRATION MODE (after max duration && !focus)')
+                this.logger.warn('ILLUSTRATION MODE (after max duration && !focus)', {focus:this.focus, toUnfocus:this.toUnfocus, currentMic:this.currentMic})
 
                 this.toUnfocus = false
                 this.focus = false
