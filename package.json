@@ -1,7 +1,7 @@
 {
   "name": "gabin",
   "productName": "Gabin",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "OneClickStudio",
   "homepage": "https://oneclickstudio.fr",
