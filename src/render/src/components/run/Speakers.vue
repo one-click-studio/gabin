@@ -21,8 +21,8 @@ const props = defineProps<{
 const DEFAULT_THRESHOLDS = {
     speaking: 10,
     silence: 3,
-    vad: 0.05,
-    minVolume: 0.5
+    vad: 0.75,
+    minVolume: -35
 }
 
 const deviceName = ref<SpeakingMic['device']|false>(false)
@@ -31,6 +31,7 @@ const thresholds = ref<Thresholds>(DEFAULT_THRESHOLDS)
 const settings = (mic: SpeakingMic) => {
     store.profiles.settings().mics.forEach((m) => {
         if (m.name === mic.device && m.thresholds) {
+            console.log(m.thresholds)
             thresholds.value = m.thresholds
         }
     })
@@ -39,6 +40,20 @@ const settings = (mic: SpeakingMic) => {
 
 const updateThresholds = (key: keyof Thresholds, value: number) => {
     thresholds.value[key] = value
+}
+
+const dbToPercent = (db: number): number => {
+    const minDb = -60
+    const maxDb = 10
+
+    return Math.round((db - minDb) / (maxDb - minDb) * 100)
+}
+
+const percentToDb = (percent: number): number => {
+    const minDb = -60
+    const maxDb = 10
+
+    return Math.round(percent / 100 * (maxDb - minDb) + minDb)
 }
 
 const getMinVolume = (mic: SpeakingMic): number => {
@@ -162,9 +177,9 @@ const resetAll = async () => {
                         <InputUi
                             label="Min. vol."
                             class="threshold-input"
-                            :value="toStr(Math.round(thresholds.minVolume*100/2))"
-                            unit="%"
-                            @update="(v) => updateThresholds('minVolume', Math.round(parseInt(v)*2)/100)"
+                            :value="toStr(thresholds.minVolume)"
+                            unit="dB"
+                            @update="(v) => updateThresholds('minVolume', Math.round(parseInt(v)))"
                         />
                     </div>
                 </div>
@@ -208,13 +223,13 @@ const resetAll = async () => {
                         class="slider-range"
                         min="0"
                         max="100"
-                        :value="getMinVolume(mic)*100/2"
-                        @change="(v: any) => updateMinVolume(mic, v.target?.value/100*2 )"
+                        :value="dbToPercent(getMinVolume(mic))"
+                        @change="(v: any) => updateMinVolume(mic, percentToDb(v.target?.value) )"
                     >
                     <div class="volume-meter w-full h-1 rounded bg-bg-2 overflow-hidden">
                         <div
                             class="volume-meter-bar bg-white h-full transition-all duration-100"
-                            :style="{ width: (mic.volume*100/2) + '%' }"
+                            :style="{ width: dbToPercent(mic.volume) + '%' }"
                         />
                     </div>
                 </div>

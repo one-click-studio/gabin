@@ -1,108 +1,22 @@
 import path from "path"
 import fs from "fs"
-import os from "os"
-import { RtAudio, RtAudioFormat, RtAudioApi, RtAudioDeviceInfo } from "audify"
-import { InferenceSession, Tensor } from "onnxruntime-node"
+
+import audioManager, { AudioDevice, AudioFeedback, HostApi } from 'audio-manager-node'
+
 import { getLogger } from '../utils/logger'
 import { formatDate } from '../utils/utils'
 import { Thresholds } from "@src/types/protocol"
-import { FileWriter } from 'wav'
-
-const sileroModelPath = path.join(__dirname, `../../resources/models/silero.onnx`)
 
 const logger = getLogger('audio Activity')
 
 interface Device {
     id: number
-    data: RtAudioDeviceInfo
-    apiId: RtAudioApi
-    apiName: string
+    data: AudioDevice
 }
 
-type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined, consecutive: number}>
+type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined}>
 
-const AudioApiByPlateform = {
-    LINUX_ALSA: ['linux'],
-    LINUX_OSS: ['linux'],
-    LINUX_PULSE: ['linux'],
-    MACOSX_CORE: ['darwin'],
-    RTAUDIO_DUMMY: [],
-    UNIX_JACK: ['darwin', 'linux'],
-    UNSPECIFIED: [],
-    WINDOWS_ASIO: ['win32'],
-    WINDOWS_DS: ['win32'],
-    WINDOWS_WASAPI: ['win32']
-}
-
-class SileroVad {
-    private loaded = false;
-    private session: any;
-
-    public ready = false;
-
-    private _h: Tensor
-    private _c: Tensor
-    private _sr: Tensor
-
-    constructor() {
-        // @ts-ignore
-        this._sr = new Tensor("int64", [16000n])
-        this._c = new Tensor("float32", Array(2 * 64).fill(0), [2, 1, 64])
-        this._h = new Tensor("float32", Array(2 * 64).fill(0), [2, 1, 64])
-    }
-
-    async load() {
-        if (this.loaded) return
-
-        this.loaded = true
-
-        try {
-            const model = fs.readFileSync(sileroModelPath)
-            this.session = await InferenceSession.create(model)
-        } catch (e) {
-            logger.error(e)
-            return
-        }
-
-        if (!this.session) return
-
-        this.ready = true
-    }
-
-    async process(audio: number[], batchSize = 1): Promise<number> {
-        if (!this.loaded) {
-            await this.load()
-        }
-
-        if (!this.ready) return 0
-
-        const result = await this.session.run({
-            input: new Tensor(Float32Array.from(audio), [batchSize, audio.length / batchSize]),
-            sr: this._sr,
-            c: this._c,
-            h: this._h,
-        })
-
-        this._h = result.hn
-        this._c = result.cn
-    
-        return result.output.data[0]
-    }
-}
-
-const splitBuffer = (buffer: Buffer, size: number, channels: number):number[][] => {
-    const buffers: number[][] = []
-
-    // init buffers
-    for (let i = 0; i < channels; i++) buffers[i] = []
-
-    for (let i = 0; i < buffer.length; i++) {
-        const index = Math.floor((i%(channels*size)) / size)
-        buffers[index].push(buffer[i])
-    }
-
-    return buffers
-}
+const TIME_TO_WATCH = 30 * 1000
 
 export class AudioActivity {
     private _speaking: boolean[]
@@ -111,34 +25,34 @@ export class AudioActivity {
     private _speakingThreshold = 3
     private _silenceThreshold = 10
 
-    private _vadThreshold = 0.05
-    private _minVolume = 0.5
+    private _vadThreshold = 0.75
+    private _minVolume = -35
  
     private _bufferLength: number = 0
  
-    private _sileroVad: SileroVad | undefined
-    private _rtAudio: RtAudio | undefined
+    private _sharedState: unknown | undefined
 
     private _deviceName: string
-    private _device : Device | undefined
+    private _device : AudioDevice | undefined
 
-    private _apiId: RtAudioApi | undefined
-    private _framesPerBuffer: number
-    private _sampleRate: number = 0
     private _isOpen: boolean
 
-    private _recorders: FileWriter[]
-    private _record: string | undefined
+    private _gain: number = 0
+    private _record: string | null = null
 
     private _channels: number[]
     private _onAudio: (speaking: boolean, channel: number, volume: number) => void
 
+    private _restarting: boolean = false
+    private _lastProcess: number = 0
+    private _volumes: number[] = []
+    private _volFrameLength = 0
+
     constructor(options: {
         deviceName: string
-        apiId?: RtAudioApi
+        host?: HostApi
+        gain?: number
         channels: number[]
-        framesPerBuffer: number
-        sampleRate?: number
         onAudio: (speaking: boolean, channel: number, volume: number) => void,
         thresholds?: {
             speaking?: number,
@@ -149,23 +63,20 @@ export class AudioActivity {
     }) {
 
         this._deviceName = options.deviceName
-        this._apiId = options.apiId
         this._channels = options.channels
-        this._framesPerBuffer = options.framesPerBuffer
-        if (options.sampleRate) this._sampleRate = options.sampleRate
         this._onAudio = options.onAudio
 
         if (options.thresholds?.speaking) this.setSpeakingThreshold(options.thresholds.speaking)
         if (options.thresholds?.silence) this.setSilenceThreshold(options.thresholds.silence)
         if (options.thresholds?.vad) this.setVadThreshold(options.thresholds.vad)
         if (options.record) this._record = options.record
+        if (options.gain) this._gain = options.gain
 
         this._speaking = Array(options.channels.length).fill(false)
         this._consecutive = Array(options.channels.length).fill(0)
         this._isOpen = false
-        this._recorders = []
 
-        this.getDevice()
+        this._device = getAudioDevice(this._deviceName, options.host)
     }
 
     public getName(): string {
@@ -221,112 +132,74 @@ export class AudioActivity {
     }
 
     public isReady(): boolean {
-        return this._sileroVad?.ready || false
+        return true
     }
 
     public async init() {
         if (!this._device) return
 
-        this._sampleRate = this.getSampleRate(this._device.data)
+        // 30 * 1000 milliseconds / (( samplerate * bitrate) / (framesPerBuffer * channels * 2))
+        // this._volFrameLength = Math.round(TIME_TO_WATCH/((this._sampleRate*8)/(this._framesPerBuffer*this._device.data.inputChannels*2)))
 
-        this._sileroVad = new SileroVad()
-        await this._sileroVad.load()
-
-        for (let i = 0; i < this._channels.length; i++) {
-            if (this._record) {
-                this._recorders[i] = new FileWriter(this.getFileName(i), {
-                    sampleRate: this._sampleRate/2,
-                    channels: 1
-                })
-            }
-        }
+        // setInterval(() => {
+        //     if (this._isOpen && Date.now() - this._lastProcess > TIME_TO_WATCH) {
+        //         logger.error('Audio stream not processing, restarting')
+        //         this.restart()
+        //     }
+        // }, TIME_TO_WATCH/2)
     }
 
     public async start() {
         if (!this._device) return
-
+        
         this.init()
+        logger.info(this._device)
+        logger.debug(this._gain)
 
-        this._rtAudio = new RtAudio(this._apiId)
 
-        logger.info({
-            deviceId: this._device.id,
-            nChannels: this._device.data.inputChannels,
-            firstChannel: 0
-        })
-
-        this._rtAudio.openStream(
-            null,
-            {
-                deviceId: this._device.id,
-                nChannels: this._device.data.inputChannels,
-                firstChannel: 0
+        this._sharedState = audioManager.start(
+            this._device.name,
+            this._device.host,
+            this.getFileName(),
+            (err, data) => {
+                if (err) {
+                    logger.error(err)
+                    return
+                }
+                // logger.info(data)
+                this.process(data)
             },
-            RtAudioFormat.RTAUDIO_SINT8,
-            this._sampleRate,
-            this._framesPerBuffer,
-            "MyStream",
-            this.process.bind(this),
-            null
+            this._gain
         )
-        this._isOpen = true
 
-        this._rtAudio.start()
+        this._isOpen = true
+        // this._volumes = []
+        // this._restarting = false
     }
 
     public stop() {
-        if (!this._rtAudio || !this._isOpen) return
+        if (!this._sharedState || !this._isOpen) return
 
-        for (let i in this._recorders) this._recorders[i].end()
+        audioManager.stop(this._sharedState)
 
-        this._rtAudio.stop()
-        this._rtAudio.closeStream()
+        this._isOpen = false
+        this._sharedState = undefined
     }
 
-    private async load() {
-        if (!this._sileroVad) return
-        for (let i = 0; i < this._channels.length; i++) await this._sileroVad.load()
+    public async restart() {
+        if (this._restarting) return
+
+        logger.debug('Restarting audio stream')
+        this.stop()
+        // wait 1 second to make sure the stream is closed
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        this.start()
     }
 
-    private getSampleRate(data: RtAudioDeviceInfo): number {
-        if (this._sampleRate) return this._sampleRate
-
-        if (data.preferredSampleRate) return data.preferredSampleRate
-
-        for (let i = data.sampleRates.length-1; i >= 0; i--) {
-            if (data.sampleRates[i] < 50000) return data.sampleRates[i]
-        }
-
-        return data.sampleRates[0]
-    }
-
-    private setBufferSize(size: number) {
-        const min = this._sampleRate / 50
-        const sizes = [min, min*2, min*3]
-
-        for (let i = sizes.length-1; i >= 0; i--) {
-            if (sizes[i] <= size) {
-                this._bufferLength = sizes[i]
-                break
-            }
-        }
-    }
-
-    private getVolume(pcm: number[]): number {
-        let sum = 0
-        for (let i = 0; i < pcm.length; i++) {
-            sum += pcm[i] * pcm[i]
-        }
-        const rms = Math.sqrt(sum / pcm.length)
-        const volume = rms / 128
-
-        return volume
-    }
-
-    private getFileName(channel: number): string {
+    private getFileName(): string {
         if (!this._device || !this._record) return ""
 
-        const deviceName = this._device.data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
+        const deviceName = this._device.name.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 10)
 
         let d = new Date()
         let datestring = d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "-" + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2)
@@ -334,38 +207,39 @@ export class AudioActivity {
         const dir = formatDate(this._record)
         if (!fs.existsSync(dir)) fs.mkdirSync(dir)
 
-        return path.join(dir, `audio-${datestring}-${deviceName}-${this._channels[channel]+1}.wav`)
+        return path.join(dir, `audio-${datestring}-${deviceName}.wav`)
+    }
+
+    private shouldRestart(): boolean {
+        const sum = this._volumes.reduce((a, b) => a + b, 0)
+        if (sum === 0 && this._volumes.length >= this._volFrameLength) return true
+        return false
     }
 
 
-    async process(pcm: Buffer) {
-        // make sure stream stays open
-        this._rtAudio?.write(Buffer.from([]))
-
+    async process(data: AudioFeedback[]) {
         if (!this._device) return
-        const buffers = splitBuffer(pcm, 1, this._device.data.inputChannels)
-
-        if (!this.isReady()) {
-            await this.load()
-        }
 
         const processed: ProcessedChannel = new Map()
+        this._lastProcess = Date.now()
 
-        for (let i = 0; i < buffers.length; i++) {
-            if (!this._bufferLength) this.setBufferSize(buffers[i].length)
-
+        // let sumVolume = 0 
+        for (let i = 0; i < data.length; i++) {
             const shortIndex = this.shortIndex(i)
             if (shortIndex === -1) continue
 
-            if (this._recorders[shortIndex] && this._recorders[shortIndex].writable) {
-                this._recorders[shortIndex].write(Buffer.from(buffers[i]))
-            }
+            const speaking = await this.processChannel(data[i]);
 
-            const volume = Math.round(this.getVolume(buffers[i])*100)/100
-            const speaking = await this.processChannel(buffers[i], i, volume)
-            
-            processed.set(i, {volume, speaking, consecutive: 0})
+            // sumVolume += volume
+            processed.set(i, {
+                speaking,
+                volume: data[i].volume,
+            })
         }
+        // this._volumes.push(sumVolume)
+        // this._volumes = this._volumes.slice(-this._volFrameLength)
+
+        // if (this.shouldRestart()) return this.restart()
 
         if (this.tooManySpeakers(processed)){
             const channelId = this.chooseSpeaker(processed)
@@ -451,19 +325,12 @@ export class AudioActivity {
         return this._channels[index]
     }
 
-    private async processChannel(buffer: number[], cId: number, volume: number): Promise<boolean|undefined> {
-        if (!this._sileroVad) return false
-
-        if (buffer.length !== this._bufferLength){
-            buffer = buffer.slice(0, this._bufferLength)
-        }
-
+    private async processChannel(data: AudioFeedback): Promise<boolean|undefined> {
         let isSpeaking = false
-        const index = this.shortIndex(cId)
+        const index = this.shortIndex(data.channelId)
 
-        if (volume > this._minVolume) {
-            const vadLastProbability = await this._sileroVad.process(buffer)
-            if (vadLastProbability > this._vadThreshold) {
+        if (data.volume > this._minVolume) {
+            if (data.speakingProb > this._vadThreshold) {
                 isSpeaking = true
             }
         }
@@ -484,71 +351,23 @@ export class AudioActivity {
         return undefined
     }
 
-    private getDevice() {
-        if (this._apiId) {
-            const device = this.findDevice(this._apiId, 'unknown', this._deviceName)
+}
 
-            if (device) {
-                this._device = device
-                return
-            }
+const getAudioDevice = (deviceName: string, host?: HostApi): AudioDevice | undefined => {
+    try {
+        const device = audioManager.getDevice(deviceName, host)
+        if (device.error) {
+            logger.error(`cannot find device ${deviceName}`, device.error)
+            return undefined
         }
-
-
-        const plateform = os.platform()
-        // @ts-ignore
-        for (let i in RtAudioApi) {
-            // @ts-ignore
-            if (AudioApiByPlateform[i].indexOf(plateform) === -1) continue
-
-            // @ts-ignore
-            const api: unknown = RtAudioApi[i]
-
-            const device = this.findDevice(api as RtAudioApi, i, this._deviceName)
-            if (device) {
-                this._apiId = api as RtAudioApi
-                this._device = device
-                return
-            }
-        }
-    }
-
-    private findDevice(apiId: RtAudioApi, apiName: string, deviceName: string): Device | undefined {
-        const rtAudio = new RtAudio(apiId)
-        const devices = rtAudio.getDevices()
-        const deviceId = devices.findIndex(d => d.inputChannels > 0 && d.name === deviceName)
-        if (deviceId !== -1) {
-            return { id: deviceId, data: devices[deviceId], apiId, apiName }
-        }
-
+        return device
+    } catch (e) {
+        logger.error(`cannot find device ${deviceName}`, e)
         return undefined
     }
 }
 
-export const getDevices = (): Device[] => {
-    const devices: Device[] = []
-    const plateform = os.platform()
-
-    // @ts-ignore
-    for (let i in RtAudioApi) {
-        // @ts-ignore
-        if (AudioApiByPlateform[i].indexOf(plateform) === -1) continue
-        // @ts-ignore
-        const api: RtAudioApi = RtAudioApi[i]
-
-        const rtAudio = new RtAudio(api)
-        const d = rtAudio.getDevices()
-
-        for (let j = 0; j < d.length; j++) {
-            devices.push({
-                id: j,
-                data: d[j],
-                apiId: api,
-                apiName: i
-            })
-        }
-    }
-
-    return devices
+export const getDevices = (): AudioDevice[] => {
+    return audioManager.getAllDevices();
 }
 

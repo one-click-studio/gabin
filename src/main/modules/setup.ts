@@ -95,15 +95,14 @@ export const getAllAudioDevices = (): AudioDevice[] => {
 
     const devices = getDevices()
     for (const d of devices) {
-        if (!d.data.inputChannels) continue
+        if (!d.inputChannels) continue
+
+        const host = d.host as unknown as string
 
         aDevices.push({
-            id: d.id,
-            name: d.data.name,
-            sampleRate: d.data.preferredSampleRate,
-            nChannels: d.data.inputChannels,
-            api: d.apiId,
-            apiName: d.apiName,
+            name: d.name,
+            nChannels: d.inputChannels,
+            host,
         })
     }
 

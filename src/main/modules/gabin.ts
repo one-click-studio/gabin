@@ -39,8 +39,8 @@ export class Gabin {
     connections$: BehaviorSubject<Connections>
 
     power$: BehaviorSubject<boolean>
-    shoot$: Subject<Shoot>
-    autocam$: Subject<boolean>
+    shoot$: BehaviorSubject<Shoot|undefined>
+    autocam$: BehaviorSubject<boolean>
     availableMics$: BehaviorSubject<AvailableMicsMap>
     triggeredShot$: BehaviorSubject<Asset['source']>
     timeline$: BehaviorSubject<MicId>
@@ -61,8 +61,8 @@ export class Gabin {
         this.isReady = false
 
         this.power$ = new BehaviorSubject<boolean>(false)
-        this.shoot$ = new Subject<Shoot>()
-        this.autocam$ = new Subject<boolean>()
+        this.shoot$ = new BehaviorSubject<Shoot|undefined>(undefined)
+        this.autocam$ = new BehaviorSubject<boolean>(true)
         this.triggeredShot$ = new BehaviorSubject({ name: '' })
         this.availableMics$ = new BehaviorSubject<AvailableMicsMap>(new Map())
         this.timeline$ = new BehaviorSubject('')
@@ -201,6 +201,8 @@ export class Gabin {
         }
 
         this.subscriptions.push(this.shoot$.subscribe(shoot => {
+            if (!shoot || shoot.mode === 'unhandled') return
+            
             this.logger.info('has made magic shot change ✨', `${shoot.container.name} | ${shoot.shot.name} | ${shoot.mode} mode`)
 
             if (this.osc?.isReachable && this.defaultConnection === 'osc') this.osc.shoot(shoot.container, shoot.shot)
@@ -241,7 +243,8 @@ export class Gabin {
         for (const scene of this.scenes) {
             for (const container of scene.containers) {
                 for (const source of container.sources) {
-                    if (source.name === sourceName) {
+                    const sourceNameShort = source.name.split('##')[0].trim()
+                    if (sourceNameShort === sourceName) {
                         this.triggeredShot$.next(source)
                         return
                     }
@@ -257,6 +260,15 @@ export class Gabin {
 
         this.logger.info('has received a new scene 🎬', scene?.name)
         if (this.autocam?.isReachable) this.autocam.setCurrentScene(scene?.name)
+
+        if (!scene && sceneName) {
+            this.shoot$.next({
+                sceneName,
+                container: { name: '', sources: [] },
+                shot: { name: '' },
+                mode: 'unhandled'
+            })
+        }
     }
 
     private getScene(sceneName: Asset['scene']['name']|undefined): Asset['scene']|undefined {

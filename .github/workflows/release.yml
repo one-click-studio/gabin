@@ -6,274 +6,60 @@ on:
     branches:
       - main
       - pre-release
+      - test
 
 jobs:
-  build-executables:
-    runs-on: ubuntu-latest
+  build-and-publish:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            name: darwin
+            arch: x64
+          - os: macos-latest
+            name: darwin
+            arch: arm64
+          - os: windows-latest
+            name: win32
+            arch: x64
+          - os: ubuntu-latest
+            name: linux
+            arch: x64
+          - os: ubuntu-latest
+            name: linux
+            arch: arm64
+      fail-fast: false
     steps:
-      - uses: actions/checkout@v3
-      - name: read package.json version
-        uses: Saionaro/extract-package-version@v1.2.1
-        id: package-json
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Install ldid
-        uses: MOZGIII/install-ldid-action@v1
-        with:
-          tag: v2.1.5-procursus2
-      - name: Install dependencies
-        run: |
-          sudo apt-get install libasound2-dev pulseaudio
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: 7
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install npm dependencies
-        run: pnpm install
-
-      - uses: actions/cache@v3
-        name: Cache pkg modules
-        with:
-          path: ~/.pkg-cache
-          key: ${{ runner.os }}-pkg-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pkg-
+    - name: Decode and Install Certificate
+      if: matrix.os == 'macos-latest'
+      run: |
+        echo ${{ secrets.MACOS_CERT }} | base64 --decode > certificate.p12
+        security create-keychain -p action build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p action build.keychain
+        security import certificate.p12 -k build.keychain -P ${{ secrets.MACOS_CERT_PASSWORD }} -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k action build.keychain
           
-      - name: Build
-        run: pnpm build
 
-      - name: Run pkg
-        run: |
-          rm -Rf ./node_modules/audify/build/Release/*
-          ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=x64 )
-          npx pkg . -t macos-x64 --compress GZip -o ./dist/gabin-macos-x64
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
 
-          rm -Rf ./node_modules/audify/build/Release/*
-          ( cd ./node_modules/audify && npx prebuild-install --platform=darwin --arch=arm64 )
-          npx pkg . -t macos-arm64 --compress GZip -o ./dist/gabin-macos-arm64
+    - name: Install Dependencies
+      run: npm ci
 
-          rm -Rf ./node_modules/audify/build/Release/*
-          ( cd ./node_modules/audify && npx prebuild-install --platform=linux --arch=x64 )
-          npx pkg . -t linux-x64 --compress GZip -o ./dist/gabin-linux-x64
+    - name: Build Application
+      run: npm run build
 
-          rm -Rf ./node_modules/audify/build/Release/*
-          ( cd ./node_modules/audify && npx prebuild-install --platform=linux --arch=arm64 )
-          npx pkg . -t linux-arm64 --compress GZip -o ./dist/gabin-linux-arm64
-
-          rm -Rf ./node_modules/audify/build/Release/*
-          ( cd ./node_modules/audify && npx prebuild-install --platform=win32 --arch=x64 )
-
-          npx pkg . -t win-x64 --compress GZip -o ./dist/gabin-win-x64.exe
-
-          mkdir ./mac-dist
-          mv ./dist/gabin-macos-arm64 ./mac-dist/
-          mv ./dist/gabin-macos-x64 ./mac-dist/
-
-          mkdir ./win-dist
-          mv ./dist/gabin-win-x64.exe ./win-dist/
-
-      - name: Upload executables to asset
-        id: upload-release-asset
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          draft: ${{ github.ref == 'refs/heads/master' }}
-          prerelease: ${{ github.ref != 'refs/heads/master' }}
-          tag_name: ${{ steps.package-json.outputs.version }}
-          files: |
-             ./dist/*
-
-      - name: upload mac artifacts
-        uses: actions/upload-artifact@master
-        with:
-          name: ${{ steps.package-json.outputs.version }}
-          path: mac-dist
-          retention-days: 1
-
-      - name: upload win artifacts
-        uses: actions/upload-artifact@master
-        with:
-          name: ${{ steps.package-json.outputs.version }}
-          path: win-dist
-          retention-days: 1
-
-  edit-win-executables:
-    runs-on: windows-latest
-    needs: build-executables
-    steps:
-      - uses: actions/checkout@v3
-      - name: read package.json version
-        uses: Saionaro/extract-package-version@v1.2.1
-        id: package-json
-
-      - uses: actions/download-artifact@master
-        with:
-          name: ${{ steps.package-json.outputs.version }}
-          path: win-dist
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: 7
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install npm exe-edit
-        run: pnpm i -D exe-edit
-
-      - name: mkdir dist
-        run: mkdir ./dist
-
-      - name: edit exe file
-        run: npx exe-edit .\win-dist\gabin-win-x64.exe .\dist\gabin-win-x64.exe --icon .\src\resources\icons\icon-64.ico --gui
-
-      - name: Upload executables to asset
-        id: upload-release-asset
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          draft: ${{ github.ref == 'refs/heads/master' }}
-          prerelease: ${{ github.ref != 'refs/heads/master' }}
-          tag_name: ${{ steps.package-json.outputs.version }}
-          files: |
-              ./dist/gabin-win-x64.exe
-
-  sign-mac-executables:
-    runs-on: macos-latest
-    needs: build-executables
-    steps:
-      - uses: actions/checkout@v3
-      - name: read package.json version
-        uses: Saionaro/extract-package-version@v1.2.1
-        id: package-json
-
-      - uses: actions/download-artifact@master
-        with:
-          name: ${{ steps.package-json.outputs.version }}
-          path: mac-dist
-
-      
-      - name: Sign macOS executables
-        run: |
-          chmod +x mac-dist/gabin-macos-x64
-          chmod +x mac-dist/gabin-macos-arm64
-          /usr/bin/codesign --force -s - mac-dist/gabin-macos-x64 -v
-          /usr/bin/codesign --force -s - mac-dist/gabin-macos-arm64 -v
-
-      - name: Build .app for x64 and arm64
-        run: |
-          mkdir -p mac-dist/x64/Gabin.app/Contents/MacOS
-          mkdir -p mac-dist/x64/Gabin.app/Contents/Resources
-          mv mac-dist/gabin-macos-x64 mac-dist/x64/Gabin.app/Contents/MacOS/Gabin
-          cp src/resources/Info.plist mac-dist/x64/Gabin.app/Contents/Info.plist
-          cp src/resources/icons/app.icns mac-dist/x64/Gabin.app/Contents/Resources/app.icns
-
-          mkdir -p mac-dist/arm64/Gabin.app/Contents/MacOS
-          mkdir -p mac-dist/arm64/Gabin.app/Contents/Resources
-          mv mac-dist/gabin-macos-arm64 mac-dist/arm64/Gabin.app/Contents/MacOS/Gabin
-          cp src/resources/Info.plist mac-dist/arm64/Gabin.app/Contents/Info.plist
-          cp src/resources/icons/app.icns mac-dist/arm64/Gabin.app/Contents/Resources/app.icns
-
-      - name: Codesign app bundles
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          MACOS_CERTIFICATE: ${{ secrets.CSC_LINK }}
-          MACOS_CERTIFICATE_NAME: ${{ secrets.CSC_NAME }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.CSC_KEY_PASSWORD }}
-          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.KEYCHAIN_PSW }}
-        run: |
-          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
-
-          security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain 
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
-          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
-    
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/x64/Gabin.app -v
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements ./src/resources/entitlements.plist ./mac-dist/arm64/Gabin.app -v
-
-      - name: "Notarize app bundle"
-        env:
-          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_ID }}
-          MACOS_NOTARIZATION_PWD: ${{ secrets.APPLEIDPASS }}
-          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          echo "Create keychain profile"
-          xcrun notarytool store-credentials "notarytool-profile" --apple-id "$MACOS_NOTARIZATION_APPLE_ID" --team-id "$MACOS_NOTARIZATION_TEAM_ID" --password "$MACOS_NOTARIZATION_PWD"
-
-          echo "Creating temp notarization archive"
-          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "notarization_x64.zip"
-          ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "notarization_arm64.zip"
-
-          echo "Notarize app"
-          xcrun notarytool submit "notarization_x64.zip" --keychain-profile "notarytool-profile" --wait &
-          xcrun notarytool submit "notarization_arm64.zip" --keychain-profile "notarytool-profile" --wait &
-          wait
-
-          echo "Attach staple"
-          xcrun stapler staple "./mac-dist/x64/Gabin.app"
-          xcrun stapler staple "./mac-dist/arm64/Gabin.app"
-
-      - name: "Create zip archives"
-        run: |
-          ditto -c -k --keepParent "./mac-dist/x64/Gabin.app" "./mac-dist/gabin-mac-x64.zip"
-          ditto -c -k --keepParent "./mac-dist/arm64/Gabin.app" "./mac-dist/gabin-mac-arm64.zip"
-          
-      - name: Upload executables to asset
-        id: upload-release-asset
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          draft: ${{ github.ref == 'refs/heads/master' }}
-          prerelease: ${{ github.ref != 'refs/heads/master' }}
-          tag_name: ${{ steps.package-json.outputs.version }}
-          files: |
-              ./mac-dist/gabin-mac-x64.zip
-              ./mac-dist/gabin-mac-arm64.zip
+    - name: Publish Electron App
+      env:
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: npm run electron:publish -- --platform=${{ matrix.name }} --arch=${{ matrix.arch }}

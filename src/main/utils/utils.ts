@@ -155,11 +155,6 @@ export class timer {
 //     return strPath
 // }
 
-export function openUrl(url: string): void {
-    var start = (process.platform == 'darwin'? 'open': process.platform == 'win32'? 'start': 'xdg-open')
-    require('child_process').exec(start + ' ' + url)
-}
-
 export function formatDate(format: string): string {
     const date = new Date()
     let str = format

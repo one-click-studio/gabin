@@ -19,16 +19,15 @@ import type { AudioDevice, AudioDeviceSettings } from '../../../../types/protoco
 
 const devices_ = ref<AudioDeviceSettings[]>(store.profiles.settings().mics)
 const audioDevices = ref<AudioDevice[]>([])
+const loadingAD = ref<boolean>(false)
 
 const addDevice = () => {
     devices_.value.push({
         id: -1,
-        api: -1,
-        apiName: '',
         name: '',
+        host: '',
         mics: [],
         micsName: [],
-        sampleRate: 0,
         nChannels: 0,
         thresholds: {
             speaking: 3,
@@ -45,10 +44,8 @@ const updateDevice = (device: AudioDevice, index: number) => {
     devices_.value[index] = {
         id: device.id,
         name: device.name,
-        api: device.api,
-        apiName: device.apiName,
+        host: device.host,
         nChannels: device.nChannels,
-        sampleRate: device.sampleRate,
         mics: Array(device.nChannels).fill((device.nChannels === 1)),
         micsName: Array(device.nChannels).fill('')
     }
@@ -111,13 +108,15 @@ const updateNextBtn = () => {
 }
 
 const setAudioDevices = async () => {
+    loadingAD.value = true
     audioDevices.value = await socketEmitter(store.socket, 'getAudioDevices', {}) as AudioDevice[]
+    loadingAD.value = false
 
     audioDevices.value.sort((a, b) => {
-        if (a.apiName === b.apiName) {
+        if (a.host === b.host) {
             return a.name > b.name ? 1 : -1
         }
-        return a.apiName > b.apiName ? 1 : -1
+        return a.host > b.host ? 1 : -1
     })
 }
 
@@ -141,6 +140,7 @@ updateNextBtn()
         <ButtonUi
             class="add-audio-btn i-first primary w-full h-14 mt-4"
             @click="addDevice"
+            :loading="loadingAD"
         >
             <PlusIcon />
             Add audio device
@@ -156,8 +156,8 @@ updateNextBtn()
                         class="bg-bg-1 flex-1"
                         :options="audioDevices"
                         label="Audio device"
-                        :value="device.name? device.name + ' - ' + device.apiName :  ''"
-                        keyvalue="name,apiName"
+                        :value="device.name? device.host + ' - ' + device.name :  ''"
+                        keyvalue="host,name"
                         @update="(d: AudioDevice) => updateDevice(d, index)"
                     />
                     <ButtonUi

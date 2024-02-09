@@ -81,20 +81,19 @@ export interface AutocamSource {
 }
 
 export interface AudioDevice {
-    id: number
+    id?: number
     name: string
-    sampleRate: number
     nChannels: number
-    api: unknown
-    apiName: string
+    host: string
     thresholds?: Thresholds
+    gain?: number
 }
 
 export interface Shoot {
     sceneName: AssetScene['name']
     container: AssetContainer
     shot: AssetSource
-    mode: 'focus' | 'illustration'
+    mode: 'focus' | 'illustration' | 'unhandled'
 }
 
 export interface SpeakingMic {

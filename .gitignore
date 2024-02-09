@@ -1,5 +1,6 @@
 node_modules
 dist
+mac-dist
 out
 build
 database.json
@@ -16,4 +17,5 @@ certificate.p12
 playwright.config.ts
 * copy.*
 *.wav
+build-mac.sh
 .idea
