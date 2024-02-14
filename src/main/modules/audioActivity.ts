@@ -9,26 +9,18 @@ import { Thresholds } from "@src/types/protocol"
 
 const logger = getLogger('audio Activity')
 
-interface Device {
-    id: number
-    data: AudioDevice
-}
-
 type ProcessedChannel = Map<number, {volume:number, speaking:boolean|undefined}>
-
-const TIME_TO_WATCH = 30 * 1000
 
 export class AudioActivity {
     private _speaking: boolean[]
     private _consecutive: number[]
 
-    private _speakingThreshold = 3
-    private _silenceThreshold = 10
+    private _speakingThreshold = 5
+    private _silenceThreshold = 20
+    private _buffer: AudioFeedback[] = []
 
     private _vadThreshold = 0.75
     private _minVolume = -35
- 
-    private _bufferLength: number = 0
  
     private _sharedState: unknown | undefined
 
@@ -44,7 +36,6 @@ export class AudioActivity {
     private _onAudio: (speaking: boolean, channel: number, volume: number) => void
 
     private _restarting: boolean = false
-    private _lastProcess: number = 0
     private _volumes: number[] = []
     private _volFrameLength = 0
 
@@ -72,8 +63,9 @@ export class AudioActivity {
         if (options.record) this._record = options.record
         if (options.gain) this._gain = options.gain
 
-        this._speaking = Array(options.channels.length).fill(false)
-        this._consecutive = Array(options.channels.length).fill(0)
+        const maxChannel = options.channels[options.channels.length-1]+1
+        this._speaking = Array(maxChannel).fill(false)
+        this._consecutive = Array(maxChannel).fill(0)
         this._isOpen = false
 
         this._device = getAudioDevice(this._deviceName, options.host)
@@ -135,27 +127,11 @@ export class AudioActivity {
         return true
     }
 
-    public async init() {
-        if (!this._device) return
-
-        // 30 * 1000 milliseconds / (( samplerate * bitrate) / (framesPerBuffer * channels * 2))
-        // this._volFrameLength = Math.round(TIME_TO_WATCH/((this._sampleRate*8)/(this._framesPerBuffer*this._device.data.inputChannels*2)))
-
-        // setInterval(() => {
-        //     if (this._isOpen && Date.now() - this._lastProcess > TIME_TO_WATCH) {
-        //         logger.error('Audio stream not processing, restarting')
-        //         this.restart()
-        //     }
-        // }, TIME_TO_WATCH/2)
-    }
-
     public async start() {
         if (!this._device) return
         
-        this.init()
         logger.info(this._device)
         logger.debug(this._gain)
-
 
         this._sharedState = audioManager.start(
             this._device.name,
@@ -210,145 +186,127 @@ export class AudioActivity {
         return path.join(dir, `audio-${datestring}-${deviceName}.wav`)
     }
 
-    private shouldRestart(): boolean {
-        const sum = this._volumes.reduce((a, b) => a + b, 0)
-        if (sum === 0 && this._volumes.length >= this._volFrameLength) return true
-        return false
-    }
-
-
-    async process(data: AudioFeedback[]) {
+    private async process(data: AudioFeedback[]) {
         if (!this._device) return
 
+        for (let channelId of this._channels) {
+            this._buffer.push(data[channelId])
+        }
+
+        const bufferLength = (this._speakingThreshold+2)*this._channels.length
+        if (this._buffer.length > bufferLength) {
+            this._buffer = this._buffer.slice(this._buffer.length - bufferLength)
+        }
+        if (this._buffer.length < bufferLength) {
+            return
+        }
+
         const processed: ProcessedChannel = new Map()
-        this._lastProcess = Date.now()
+        let start = this._speaking.reduce((p, v) => (p||v? true : false), false)
+        for (let channelId of this._channels) {
+            const filtred = this._buffer.filter((d) => d.channelId === channelId)
+            if (!start) {
+                const sf = this.speakingFrames(filtred.slice(0, this._speakingThreshold))
+                if (sf === this._speakingThreshold) start = true
+            }
 
-        // let sumVolume = 0 
-        for (let i = 0; i < data.length; i++) {
-            const shortIndex = this.shortIndex(i)
-            if (shortIndex === -1) continue
-
-            const speaking = await this.processChannel(data[i]);
-
-            // sumVolume += volume
-            processed.set(i, {
-                speaking,
-                volume: data[i].volume,
+            let isSpeaking = this.isSpeaking(channelId, filtred)
+            processed.set(channelId, {
+                speaking: isSpeaking,
+                volume: data[channelId].volume,
             })
         }
-        // this._volumes.push(sumVolume)
-        // this._volumes = this._volumes.slice(-this._volFrameLength)
 
-        // if (this.shouldRestart()) return this.restart()
+        if (start) {
+            let speakers = this.getSpeakers(processed)
+            if (speakers.length > 1) {
+                const loudestChanId = this.getLoudestSpeakers(speakers)
 
-        if (this.tooManySpeakers(processed)){
-            const channelId = this.chooseSpeaker(processed)
-
-            for (let i = 0; i < this._channels.length; i++) {
-                const cId = this.longIndex(i)
-                const channel = processed.get(cId)
-                if (!channel || cId === channelId) continue
-                if (channel.speaking !== true && !this._speaking[i]) continue
-
-                channel.speaking = this._speaking[i]? false : undefined
+                for (let channelId of speakers) {
+                    if (channelId !== loudestChanId) {
+                        const speaking = this._speaking[channelId]? false : undefined
+                        processed.set(channelId, {
+                            speaking: speaking,
+                            volume: data[channelId].volume,
+                        })
+                    }
+                }
             }
         }
 
-        for (let i = 0; i < this._channels.length; i++) {
-            const cId = this.longIndex(i)
-            const channel = processed.get(cId)
-            if (!channel) continue
+        for (let channelId of this._channels) {
+            const c = processed.get(channelId)
+            if (!c) continue
 
-            if (channel.speaking !== undefined) this._speaking[i] = channel.speaking
-            this._onAudio(this._speaking[i], cId, channel.volume)
+            if (c.speaking !== undefined) this._speaking[channelId] = c.speaking
+            if (!start) this._speaking[channelId] = false
+            this._onAudio(this._speaking[channelId], channelId, c.volume)
         }
     }
 
-    private tooManySpeakers(processed: ProcessedChannel): boolean {
-        let speaking = 0
-        for (let i = 0; i < this._channels.length; i++) {
-            const cId = this.longIndex(i)
-            const channel = processed.get(cId)
-            if (channel?.speaking || (channel?.speaking === undefined && this._speaking[i])) {
-                speaking++
+    private speakingFrames(frames: AudioFeedback[]): number {
+        return frames.reduce((total, d) => {
+            if (d.speakingProb >= this._vadThreshold) {
+                total += 1
             }
-        }
-
-        return (speaking > 1)
+            return total
+        }, 0)
     }
 
-    private chooseSpeaker(processed: ProcessedChannel): number {
-        const wasSpeaking = this.wasSpeaking(processed)
-        if (wasSpeaking !== -1) return wasSpeaking
+    private avgDecibels(frames: AudioFeedback[]): number {
+        const totalNoiseEnergy = frames
+        .map((d) => Math.pow(10, d.volume/10))
+        .reduce((total, v) => total + v, 0)
 
-        return this.getLoudestChannel(processed)
+        return 10*Math.log10(totalNoiseEnergy/frames.length)
     }
 
-    private wasSpeaking(processed: ProcessedChannel): number {
-        for (let i = 0; i < this._channels.length; i++) {
-            const cId = this.longIndex(i)
-            const channel = processed.get(cId)
-            
-            if ((channel?.speaking || channel?.speaking === undefined) && this._speaking[i]) {
-                return cId
-            }
-        }
-
-        return -1
-    }
-    
-    private getLoudestChannel(processed: ProcessedChannel): number {
-        let maxVolume = 0
-        let maxChannel = 0
-        for (let i = 0; i < this._channels.length; i++) {
-            const cId = this.longIndex(i)
-            const channel = processed.get(cId)
-            if (channel?.volume && channel.volume > maxVolume) {
-                maxVolume = channel.volume
-                maxChannel = cId
-            }
-        }
-        return maxChannel
-    }
-
-    // channels : [1, 2, 4]
-    // inputChannels :  6
-    // buffers : [null, buf, buf, null, buf, null]
-
-    // index 1 -> 0
-    private shortIndex(index: number): number {
-        return this._channels.indexOf(index)
-    }
-
-    // index 0 -> 1
-    private longIndex(index: number): number {
-        return this._channels[index]
-    }
-
-    private async processChannel(data: AudioFeedback): Promise<boolean|undefined> {
-        let isSpeaking = false
-        const index = this.shortIndex(data.channelId)
-
-        if (data.volume > this._minVolume) {
-            if (data.speakingProb > this._vadThreshold) {
-                isSpeaking = true
-            }
-        }
-
+    private isSpeaking(channelId: number, frames: AudioFeedback[]): boolean | undefined {
+        const LIMIT = 30
+        let isSpeaking: boolean | undefined = (this.speakingFrames(frames) >= this._speakingThreshold)
         const toAdd = isSpeaking? 1 : -1
-    
-        if (this._consecutive[index] * toAdd < 0)
-        this._consecutive[index] = 0
-        
-        this._consecutive[index] += toAdd
 
-        if (!this._speaking[index] && this._consecutive[index] > this._speakingThreshold) {
-            return true
-        } else if (this._speaking[index] && this._consecutive[index] < this._silenceThreshold*-1) {
-            return false
+        // reset consecutive if the sign changes
+        if (this._consecutive[channelId] * toAdd < 0) this._consecutive[channelId] = 0
+        if (-LIMIT < this._consecutive[channelId] && this._consecutive[channelId] < LIMIT) this._consecutive[channelId] += toAdd
+
+        if (!this._speaking[channelId] && isSpeaking) {
+            isSpeaking = true
+        } else if (this._speaking[channelId] && this._consecutive[channelId] < this._silenceThreshold*-1) {
+            isSpeaking = false
+        } else {
+            isSpeaking = undefined
         }
 
-        return undefined
+        return isSpeaking
+    }
+
+    private getSpeakers(processed: ProcessedChannel): number[] {
+        let speakers: number[] = []
+        for (let channelId of this._channels) {
+            const c = processed.get(channelId)
+            if (!c) continue
+
+            if (c.speaking || (c.speaking === undefined && this._speaking[channelId])) {
+                speakers.push(channelId)
+            }
+        }
+
+        return speakers
+    }
+
+    private getLoudestSpeakers(speakers: number[]): number {
+        const loudestChan = {channelId: -1, volume: -100}
+        for (let channelId of speakers) {
+            const filtred = this._buffer.filter((d) => d.channelId === channelId)
+            const avg = this.avgDecibels(filtred)
+            if (avg > loudestChan.volume) {
+                loudestChan.channelId = channelId
+                loudestChan.volume = avg
+            }
+        }
+
+        return loudestChan.channelId
     }
 
 }
