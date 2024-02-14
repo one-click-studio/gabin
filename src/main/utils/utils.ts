@@ -37,6 +37,8 @@ export class expoAttempt {
     }
 
     reconnectAfterError(callback: ()=>void): void {
+        if (this.attempts === -1) return
+
         this.incrementAttempts()
         this.timeout = setTimeout(() => {
             callback()
