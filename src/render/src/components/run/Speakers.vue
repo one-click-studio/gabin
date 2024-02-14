@@ -19,8 +19,8 @@ const props = defineProps<{
 }>()
 
 const DEFAULT_THRESHOLDS = {
-    speaking: 10,
-    silence: 3,
+    speaking: 3,
+    silence: 10,
     vad: 0.75,
     minVolume: -35
 }
@@ -31,7 +31,6 @@ const thresholds = ref<Thresholds>(DEFAULT_THRESHOLDS)
 const settings = (mic: SpeakingMic) => {
     store.profiles.settings().mics.forEach((m) => {
         if (m.name === mic.device && m.thresholds) {
-            console.log(m.thresholds)
             thresholds.value = m.thresholds
         }
     })
@@ -168,7 +167,7 @@ const resetAll = async () => {
                             @update="(v) => updateThresholds('vad', Math.round(parseInt(v))/100)"
                         />
                     </div>
-                    <div class="threshold">
+                    <!-- <div class="threshold">
                         <p class="threshold-description">
                             Minimum required volume to trigger mic.
                             <p class="threshold-info">lower: CPU goes brrrrrr</p>
@@ -181,7 +180,7 @@ const resetAll = async () => {
                             unit="dB"
                             @update="(v) => updateThresholds('minVolume', Math.round(parseInt(v)))"
                         />
-                    </div>
+                    </div> -->
                 </div>
                 <div class="flex justify-between w-full">
                     <ButtonUi
@@ -218,14 +217,14 @@ const resetAll = async () => {
                 <span>{{ mic.name }}</span>
 
                 <div class="w-full relative mt-3">
-                    <input
+                    <!-- <input
                         type="range"
                         class="slider-range"
                         min="0"
                         max="100"
                         :value="dbToPercent(getMinVolume(mic))"
                         @change="(v: any) => updateMinVolume(mic, percentToDb(v.target?.value) )"
-                    >
+                    > -->
                     <div class="volume-meter w-full h-1 rounded bg-bg-2 overflow-hidden">
                         <div
                             class="volume-meter-bar bg-white h-full transition-all duration-100"
