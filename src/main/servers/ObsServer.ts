@@ -38,6 +38,10 @@ export class ObsServer extends Server {
     }
 
     async connect(connection?: Connection, once: boolean = false) {
+        if (this._expo.getAttempts() === -1) {
+            this._expo.reset()
+        }
+
         if (connection) {
             this.obsConfig = connection
         }
@@ -49,7 +53,6 @@ export class ObsServer extends Server {
 
     override async clean() {
         this._expo.stop()
-        this._expo.reset()
 
         if (this.websocket){
             this.websocket.removeAllListeners()
@@ -80,10 +83,13 @@ export class ObsServer extends Server {
     private async websocketConnection() {
         this.websocket.removeAllListeners()
 
-        this.websocket.once('ConnectionError', (err) => this.logger.error('socket error', err))
+        this.websocket.once('ConnectionError', (err) => this.logger.error('ConnectionError', err))
 
         this.websocket.once('ConnectionClosed', () => {
+            this.logger.error('ConnectionClosed')
+
             if (!this.tryToConnectOnce) {
+                this.logger.info(`reconnection try in ${this._expo.humanTimeout()}`)
                 this._expo.reconnectAfterError(() => { this.connect() })
             }
             this.reachable$.next(false)
@@ -92,17 +98,11 @@ export class ObsServer extends Server {
         try {
             await this.websocket.connect('ws://'+this.obsConfig?.ip, this.obsConfig?.password, { rpcVersion:1 })
 
-            this._expo.reset()
             await this.initWebsocket()
             this.isTryingToConnect = false
             this.reachable$.next(true)
         } catch (err) {
             this.logger.error('obs connect error', err)
-            this.logger.error(JSON.stringify(err))
-            if (!this.tryToConnectOnce) {
-                this.logger.info(`reconnection try in ${this._expo.humanTimeout()}`)
-                this._expo.reconnectAfterError(() => { this.connect() })
-            }
         }
 
     }
