@@ -1,7 +1,7 @@
 {
   "name": "gabin",
   "productName": "Gabin",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Automate camera switching with OBS, Bitfocus Companion and any audio api.",
   "author": "OneClickStudio",
   "homepage": "https://oneclickstudio.fr",
@@ -9,12 +9,11 @@
   "main": "./build/main/index.js",
   "bin": "./build/main/index.js",
   "scripts": {
-    "postinstall": "npm --prefix ./src/render ci",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
-    "build": "shx rm -rf ./build && concurrently \"npm run build:client\" \"npm run build:server\"",
+    "clean": "shx rm -rf ./build && shx rm -rf ./src/render/tsconfig.tsbuildinfo",
+    "build": "npm run clean && npm run build:client && npm run build:server",
     "build:server": "tsc && shx cp -R ./src/resources ./build/resources",
-    "build:client": "npm --prefix ./src/render run build && shx mkdir -p ./build/render/dist && shx cp -R ./src/render/dist ./build/render",
-    "clean": "shx rm -rf ./out && shx rm -rf ./build && shx rm -rf ./dist && shx rm -rf ./*-dist",
+    "build:client": "vue-tsc -p src/render/ && vite build src/render/",
     "dev": "nodemon",
     "preview": "npm run build && npm run electron:start",
     "electron:start": "electron-forge start",
@@ -23,18 +22,24 @@
     "electron:publish": "electron-forge publish"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.7.7",
     "audio-manager-node": "github:one-click-studio/audio-manager-node",
     "deep-eql": "^4.1.3",
     "dotenv": "^16.0.3",
     "electron-squirrel-startup": "^1.0.0",
     "fast-xml-parser": "^4.2.0",
     "finalhandler": "^1.2.0",
+    "klona": "^2.0.5",
     "node-osc": "^9.1.0",
     "obs-websocket-js": "^5.0.2",
     "rxjs": "^7.8.0",
     "serve-static": "^1.15.0",
     "simple-json-db": "^2.0.0",
-    "socket.io": "^4.6.0"
+    "socket.io": "^4.6.0",
+    "socket.io-client": "^4.6.0",
+    "unocss": "^0.48.0",
+    "vue": "^3.2.45",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",
@@ -50,12 +55,18 @@
     "@types/node-osc": "^6.0.3",
     "@types/serve-static": "^1.15.0",
     "@types/wav": "^1.0.1",
-    "concurrently": "^7.6.0",
-    "cross-env": "^7.0.3",
+    "@unocss/reset": "^0.49.4",
+    "@unocss/transformer-directives": "^0.49.4",
+    "@vitejs/plugin-vue": "^3.2.0",
     "electron": "^28.1.1",
     "nodemon": "^2.0.20",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.3"
+    "typescript": "^4.9.5",
+    "unocss-preset-scrollbar": "^0.2.1",
+    "vite": "^3.2.4",
+    "vitest": "^0.27.1",
+    "vue": "^3.2.45",
+    "vue-tsc": "^1.0.9"
   }
 }
