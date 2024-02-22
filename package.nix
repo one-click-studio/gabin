@@ -7,8 +7,7 @@ buildNpmPackage rec {
 
   src = ./.;
 
-  npmDepsHash = lib.fakeHash;
-
+  npmDepsHash = "sha256-wxIVeeeqd3DxtIQqYSxcmUycWlItODkpyYS1xReD7Zs=";
   makeCacheWritable = true;
 
   # Useful for debugging, just run "electron ."
@@ -19,7 +18,7 @@ buildNpmPackage rec {
   # Otherwise it will try to run a build phase (via npm build) that we don't have or need, with an error:
   # Missing script: "build"
   # This method is used in pkgs/by-name/in/indiepass-desktop/package.nix
-  dontNpmBuild = true;
+  dontNpmBuild = false;
 
   # Needed, otherwise you will get an error:
   # RequestError: getaddrinfo EAI_AGAIN github.com
