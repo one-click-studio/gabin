@@ -256,6 +256,7 @@ updateNextBtn()
             <PlusIcon />
             Add a scene
         </ButtonUi>
+        <div class="flex-1 overflow-y-auto">
         <div
             v-for="(scene, scIndex) in scenes_"
             :key="'scene-' + scIndex"
@@ -322,6 +323,7 @@ updateNextBtn()
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </template>
 

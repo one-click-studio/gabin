@@ -21,29 +21,30 @@ const initStore = async () => {
 
     store.layout.header.title =  TimelineSteps[step].name
     store.layout.timeline.currentStep = step
+    const footer = store.layout.footer
 
     if (route.meta.back) {
-        store.layout.footer.back.url = (route.meta.back as string)
-        store.layout.footer.back.label = (route.meta.order === 0)? 'Cancel' : 'Back'
-        store.layout.footer.back.icon = (route.meta.order === 0)? 'Cross' : 'ArrowLeft'
+        footer.back.url = (route.meta.back as string)
+        footer.back.label = (route.meta.order === 0)? 'Cancel' : 'Back'
+        footer.back.icon = (route.meta.order === 0)? 'Cross' : 'ArrowLeft'
     }
 
     if (route.meta.next) {
-        store.layout.footer.next.url = (route.meta.next as string)
-        store.layout.footer.next.label = (route.meta.order === TimelineSteps.length-1)? 'Save profile' : 'Next'
-        store.layout.footer.next.icon = (route.meta.order === TimelineSteps.length-1)? 'Check' : 'ArrowRight' 
+        footer.next.url = (route.meta.next as string)
+        footer.next.label = (route.meta.order === TimelineSteps.length-1)? 'Save profile' : 'Next'
+        footer.next.icon = (route.meta.order === TimelineSteps.length-1)? 'Check' : 'ArrowRight' 
     }
 
     if (store.profiles.editProfile) {
-        store.layout.footer.back.url = '/home'
-        store.layout.footer.back.label = 'Return'
-        store.layout.footer.back.icon = 'Return'
+        footer.back.url = '/home'
+        footer.back.label = 'Return'
+        footer.back.icon = 'Return'
 
-        store.layout.footer.next.url = route.path
-        store.layout.footer.next.label = 'Save'
-        store.layout.footer.next.icon = 'Check'
+        footer.next.url = route.path
+        footer.next.label = 'Save'
+        footer.next.icon = 'Check'
 
-        store.layout.footer.next.callback = async () => {
+        footer.next.callback = async () => {
             await store.profiles.save()
             store.toast.success('Profile saved !')
         }

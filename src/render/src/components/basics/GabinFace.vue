@@ -33,6 +33,9 @@ const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
 </template>
 
 <style scoped>
+.gabin-container {
+    @apply relative
+}
 .gabin-container.xs {
     @apply h-5;
 }
@@ -49,8 +52,10 @@ const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
     @apply h-52;
 }
 .message {
-    @apply bg-white h-5 rounded-3xl text-bg-3 text-sm px-2 py-1 font-bold relative;
-    @apply flex flex-col items-center;
+    @apply bg-white h-5 rounded-3xl text-bg-3 text-sm px-2 py-1 font-bold absolute;
+    @apply top-[-32px] left-[22px]
+    transform: translate(-50%, -50%);
+    text-wrap: nowrap;
 }
 .message > span {
     @apply text-main;
@@ -71,7 +76,7 @@ const classToAdd = (props.size || 'md') + (props.msg? ' has-msg' : '')
 }
 .gabin-container.xl.has-msg > .message,
 .gabin-container.lg.has-msg > .message {
-    @apply mb-8 px-3;
+    @apply px-3 left-[-30px];
 }
 .gabin-container.xl.has-msg > .message > .triangle,
 .gabin-container.lg.has-msg > .message > .triangle {

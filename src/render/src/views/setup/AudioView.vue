@@ -61,7 +61,7 @@ const removeDevice = (index: number) => {
 
 const updateMic = (index: number, mic: number, value: boolean) => {
     devices_.value[index].mics[mic] = value
-    devices_.value[index].micsName[mic] = value? defaultMicName(index, mic) : ''
+    devices_.value[index].micsName[mic] = value ? defaultMicName(index, mic) : ''
 
     updateNextBtn()
 }
@@ -145,13 +145,11 @@ updateNextBtn()
             <PlusIcon />
             Add audio device
         </ButtonUi>
-        <div
-            v-for="(device, index) in devices_"
-            :key="'device-select' + index"
-            class="bg-bg-2 flex flex-col w-full mt-4"
-        >
-            <div class="m-2">
-                <div class="flex w-full items-center">
+        <div class="flex-1 overflow-y-auto">
+            <div v-for="(device, index) in devices_" :key="'device-select' + index"
+                class="bg-bg-2 flex flex-col w-full mt-4">
+                <div class="m-2">
+                    <div class="flex w-full items-center">
                     <SelectUi
                         class="bg-bg-1 flex-1"
                         :options="audioDevices"
@@ -164,44 +162,45 @@ updateNextBtn()
                         class="i-round ml-2"
                         @click="() => removeDevice(index)"
                     >
-                        <BinIcon />
-                    </ButtonUi>
-                </div>
+                            <BinIcon />
+                        </ButtonUi>
+                    </div>
                 <div
                     v-if="device.nChannels > 1"
                     class="flex flex-wrap w-full"
                 >
-                    <div class="w-full text-content-2 text-sm mt-2">
-                        <span>Add or remove channels as a mics.</span>
-                    </div>
+                        <div class="w-full text-content-2 text-sm mt-2">
+                            <span>Add or remove channels as a mics.</span>
+                        </div>
                     <template
                         v-for="(_e, mic) in device.nChannels"
                         :key="'tag-mic-' + mic"
                     >
-                        <!-- <TooltipUi :value="device.mics[mic]? 'Remove this channel as a Mic.':'Add this channel as a Mic.'"> -->
+                            <!-- <TooltipUi :value="device.mics[mic]? 'Remove this channel as a Mic.':'Add this channel as a Mic.'"> -->
                         <TagUi
                             class="mr-2 mt-2"
                             :label="'Channel ' + (mic+1)"
                             :value="device.mics[mic]"
                             @update="(v: boolean) => updateMic(index, mic, v)"
                         />
-                        <!-- </TooltipUi> -->
-                    </template>
-                </div>
-                <div class="flex flex-col w-full">
-                    <div
-                        v-for="(_e, mic) in device.nChannels"
-                        :key="'input-mic-' + mic"
-                        class="w-full"
-                    >
-                        <InputUi
-                            v-if="device.mics[mic]"
-                            class="min-w-full mt-2"
-                            :label="'Channel ' + (mic+1) + ' name'"
-                            :error="hasDuplicates(index, mic)"
-                            :value="device.micsName[mic]"
-                            @update="(v: string) => updateMicName(index, mic, v)"
-                        />
+                            <!-- </TooltipUi> -->
+                        </template>
+                    </div>
+                    <div class="flex flex-col w-full">  
+                        <div
+                            v-for="(_e, mic) in device.nChannels"
+                            :key="'input-mic-' + mic"
+                            class="w-full"
+                        >
+                            <InputUi
+                                v-if="device.mics[mic]"
+                                class="min-w-full mt-2"
+                                :label="'Channel ' + (mic+1) + ' name'"
+                                :error="hasDuplicates(index, mic)"
+                                :value="device.micsName[mic]"
+                                @update="(v: string) => updateMicName(index, mic, v)"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
