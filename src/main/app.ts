@@ -95,7 +95,7 @@ export class App {
   }
 
   private getHttpServer(): http.Server {
-    const serve = serveStatic(path.join(__dirname, '../render/dist'))
+    const serve = serveStatic(path.join(__dirname, './render'))
     const server = http.createServer((req, res) => {
       if (GABIN_BASE_URL !== '/') {
         if (req.url?.substring(0, GABIN_BASE_URL.length) !== GABIN_BASE_URL) {

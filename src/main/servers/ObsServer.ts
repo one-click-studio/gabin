@@ -83,14 +83,23 @@ export class ObsServer extends Server {
     private async websocketConnection() {
         this.websocket.removeAllListeners()
 
+        let retryTimeout: NodeJS.Timeout
+
+        const retryConnection = () => {
+            clearTimeout(retryTimeout)
+            retryTimeout = setTimeout(() => {
+                this.logger.info(`reconnection try in ${this._expo.humanTimeout()}`)
+                this._expo.reconnectAfterError(() => { this.connect() })
+            }, 2000)
+        }
+
         this.websocket.once('ConnectionError', (err) => this.logger.error('ConnectionError', err))
 
         this.websocket.once('ConnectionClosed', () => {
             this.logger.error('ConnectionClosed')
 
             if (!this.tryToConnectOnce) {
-                this.logger.info(`reconnection try in ${this._expo.humanTimeout()}`)
-                this._expo.reconnectAfterError(() => { this.connect() })
+                retryConnection()
             }
             this.reachable$.next(false)
         })
@@ -103,6 +112,10 @@ export class ObsServer extends Server {
             this.reachable$.next(true)
         } catch (err) {
             this.logger.error('obs connect error', err)
+
+            if (!this.tryToConnectOnce) {
+                retryConnection()
+            }
         }
 
     }

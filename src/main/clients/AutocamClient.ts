@@ -625,7 +625,7 @@ class Container {
             this.focus = true
             this.toUnfocus = false
 
-            if (!this.isShowingMic(params.micId)){
+            if (params.shotName || !this.isShowingMic(params.micId)){
                 this.logger.warn('FOCUS MODE (triggered)', params)
                 this.focusMode(params.micId, params.shotName, params.lastSpeakers)
             }
